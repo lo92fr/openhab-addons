@@ -1,0 +1,61 @@
+package org.openhab.binding.siemenshvac.internal.Metadata;
+
+public class SiemensHvacMetadata {
+    private int menuId = -1;
+    private int groupId = -1;
+    private int catId = -1;
+    private String shortDesc = null;
+    private String longDesc = null;
+    private transient SiemensHvacMetadata parent;
+
+    public SiemensHvacMetadata() {
+    }
+
+    public int getMenuId() {
+        return menuId;
+    }
+
+    public void setMenuId(int menuId) {
+        this.menuId = menuId;
+    }
+
+    public int getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(int groupId) {
+        this.groupId = groupId;
+    }
+
+    public int getCatId() {
+        return catId;
+    }
+
+    public void setCatId(int groupId) {
+        this.catId = catId;
+    }
+
+    public String getShortDesc() {
+        return shortDesc;
+    }
+
+    public void setShortDesc(String shortDesc) {
+        this.shortDesc = shortDesc;
+    }
+
+    public String getLongDesc() {
+        return longDesc;
+    }
+
+    public void setLongDesc(String longDesc) {
+        this.longDesc = longDesc;
+    }
+
+    public SiemensHvacMetadata getParent() {
+        return parent;
+    }
+
+    public void setParent(SiemensHvacMetadata parent) {
+        this.parent = parent;
+    }
+}
