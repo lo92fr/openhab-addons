@@ -68,6 +68,15 @@ public abstract class SiemensHvacBridgeBaseThingHandler extends BaseBridgeHandle
      */
 
     @Override
+    public void initialize() {
+
+        if (metaDataRegistry != null) {
+            metaDataRegistry.ReadMeta();
+        }
+
+    }
+
+    @Override
     public void updateStatus(ThingStatus status) {
         super.updateStatus(status);
     }

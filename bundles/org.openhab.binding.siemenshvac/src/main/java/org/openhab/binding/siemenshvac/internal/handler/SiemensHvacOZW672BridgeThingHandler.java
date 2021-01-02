@@ -51,56 +51,8 @@ public class SiemensHvacOZW672BridgeThingHandler extends SiemensHvacBridgeBaseTh
     @Override
     public void initialize() {
         logger.debug("Initialize() bridge");
-        /*
-         * IPBridgeConfiguration config = getConfigAs(IPBridgeConfiguration.class);
-         * int autoReconnectPeriod = config.getAutoReconnectPeriod();
-         * if (autoReconnectPeriod != 0 && autoReconnectPeriod < 30) {
-         * logger.info("autoReconnectPeriod for {} set to {}s, allowed range is 0 (never) or >30", thing.getUID(),
-         * autoReconnectPeriod);
-         * autoReconnectPeriod = 30;
-         * config.setAutoReconnectPeriod(autoReconnectPeriod);
-         * }
-         * String localSource = config.getLocalSourceAddr();
-         * String connectionTypeString = config.getType();
-         * int port = config.getPortNumber().intValue();
-         * String ip = config.getIpAddress();
-         * InetSocketAddress localEndPoint = null;
-         * boolean useNAT = false;
-         * int ipConnectionType;
-         * if (MODE_TUNNEL.equalsIgnoreCase(connectionTypeString)) {
-         * useNAT = config.getUseNAT() != null ? config.getUseNAT() : false;
-         * ipConnectionType = CustomKNXNetworkLinkIP.TUNNELING;
-         * } else if (MODE_ROUTER.equalsIgnoreCase(connectionTypeString)) {
-         * useNAT = false;
-         * if (ip == null || ip.isEmpty()) {
-         * ip = KNXBindingConstants.DEFAULT_MULTICAST_IP;
-         * }
-         * ipConnectionType = CustomKNXNetworkLinkIP.ROUTING;
-         * } else {
-         * updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-         * MessageFormat.format("Unknown IP connection type {0}. Known types are either 'TUNNEL' or 'ROUTER'",
-         * connectionTypeString));
-         * return;
-         * }
-         * if (ip == null) {
-         * updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-         * "The 'ipAddress' of the gateway must be configured in 'TUNNEL' mode");
-         * return;
-         * }
-         *
-         * if (config.getLocalIp() != null && !config.getLocalIp().isEmpty()) {
-         * localEndPoint = new InetSocketAddress(config.getLocalIp(), 0);
-         * } else {
-         * localEndPoint = new InetSocketAddress(networkAddressService.getPrimaryIpv4HostAddress(), 0);
-         * }
-         *
-         * updateStatus(ThingStatus.UNKNOWN);
-         * client = new IPClient(ipConnectionType, ip, localSource, port, localEndPoint, useNAT, autoReconnectPeriod,
-         * thing.getUID(), config.getResponseTimeout().intValue(), config.getReadingPause().intValue(),
-         * config.getReadRetriesLimit().intValue(), getScheduler(), this);
-         *
-         * client.initialize();
-         */
+
+        super.initialize();
         updateStatus(ThingStatus.ONLINE);
 
     }

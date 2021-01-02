@@ -69,6 +69,7 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
     // A map contains data point config read from Api and/or WebPages
     private @Nullable Map<String, SiemensHvacMetadata> dptMap = null;
     private @Nullable SiemensHvacMetadata root = null;
+    private @Nullable ArrayList<SiemensHvacMetadataDevice> devices = null;
 
     // private siemensHvacConnector cnx = null;
     private boolean interrupted = false;
@@ -180,6 +181,8 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
             logger.debug("siemensHvac:InitDptMap():begin");
 
             LoadMetaDataFromCache();
+
+            ReadDeviceList();
 
             if (root == null) {
                 root = new SiemensHvacMetadataMenu();
@@ -391,6 +394,75 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
         }
         configDescriptionProvider.addConfigDescription(ConfigDescriptionBuilder.create(configDescriptionURI)
                 .withParameters(parms).withParameterGroups(groups).build());
+
+    }
+
+    public void ReadDeviceList() {
+        try {
+            devices = new ArrayList<SiemensHvacMetadataDevice>();
+            String request = "api/devicelist/list.json?";
+
+            JsonObject response = hvacConnector.DoRequest(request, null);
+            JsonArray devicesList = response.getAsJsonArray("Devices");
+
+            for (JsonElement device : devicesList) {
+
+                JsonObject obj = (JsonObject) device;
+                String Name = "";
+                String Addr = "";
+                String Type = "";
+                String SerialNr = "";
+                String TreeDate = "";
+                String TreeTime = "";
+                boolean TreeGenerated = false;
+
+                if (obj.has("Name")) {
+                    Name = obj.get("Name").getAsString();
+                }
+
+                if (obj.has("Addr")) {
+                    Addr = obj.get("Addr").getAsString();
+                }
+
+                if (obj.has("Type")) {
+                    Type = obj.get("Type").getAsString();
+                }
+
+                if (obj.has("SerialNr")) {
+                    SerialNr = obj.get("SerialNr").getAsString();
+                }
+
+                if (obj.has("TreeDate")) {
+                    TreeDate = obj.get("TreeDate").getAsString();
+                }
+
+                if (obj.has("TreeTime")) {
+                    TreeTime = obj.get("TreeTime").getAsString();
+                }
+
+                if (obj.has("TreeGenerated")) {
+                    TreeGenerated = obj.get("TreeGenerated").getAsBoolean();
+                }
+
+                SiemensHvacMetadataDevice deviceObj = new SiemensHvacMetadataDevice();
+                deviceObj.setName(Name);
+                deviceObj.setAddr(Addr);
+                deviceObj.setSerialNr(SerialNr);
+                deviceObj.setType(Type);
+                deviceObj.setTreeDate(TreeDate);
+                deviceObj.setTreeTime(TreeTime);
+                deviceObj.setTreeGenerated(TreeGenerated);
+
+                devices.add(deviceObj);
+                logger.debug("p2");
+            }
+
+            logger.debug("p1");
+
+        } catch (Exception e) {
+            logger.error("siemensHvac:ResolveDpt:Error during dp reading: " + e.getLocalizedMessage());
+            // Reset sessionId so we redone _auth on error
+        }
 
     }
 
