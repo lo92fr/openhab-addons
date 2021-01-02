@@ -15,6 +15,10 @@ import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.openhab.binding.siemenshvac.internal.Metadata.RuntimeTypeAdapterFactory;
+import org.openhab.binding.siemenshvac.internal.Metadata.SiemensHvacMetadata;
+import org.openhab.binding.siemenshvac.internal.Metadata.SiemensHvacMetadataDataPoint;
+import org.openhab.binding.siemenshvac.internal.Metadata.SiemensHvacMetadataMenu;
 import org.openhab.core.io.net.http.HttpClientFactory;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -317,12 +321,18 @@ public class SiemensHvacConnectorImpl implements SiemensHvacConnector {
     }
 
     public static Gson getGson() {
-        // RuntimeTypeAdapterFactory<siemensMetadata> adapter = RuntimeTypeAdapterFactory.of(siemensMetadata.class);
+        GsonBuilder builder = new GsonBuilder();
+        Gson gson = builder.setPrettyPrinting().create();
+        return gson;
+    }
 
-        // adapter.registerSubtype(siemensMetadataMenu.class);
-        // adapter.registerSubtype(siemensMetadataDataPoint.class);
-        /* .registerTypeAdapterFactory(adapter) */
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    public static Gson getGsonWithAdapter() {
+        RuntimeTypeAdapterFactory<SiemensHvacMetadata> adapter = RuntimeTypeAdapterFactory
+                .of(SiemensHvacMetadata.class);
+        adapter.registerSubtype(SiemensHvacMetadataMenu.class);
+        adapter.registerSubtype(SiemensHvacMetadataDataPoint.class);
+
+        Gson gson = new GsonBuilder().setPrettyPrinting().registerTypeAdapterFactory(adapter).create();
         return gson;
     }
 

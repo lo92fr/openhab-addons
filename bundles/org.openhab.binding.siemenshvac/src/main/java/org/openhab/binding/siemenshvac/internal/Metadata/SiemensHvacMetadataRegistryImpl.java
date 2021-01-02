@@ -184,9 +184,9 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
             if (root == null) {
                 root = new SiemensHvacMetadataMenu();
                 ReadMetaData(root, -1);
+                hvacConnector.WaitAllPendingRequest();
             }
 
-            hvacConnector.WaitAllPendingRequest();
             dptMap = new Hashtable<String, SiemensHvacMetadata>();
             InitDptMap(root);
             SaveMetaDataToCache();
@@ -662,7 +662,7 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
             FileInputStream is = new FileInputStream(file);
             String js = IOUtils.toString(is);
 
-            root = SiemensHvacConnectorImpl.getGson().fromJson(js, SiemensHvacMetadataMenu.class);
+            root = SiemensHvacConnectorImpl.getGsonWithAdapter().fromJson(js, SiemensHvacMetadataMenu.class);
         } catch (IOException ioe) {
             logger.error("Couldn't write WithingsAccount to file '{}'.", file.getAbsolutePath());
 
@@ -683,7 +683,7 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
 
             FileOutputStream os = new FileOutputStream(file);
 
-            String js = SiemensHvacConnectorImpl.getGson().toJson(root);
+            String js = SiemensHvacConnectorImpl.getGsonWithAdapter().toJson(root);
 
             IOUtils.write(js, os);
             IOUtils.closeQuietly(os);
