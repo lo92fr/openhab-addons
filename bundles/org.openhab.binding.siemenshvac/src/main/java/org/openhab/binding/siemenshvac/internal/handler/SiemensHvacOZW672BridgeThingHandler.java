@@ -50,7 +50,7 @@ public class SiemensHvacOZW672BridgeThingHandler extends SiemensHvacBridgeBaseTh
 
     @Override
     public void initialize() {
-        logger.debug("p1");
+        logger.debug("Initialize() bridge");
         /*
          * IPBridgeConfiguration config = getConfigAs(IPBridgeConfiguration.class);
          * int autoReconnectPeriod = config.getAutoReconnectPeriod();

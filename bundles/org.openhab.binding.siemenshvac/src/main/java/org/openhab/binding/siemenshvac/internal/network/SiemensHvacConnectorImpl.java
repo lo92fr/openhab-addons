@@ -4,6 +4,8 @@ import java.util.Date;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -42,6 +44,10 @@ public class SiemensHvacConnectorImpl implements SiemensHvacConnector {
     protected @Nullable HttpClient httpClient;
     protected @Nullable HttpClient httpClientInsecure;
 
+    private static int startedRequest = 0;
+    private static int completedRequest = 0;
+    private Lock lockObj = new ReentrantLock();
+
     // private siemensMetadataRegistry registry = new siemensMetadataRegistry(this);
 
     // private Map<String, Type> updateCommand;
@@ -57,6 +63,7 @@ public class SiemensHvacConnectorImpl implements SiemensHvacConnector {
         // this.hvacBinding = hvacBinding;
         // this.updateCommand = new Hashtable<String, Type>();
         this.httpClientFactory = httpClientFactory;
+
         initHttpClient();
 
     }
@@ -65,6 +72,8 @@ public class SiemensHvacConnectorImpl implements SiemensHvacConnector {
 
         this.httpClient = httpClientFactory.getCommonHttpClient();
         this.httpClientInsecure = new HttpClient(new SslContextFactory.Client(true));
+        this.httpClientInsecure.setRemoveIdleDestinations(true);
+        this.httpClientInsecure.setMaxConnectionsPerDestination(15);
         try {
             this.httpClientInsecure.start();
         } catch (Exception e) {
@@ -86,13 +95,45 @@ public class SiemensHvacConnectorImpl implements SiemensHvacConnector {
         this.userPassword = userPassword;
     }
 
-    private ContentResponse executeRequest(final Request request) throws Exception {
+    @Override
+    public void onComplete(@Nullable Request request) {
+        lockObj.lock();
+        try {
+            completedRequest++;
+        } finally {
+            lockObj.unlock();
+        }
+        logger.debug("unregisterCount:" + completedRequest + " " + request.getURI());
+    }
+
+    private @Nullable ContentResponse executeRequest(final Request request, @Nullable SiemensHvacCallback callback)
+            throws Exception {
         request.timeout(60, TimeUnit.SECONDS);
 
-        ContentResponse response;
+        ContentResponse response = null;
+
+        @Nullable
+        SiemensHvacRequestListener requestListener = null;
+        if (callback != null) {
+            requestListener = new SiemensHvacRequestListener(callback, this);
+            request.onResponseSuccess(requestListener);
+            request.onResponseFailure(requestListener);
+        }
 
         try {
-            response = request.send();
+            if (requestListener != null) {
+                lockObj.lock();
+                try {
+                    startedRequest++;
+                } finally {
+                    lockObj.unlock();
+                }
+
+                logger.debug("registerCount:" + startedRequest + " " + request.getQuery());
+                request.send(requestListener);
+            } else {
+                response = request.send();
+            }
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
             throw new Exception("siemensHvac:Exception by executing request: " + request.getQuery() + " ; "
                     + e.getLocalizedMessage());
@@ -114,7 +155,7 @@ public class SiemensHvacConnectorImpl implements SiemensHvacConnector {
         logger.debug("siemensHvac:doAuth:connect()");
 
         try {
-            ContentResponse response = executeRequest(request);
+            ContentResponse response = executeRequest(request, null);
             int statusCode = response.getStatus();
 
             logger.debug("siemensHvac:doAuth:Endresponse:()" + statusCode);
@@ -137,7 +178,7 @@ public class SiemensHvacConnectorImpl implements SiemensHvacConnector {
 
                                 if (resultObj.has("SessionId")) {
                                     sessionId = resultObj.get("SessionId").getAsString();
-                                    logger.debug("p2");
+                                    logger.debug("Have new SessionId : " + sessionId);
                                 }
 
                             }
@@ -163,6 +204,14 @@ public class SiemensHvacConnectorImpl implements SiemensHvacConnector {
     }
 
     public @Nullable String DoBasicRequest(@Nullable String uri) {
+        return DoBasicRequest(uri, null);
+    }
+
+    public @Nullable String DoBasicRequestAsync(@Nullable String uri, @Nullable SiemensHvacCallback callback) {
+        return DoBasicRequest(uri, callback);
+    }
+
+    public @Nullable String DoBasicRequest(@Nullable String uri, @Nullable SiemensHvacCallback callback) {
         if (sessionId == null) {
             _doAuth();
         }
@@ -180,13 +229,15 @@ public class SiemensHvacConnectorImpl implements SiemensHvacConnector {
 
             logger.debug("siemensHvac:DoBasicRequest()" + request);
 
-            ContentResponse response = executeRequest(request);
-            int statusCode = response.getStatus();
+            ContentResponse response = executeRequest(request, callback);
+            if (callback == null) {
+                int statusCode = response.getStatus();
 
-            if (statusCode == HttpStatus.OK_200) {
-                String result = response.getContentAsString();
+                if (statusCode == HttpStatus.OK_200) {
+                    String result = response.getContentAsString();
 
-                return result;
+                    return result;
+                }
             }
         } catch (Exception ex) {
             logger.error(
@@ -198,9 +249,9 @@ public class SiemensHvacConnectorImpl implements SiemensHvacConnector {
     }
 
     @Override
-    public @Nullable JsonObject DoRequest(@Nullable String req) {
+    public @Nullable JsonObject DoRequest(@Nullable String req, @Nullable SiemensHvacCallback callback) {
         try {
-            String response = DoBasicRequest(req);
+            String response = DoBasicRequest(req, callback);
 
             if (response != null) {
                 // logger.debug("siemensHvacDoRequest:responseSt:" + response);
@@ -230,7 +281,42 @@ public class SiemensHvacConnectorImpl implements SiemensHvacConnector {
     }
 
     @Override
-    public Gson getGson() {
+    public void WaitAllPendingRequest() {
+        logger.debug("WaitAllPendingRequest:start");
+        try {
+            logger.debug("WaitAllPendingRequest:start Initial Sleep");
+            Thread.sleep(1000);
+            logger.debug("WaitAllPendingRequest:end Initial Sleep");
+
+            logger.debug("WaitAllPendingRequest:start Wait Request");
+            boolean allRequestDone = false;
+
+            while (!allRequestDone) {
+                int idx = 0;
+
+                allRequestDone = true;
+                while (idx < 5 && allRequestDone) {
+                    logger.debug("WaitAllPendingRequest:waitAllRequestDone " + idx + " " + startedRequest + "/"
+                            + completedRequest);
+                    if (startedRequest != completedRequest) {
+                        allRequestDone = false;
+                    }
+                    Thread.sleep(1000);
+                    idx++;
+                }
+            }
+
+            logger.debug("WaitAllPendingRequest:end Wait");
+
+        } catch (InterruptedException ex) {
+            logger.debug("WaitAllPendingRequest:interrupted in WaitAllRequest");
+        }
+
+        logger.debug("WaitAllPendingRequest:end Wait");
+        logger.debug("WaitAllPendingRequest:end WaitAllPendingRequest");
+    }
+
+    public static Gson getGson() {
         // RuntimeTypeAdapterFactory<siemensMetadata> adapter = RuntimeTypeAdapterFactory.of(siemensMetadata.class);
 
         // adapter.registerSubtype(siemensMetadataMenu.class);

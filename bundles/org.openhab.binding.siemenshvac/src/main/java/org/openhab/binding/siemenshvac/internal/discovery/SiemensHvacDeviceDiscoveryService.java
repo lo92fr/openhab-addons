@@ -82,13 +82,11 @@ public class SiemensHvacDeviceDiscoveryService extends AbstractDiscoveryService
 
     @Override
     protected void startBackgroundDiscovery() {
-        logger.debug("p1");
     }
 
     @Override
     protected void stopBackgroundDiscovery() {
         // can be overridden
-        logger.debug("p1");
     }
 
     private @Nullable ThingUID getThingUID() {
@@ -113,7 +111,7 @@ public class SiemensHvacDeviceDiscoveryService extends AbstractDiscoveryService
 
     @Override
     public void startScan() {
-        logger.debug("p1");
+        logger.debug("call startScan()");
 
         final SiemensHvacBridgeBaseThingHandler handler = siemensHvacBridgeHandler;
 
@@ -178,7 +176,6 @@ public class SiemensHvacDeviceDiscoveryService extends AbstractDiscoveryService
 
     @Override
     public void deactivate() {
-        logger.debug("p1");
         /*
          * removeOlderResults(new Date().getTime(), bridgeUID);
          * final HueBridgeHandler handler = hueBridgeHandler;

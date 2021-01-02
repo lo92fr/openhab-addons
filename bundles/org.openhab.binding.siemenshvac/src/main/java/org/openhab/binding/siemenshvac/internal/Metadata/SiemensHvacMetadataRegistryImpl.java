@@ -17,7 +17,9 @@ import org.apache.commons.io.IOUtils;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.siemenshvac.internal.constants.SiemensHvacBindingConstants;
+import org.openhab.binding.siemenshvac.internal.network.SiemensHvacCallback;
 import org.openhab.binding.siemenshvac.internal.network.SiemensHvacConnector;
+import org.openhab.binding.siemenshvac.internal.network.SiemensHvacConnectorImpl;
 import org.openhab.binding.siemenshvac.internal.type.SiemensHvacChannelGroupTypeProvider;
 import org.openhab.binding.siemenshvac.internal.type.SiemensHvacChannelTypeProvider;
 import org.openhab.binding.siemenshvac.internal.type.SiemensHvacConfigDescriptionProvider;
@@ -149,7 +151,6 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
             }
         }
 
-        // ((DataPointInformation) childNode).resolveDptDetails();
         if (node != null) {
             if (node.getLongDesc() != null) {
                 dptMap.put("byName" + node.getLongDesc(), node);
@@ -173,6 +174,8 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
 
     @Override
     public void ReadMeta() {
+        root = null;
+
         if (root == null) {
             logger.debug("siemensHvac:InitDptMap():begin");
 
@@ -183,21 +186,37 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
                 ReadMetaData(root, -1);
             }
 
+            hvacConnector.WaitAllPendingRequest();
             dptMap = new Hashtable<String, SiemensHvacMetadata>();
             InitDptMap(root);
             SaveMetaDataToCache();
             logger.debug("siemensHvac:InitDptMap():end");
         }
 
-        test();
+        SiemensHvacMetadataMenu rootMenu = getRoot();
+        for (SiemensHvacMetadata child : rootMenu.getChilds().values()) {
+            if (child.getLongDesc().indexOf("OZW672") >= 0) {
+                continue;
+            }
+
+            if (child instanceof SiemensHvacMetadataMenu) {
+                addThing((SiemensHvacMetadataMenu) child);
+            }
+        }
     }
 
-    private void test() {
+    private void addThing(SiemensHvacMetadataMenu meta) {
         if (thingTypeProvider != null) {
             ThingTypeUID thingTypeUID = UidUtils.generateThingTypeUID("");
             ThingType tt = thingTypeProvider.getInternalThingType(thingTypeUID);
 
             if (tt == null) {
+
+                int catId = meta.getCatId();
+                int groupId = meta.getGroupId();
+                int menuId = meta.getMenuId();
+                String shortDesc = meta.getShortDesc();
+                String longDesc = meta.getLongDesc();
 
                 List<ChannelGroupType> groupTypes = new ArrayList<>();
                 for (int i = 0; i < 3; i++) {
@@ -382,8 +401,15 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
                 request = request + "&Id=" + id;
             }
 
-            SiemensHvacMetadata childNode;
-            JsonObject resultObj = hvacConnector.DoRequest(request);
+            hvacConnector.DoRequest(request, new SiemensHvacCallback() {
+
+                @Override
+                public void execute(URI uri, int status, @Nullable Object response) {
+                    if (response instanceof JsonObject) {
+                        DecodeMetaDataResult((JsonObject) response, parent, id);
+                    }
+                }
+            });
             /*
              * String html = cnx.DoBasicRequest("main.app?section=popcard&idtype=4&id=" + id);
              * Pattern pattern = Pattern.compile("td class=\"dp_linenumber\".?>(.?)</td>.?id=\"dp(.?)\"");
@@ -399,75 +425,176 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
              * }
              */
 
-            if (resultObj.has("MenuItems")) {
-                JsonArray menuItems = resultObj.getAsJsonArray("MenuItems");
-
-                for (JsonElement child : menuItems) {
-                    JsonObject menuItem = child.getAsJsonObject();
-
-                    if (menuItem == null) {
-                        continue;
-                    }
-
-                    childNode = new SiemensHvacMetadataMenu();
-                    childNode.setParent(parent);
-
-                    int itemId = -1;
-                    if (menuItem.has("Id")) {
-                        itemId = menuItem.get("Id").getAsInt();
-                    }
-
-                    if (menuItem.has("Text")) {
-                        JsonObject descObj = menuItem.getAsJsonObject("Text");
-
-                        int catId = -1;
-                        int groupId = -1;
-                        int subItemId = -1;
-                        String longDesc = "";
-                        String shortDesc = "";
-
-                        if (descObj.has("CatId")) {
-                            catId = descObj.get("CatId").getAsInt();
-                        }
-                        if (descObj.has("GroupId")) {
-                            groupId = descObj.get("GroupId").getAsInt();
-                        }
-                        if (descObj.has("Id")) {
-                            subItemId = descObj.get("Id").getAsInt();
-                        }
-                        if (descObj.has("Long")) {
-                            longDesc = descObj.get("Long").getAsString();
-                        }
-                        if (descObj.has("Short")) {
-                            shortDesc = descObj.get("Short").getAsString();
-                        }
-
-                        childNode.setMenuId(subItemId);
-                        childNode.setCatId(catId);
-                        childNode.setGroupId(groupId);
-                        childNode.setShortDesc(shortDesc);
-                        childNode.setLongDesc(longDesc);
-                        ((SiemensHvacMetadataMenu) parent).AddChild(childNode);
-
-                    }
-                }
-            }
-            if (resultObj.has("DatapointItems")) {
-                // JSONArray dpItems = (JSONArray) result.get("DatapointItems");
-
-                logger.debug("p1");
-
-            }
-            if (resultObj.has("WidgetItems")) {
-                logger.debug("p2");
-                // JSONArray wgItems = (JSONArray) result.get("WidgetItems");
-            }
-
-            logger.debug("p3");
-
         } catch (Exception e) {
             logger.error("siemensHvac:ResolveDpt:Error during dp reading: " + id + " ; " + e.getLocalizedMessage());
             // Reset sessionId so we redone _auth on error
+        }
+
+    }
+
+    private static int nbDpt = 0;
+
+    public void DecodeMetaDataResult(JsonObject resultObj, SiemensHvacMetadata parent, int id) {
+        if (resultObj.has("MenuItems")) {
+            if (parent != null) {
+                logger.debug("Decode menuItem for :" + parent.getShortDesc());
+            } else {
+                logger.debug("Decode menuItem for root");
+            }
+
+            SiemensHvacMetadata childNode;
+            JsonArray menuItems = resultObj.getAsJsonArray("MenuItems");
+
+            for (JsonElement child : menuItems) {
+                JsonObject menuItem = child.getAsJsonObject();
+
+                if (menuItem == null) {
+                    continue;
+                }
+
+                childNode = new SiemensHvacMetadataMenu();
+                childNode.setParent(parent);
+
+                int itemId = -1;
+                if (menuItem.has("Id")) {
+                    itemId = menuItem.get("Id").getAsInt();
+                }
+
+                if (menuItem.has("Text")) {
+                    JsonObject descObj = menuItem.getAsJsonObject("Text");
+
+                    int catId = -1;
+                    int groupId = -1;
+                    int subItemId = -1;
+                    String longDesc = "";
+                    String shortDesc = "";
+
+                    if (descObj.has("CatId")) {
+                        catId = descObj.get("CatId").getAsInt();
+                    }
+                    if (descObj.has("GroupId")) {
+                        groupId = descObj.get("GroupId").getAsInt();
+                    }
+                    if (descObj.has("Id")) {
+                        subItemId = descObj.get("Id").getAsInt();
+                    }
+                    if (descObj.has("Long")) {
+                        longDesc = descObj.get("Long").getAsString();
+                    }
+                    if (descObj.has("Short")) {
+                        shortDesc = descObj.get("Short").getAsString();
+                    }
+
+                    childNode.setMenuId(subItemId);
+                    childNode.setCatId(catId);
+                    childNode.setGroupId(groupId);
+                    childNode.setShortDesc(shortDesc);
+                    childNode.setLongDesc(longDesc);
+                    ((SiemensHvacMetadataMenu) parent).AddChild(childNode);
+
+                    // logger.debug(String.format("siemensHvac:ResolveDpt():findMenuItem: %d, %s, %s, %s, %s", itemId,
+                    // subItemId, groupId, catId, longDesc));
+
+                    if (itemId == 931 || itemId == 932 || itemId == 992 || itemId == 1505) {
+
+                        ReadMetaData(childNode, itemId);
+                    }
+
+                }
+            }
+        }
+        if (resultObj.has("DatapointItems")) {
+            if (parent != null) {
+                logger.debug("Decode dp for :" + parent.getShortDesc());
+            } else {
+                logger.debug("Decode dp for root");
+            }
+
+            SiemensHvacMetadata childNode;
+            JsonArray dptItems = resultObj.getAsJsonArray("DatapointItems");
+
+            for (JsonElement child : dptItems) {
+                JsonObject dptItem = child.getAsJsonObject();
+
+                if (dptItem == null) {
+                    continue;
+                }
+
+                nbDpt++;
+                logger.debug("dpt1:" + nbDpt);
+
+                childNode = new SiemensHvacMetadataDataPoint();
+                childNode.setParent(parent);
+
+                int dptId = -1;
+                int dpSubKey = -1;
+                boolean hasWriteAccess = false;
+                String address = "";
+
+                if (dptItem.has("Id")) {
+                    dptId = dptItem.get("Id").getAsInt();
+                }
+                if (dptItem.has("Address")) {
+                    address = dptItem.get("Address").getAsString();
+                }
+                if (dptItem.has("DpSubKey")) {
+                    dpSubKey = dptItem.get("DpSubKey").getAsInt();
+                }
+                if (dptItem.has("WriteAccess")) {
+                    hasWriteAccess = dptItem.get("WriteAccess").getAsBoolean();
+                }
+
+                SiemensHvacMetadataDataPoint dptChild = (SiemensHvacMetadataDataPoint) childNode;
+
+                dptChild.setDptId(dptId);
+                dptChild.setAddress(address);
+                dptChild.setDptSubKey(dpSubKey);
+                dptChild.setWriteAccess(hasWriteAccess);
+
+                if (dptItem.has("Text")) {
+                    JsonObject descObj = dptItem.getAsJsonObject("Text");
+
+                    int catId = -1;
+                    int groupId = -1;
+                    int subItemId = -1;
+                    String longDesc = "";
+                    String shortDesc = "";
+
+                    if (descObj.has("CatId")) {
+                        catId = descObj.get("CatId").getAsInt();
+                    }
+                    if (descObj.has("GroupId")) {
+                        groupId = descObj.get("GroupId").getAsInt();
+                    }
+                    if (descObj.has("Id")) {
+                        subItemId = descObj.get("Id").getAsInt();
+                    }
+                    if (descObj.has("Long")) {
+                        longDesc = descObj.get("Long").getAsString();
+                    }
+                    if (descObj.has("Short")) {
+                        shortDesc = descObj.get("Short").getAsString();
+                    }
+
+                    childNode.setMenuId(subItemId);
+                    childNode.setCatId(catId);
+                    childNode.setGroupId(groupId);
+                    childNode.setShortDesc(shortDesc);
+                    childNode.setLongDesc(longDesc);
+
+                    // logger.debug(String.format("siemensHvac:ResolveDpt():findDpItem: %d, %s, %s, %s, %s %s", dptId,
+                    // catId, groupId, subItemId, shortDesc, longDesc));
+                }
+
+                resolveDptDetails(dptChild);
+
+                ((SiemensHvacMetadataMenu) parent).AddChild(childNode);
+
+            }
+
+        }
+        if (resultObj.has("WidgetItems")) {
+            // JSONArray wgItems = (JSONArray) result.get("WidgetItems");
         }
 
     }
@@ -535,7 +662,7 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
             FileInputStream is = new FileInputStream(file);
             String js = IOUtils.toString(is);
 
-            root = hvacConnector.getGson().fromJson(js, SiemensHvacMetadataMenu.class);
+            root = SiemensHvacConnectorImpl.getGson().fromJson(js, SiemensHvacMetadataMenu.class);
         } catch (IOException ioe) {
             logger.error("Couldn't write WithingsAccount to file '{}'.", file.getAbsolutePath());
 
@@ -556,7 +683,7 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
 
             FileOutputStream os = new FileOutputStream(file);
 
-            String js = hvacConnector.getGson().toJson(root);
+            String js = SiemensHvacConnectorImpl.getGson().toJson(root);
 
             IOUtils.write(js, os);
             IOUtils.closeQuietly(os);
@@ -567,16 +694,32 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
         }
     }
 
-    /*
-     * public void resolveDptDetails(siemensMetadataDataPoint dpt) {
-     * if (dpt.getDetailsResolved()) {
-     * return;
-     * }
-     *
-     * String request = "api/menutree/datapoint_desc.json?Id=" + dpt.getDptId();
-     * JSONObject result = cnx.DoRequest(request);
-     * dpt.resolveDptDetails(result);
-     * }
-     */
+    public static int nbDptRq = 0;
+    public static int nbDptRs = 0;
+
+    public void resolveDptDetails(SiemensHvacMetadataDataPoint dpt) {
+        if (dpt.getDetailsResolved()) {
+            return;
+        }
+
+        String request = "api/menutree/datapoint_desc.json?Id=" + dpt.getDptId();
+        nbDptRq++;
+        logger.debug("dpt21:" + nbDptRq);
+        hvacConnector.DoRequest(request, new SiemensHvacCallback() {
+
+            @Override
+            public void execute(URI uri, int status, @Nullable Object response) {
+                if (response instanceof JsonObject) {
+                    dpt.resolveDptDetails((JsonObject) response);
+                    nbDptRs++;
+                    logger.debug("dpt22:" + nbDptRs);
+                } else {
+                    logger.debug("errror");
+                }
+            }
+        });
+    }
 
 }
+
+// https://stackoverflow.com/questions/5737923/how-do-i-limit-the-number-of-connections-jetty-will-accept

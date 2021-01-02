@@ -1,6 +1,10 @@
 package org.openhab.binding.siemenshvac.internal.Metadata;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 public class SiemensHvacMetadataDataPoint extends SiemensHvacMetadata {
     private int dptId = -1;
@@ -14,6 +18,9 @@ public class SiemensHvacMetadataDataPoint extends SiemensHvacMetadata {
     private Boolean detailsResolved = false;
     private String dialogType = null;
     private String maxLength = null;
+    private String address = null;
+    private int dptSubKey = -1;
+    private boolean writeAccess = false;
     private List<SiemensHvacMetadataPointChild> child = null;
 
     public String getDptType() {
@@ -38,6 +45,30 @@ public class SiemensHvacMetadataDataPoint extends SiemensHvacMetadata {
 
     public void setDptId(int dptId) {
         this.dptId = dptId;
+    }
+
+    public int getDptSubKey() {
+        return dptSubKey;
+    }
+
+    public void setDptSubKey(int dptSubKey) {
+        this.dptSubKey = dptSubKey;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setWriteAccess(boolean writeAccess) {
+        this.writeAccess = writeAccess;
+    }
+
+    public boolean getWriteAccess() {
+        return writeAccess;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 
     public String getDptUnit() {
@@ -112,72 +143,71 @@ public class SiemensHvacMetadataDataPoint extends SiemensHvacMetadata {
         this.detailsResolved = detailsResolved;
     }
 
-    /*
-     * public void resolveDptDetails(JSONObject result) {
-     * if (result == null) {
-     * return;
-     * }
-     */
-    /*
-     * JSONObject desc = (JSONObject) result.get("Description");
-     *
-     * if (desc != null) {
-     * this.dptType = (String) desc.get("Type");
-     *
-     * if (dptType.equals("Enumeration")) {
-     * JSONArray enums = (JSONArray) desc.get("Enums");
-     * child = new ArrayList<siemensMetadataPointChild>();
-     *
-     * for (Object obj : enums) {
-     * JSONObject entry = (JSONObject) obj;
-     *
-     * siemensMetadataPointChild ch = new siemensMetadataPointChild();
-     * ch.setText((String) entry.get("Text"));
-     * ch.setValue((String) entry.get("Value"));
-     * ch.setIsActive((String) entry.get("IsCurrentValue"));
-     * child.add(ch);
-     * }
-     * } else if (dptType.equals("Numeric")) {
-     * this.dptUnit = (String) desc.get("Unit");
-     * this.min = (String) desc.get("Min");
-     * this.max = (String) desc.get("Max");
-     * this.resolution = (String) desc.get("Resolution");
-     * this.fieldWitdh = (String) desc.get("FieldWitdh");
-     * this.decimalDigits = (String) desc.get("DecimalDigits");
-     * } else if (dptType.equals("String")) {
-     *
-     * this.dialogType = (String) desc.get("DialogType");
-     * this.maxLength = (String) desc.get("MaxLength");
-     * } else if (dptType.equals("RadioButton")) {
-     * JSONArray buttons = (JSONArray) desc.get("Buttons");
-     *
-     * child = new ArrayList<siemensMetadataPointChild>();
-     *
-     * for (Object obj : buttons) {
-     * JSONObject button = (JSONObject) obj;
-     *
-     * siemensMetadataPointChild ch = new siemensMetadataPointChild();
-     * ch.setOpt0((String) button.get("TextOpt0"));
-     * ch.setOpt1((String) button.get("TextOpt1"));
-     * ch.setIsActive((String) button.get("IsActive"));
-     * child.add(ch);
-     *
-     * String signifiance = (String) button.get("Significance");
-     * }
-     * } else if (dptType.equals("DateTime")) {
-     * System.out.println("");
-     * } else if (dptType.equals("TimeOfDay")) {
-     * System.out.println("");
-     * } else if (dptType.equals("Scheduler")) {
-     * System.out.println("");
-     * } else if (dptType.equals("Calendar")) {
-     * System.out.println("");
-     * } else {
-     * System.out.println("");
-     * }
-     * detailsResolved = true;
-     * }
-     */
-    // }
+    public void resolveDptDetails(JsonObject result) {
+        if (result == null) {
+            return;
+        }
+
+        JsonObject desc = result.getAsJsonObject("Description");
+
+        if (desc != null) {
+            this.dptType = desc.get("Type").getAsString();
+
+            if (dptType.equals("Enumeration")) {
+
+                JsonArray enums = desc.getAsJsonArray("Enums");
+                child = new ArrayList<SiemensHvacMetadataPointChild>();
+
+                for (Object obj : enums) {
+                    JsonObject entry = (JsonObject) obj;
+
+                    SiemensHvacMetadataPointChild ch = new SiemensHvacMetadataPointChild();
+                    ch.setText(entry.get("Text").getAsString());
+                    ch.setValue(entry.get("Value").getAsString());
+                    ch.setIsActive(entry.get("IsCurrentValue").getAsString());
+                    child.add(ch);
+                }
+            } else if (dptType.equals("Numeric")) {
+                this.dptUnit = desc.get("Unit").getAsString();
+                this.min = desc.get("Min").getAsString();
+                this.max = desc.get("Max").getAsString();
+                this.resolution = desc.get("Resolution").getAsString();
+                this.fieldWitdh = desc.get("FieldWitdh").getAsString();
+                this.decimalDigits = desc.get("DecimalDigits").getAsString();
+            } else if (dptType.equals("String")) {
+
+                this.dialogType = desc.get("DialogType").getAsString();
+                this.maxLength = desc.get("MaxLength").getAsString();
+            } else if (dptType.equals("RadioButton")) {
+                JsonArray buttons = desc.getAsJsonArray("Buttons");
+
+                child = new ArrayList<SiemensHvacMetadataPointChild>();
+
+                for (Object obj : buttons) {
+                    JsonObject button = (JsonObject) obj;
+
+                    SiemensHvacMetadataPointChild ch = new SiemensHvacMetadataPointChild();
+                    ch.setOpt0(button.get("TextOpt0").getAsString());
+                    ch.setOpt1(button.get("TextOpt1").getAsString());
+                    ch.setIsActive(button.get("IsActive").getAsString());
+                    child.add(ch);
+
+                    String signifiance = button.get("Significance").getAsString();
+                }
+            } else if (dptType.equals("DateTime")) {
+                System.out.println("");
+            } else if (dptType.equals("TimeOfDay")) {
+                System.out.println("");
+            } else if (dptType.equals("Scheduler")) {
+                System.out.println("");
+            } else if (dptType.equals("Calendar")) {
+                System.out.println("");
+            } else {
+                System.out.println("");
+            }
+            detailsResolved = true;
+        }
+
+    }
 
 }

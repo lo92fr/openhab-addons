@@ -68,10 +68,6 @@ public class SiemensHvacHandlerFactory extends BaseThingHandlerFactory {
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
         boolean result = SUPPORTED_THING_TYPES_UIDS.contains(thingTypeUID);
-
-        if (result) {
-            logger.debug("p1");
-        }
         return result;
     }
 

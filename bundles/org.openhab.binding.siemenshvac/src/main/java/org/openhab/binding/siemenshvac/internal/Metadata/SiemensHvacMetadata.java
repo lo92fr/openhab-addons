@@ -31,7 +31,7 @@ public class SiemensHvacMetadata {
         return catId;
     }
 
-    public void setCatId(int groupId) {
+    public void setCatId(int catId) {
         this.catId = catId;
     }
 
