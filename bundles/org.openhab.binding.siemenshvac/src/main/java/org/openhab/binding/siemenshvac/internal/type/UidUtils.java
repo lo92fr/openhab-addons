@@ -12,6 +12,7 @@
  */
 package org.openhab.binding.siemenshvac.internal.type;
 
+import org.openhab.binding.siemenshvac.internal.Metadata.SiemensHvacMetadataDevice;
 import org.openhab.binding.siemenshvac.internal.constants.SiemensHvacBindingConstants;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.ChannelUID;
@@ -31,12 +32,15 @@ public class UidUtils {
      * Generates the ThingTypeUID for the given device. If it's a Homegear device, add a prefix because a Homegear
      * device has more datapoints.
      */
+    public static ThingTypeUID generateThingTypeUID(SiemensHvacMetadataDevice device) {
+        String type = device.getType();
+        type = type.replace(".", "_");
+        type = type.replace("/", "_");
+        return new ThingTypeUID(SiemensHvacBindingConstants.BINDING_ID, type);
+    }
+
     public static ThingTypeUID generateThingTypeUID(String name) {
-        // if (!device.isGatewayExtras() && device.getGatewayId().equals(HmGatewayInfo.ID_HOMEGEAR)) {
-        // return new ThingTypeUID(SiemensHvacBindingConstants.BINDING_ID, "String.format("HG-%s", device.getType())");
-        // } else {
-        return new ThingTypeUID(SiemensHvacBindingConstants.BINDING_ID, "deviceType");
-        // }
+        return new ThingTypeUID(SiemensHvacBindingConstants.BINDING_ID, name);
     }
 
     /**

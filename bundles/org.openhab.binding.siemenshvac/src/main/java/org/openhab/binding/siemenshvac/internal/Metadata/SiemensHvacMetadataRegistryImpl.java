@@ -197,30 +197,21 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
         }
 
         SiemensHvacMetadataMenu rootMenu = getRoot();
-        for (SiemensHvacMetadata child : rootMenu.getChilds().values()) {
-            if (child.getLongDesc().indexOf("OZW672") >= 0) {
+        for (SiemensHvacMetadataDevice device : devices) {
+            if (device.getType().indexOf("OZW672") >= 0) {
                 continue;
             }
 
-            if (child instanceof SiemensHvacMetadataMenu) {
-                addThing((SiemensHvacMetadataMenu) child);
-            }
+            addThing(device);
         }
     }
 
-    private void addThing(SiemensHvacMetadataMenu meta) {
+    private void addThing(SiemensHvacMetadataDevice device) {
         if (thingTypeProvider != null) {
-            ThingTypeUID thingTypeUID = UidUtils.generateThingTypeUID("");
+            ThingTypeUID thingTypeUID = UidUtils.generateThingTypeUID(device);
             ThingType tt = thingTypeProvider.getInternalThingType(thingTypeUID);
 
             if (tt == null) {
-
-                int catId = meta.getCatId();
-                int groupId = meta.getGroupId();
-                int menuId = meta.getMenuId();
-                String shortDesc = meta.getShortDesc();
-                String longDesc = meta.getLongDesc();
-
                 List<ChannelGroupType> groupTypes = new ArrayList<>();
                 for (int i = 0; i < 3; i++) {
                     List<ChannelDefinition> channelDefinitions = new ArrayList<>();
@@ -250,7 +241,7 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
                     }
                 }
 
-                tt = createThingType("name", groupTypes);
+                tt = createThingType(device, groupTypes);
                 thingTypeProvider.addThingType(tt);
             }
         }
@@ -325,19 +316,19 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
     /**
      * Creates the ThingType for the given device.
      */
-    private ThingType createThingType(String name, List<ChannelGroupType> groupTypes) {
-        String label = "label" + name;
-        String description = String.format("%s (%s)", label, "dType");
+    private ThingType createThingType(SiemensHvacMetadataDevice device, List<ChannelGroupType> groupTypes) {
+        String name = device.getName();
+        String description = device.getName();
 
         List<String> supportedBridgeTypeUids = new ArrayList<>();
         supportedBridgeTypeUids.add(SiemensHvacBindingConstants.THING_TYPE_OZW672.toString());
-        ThingTypeUID thingTypeUID = UidUtils.generateThingTypeUID(name);
+        ThingTypeUID thingTypeUID = UidUtils.generateThingTypeUID(device);
 
         Map<String, String> properties = new HashMap<>();
         properties.put(Thing.PROPERTY_VENDOR, SiemensHvacBindingConstants.PROPERTY_VENDOR_NAME);
-        properties.put(Thing.PROPERTY_MODEL_ID, "dType");
+        properties.put(Thing.PROPERTY_MODEL_ID, device.getType());
 
-        URI configDescriptionURI = getConfigDescriptionURI(name);
+        URI configDescriptionURI = getConfigDescriptionURI(device);
         if (configDescriptionProvider.getInternalConfigDescription(configDescriptionURI) == null) {
             generateConfigDescription(name, configDescriptionURI);
         }
@@ -348,18 +339,18 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
             groupDefinitions.add(new ChannelGroupDefinition(id, groupType.getUID()));
         }
 
-        return ThingTypeBuilder.instance(thingTypeUID, label).withSupportedBridgeTypeUIDs(supportedBridgeTypeUids)
+        return ThingTypeBuilder.instance(thingTypeUID, name).withSupportedBridgeTypeUIDs(supportedBridgeTypeUids)
                 .withDescription(description).withChannelGroupDefinitions(groupDefinitions).withProperties(properties)
                 .withRepresentationProperty(Thing.PROPERTY_SERIAL_NUMBER).withConfigDescriptionURI(configDescriptionURI)
                 .build();
     }
 
-    private URI getConfigDescriptionURI(String name) {
+    private URI getConfigDescriptionURI(SiemensHvacMetadataDevice device) {
         try {
             return new URI(String.format("%s:%s", SiemensHvacBindingConstants.CONFIG_DESCRIPTION_URI_THING_PREFIX,
-                    UidUtils.generateThingTypeUID(name)));
+                    UidUtils.generateThingTypeUID(device)));
         } catch (URISyntaxException ex) {
-            logger.warn("Can't create configDescriptionURI for device type {}", name);
+            logger.warn("Can't create configDescriptionURI for device type {}", device.getName());
             throw new RuntimeException("can't construct URI");
         }
     }
