@@ -31,7 +31,6 @@ import org.openhab.core.config.core.ConfigDescriptionParameter.Type;
 import org.openhab.core.config.core.ConfigDescriptionParameterBuilder;
 import org.openhab.core.config.core.ConfigDescriptionParameterGroup;
 import org.openhab.core.config.core.ConfigDescriptionParameterGroupBuilder;
-import org.openhab.core.thing.DefaultSystemChannelTypeProvider;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingTypeUID;
 import org.openhab.core.thing.type.ChannelDefinition;
@@ -45,8 +44,8 @@ import org.openhab.core.thing.type.ChannelTypeBuilder;
 import org.openhab.core.thing.type.ChannelTypeUID;
 import org.openhab.core.thing.type.ThingType;
 import org.openhab.core.thing.type.ThingTypeBuilder;
-import org.openhab.core.types.EventDescription;
 import org.openhab.core.types.StateDescriptionFragmentBuilder;
+import org.openhab.core.types.StateOption;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -161,6 +160,7 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
             }
         }
 
+        dptMap.put("byId" + node.getId(), node);
         dptMap.put("byMenu" + node.getMenuId(), node);
         if (node.getClass() == SiemensHvacMetadataDataPoint.class) {
             SiemensHvacMetadataDataPoint dpi = (SiemensHvacMetadataDataPoint) node;
@@ -202,43 +202,76 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
                 continue;
             }
 
-            addThing(device);
+            generateThingsType(device);
         }
+
+        logger.info("end configuration");
     }
 
-    private void addThing(SiemensHvacMetadataDevice device) {
+    private void generateThingsType(SiemensHvacMetadataDevice device) {
         if (thingTypeProvider != null) {
             ThingTypeUID thingTypeUID = UidUtils.generateThingTypeUID(device);
             ThingType tt = thingTypeProvider.getInternalThingType(thingTypeUID);
 
             if (tt == null) {
+
                 List<ChannelGroupType> groupTypes = new ArrayList<>();
-                for (int i = 0; i < 3; i++) {
-                    List<ChannelDefinition> channelDefinitions = new ArrayList<>();
 
-                    ChannelTypeUID channelTypeUID = UidUtils.generateChannelTypeUID(i);
+                int treeId = device.getTreeId();
+                if (dptMap.containsKey("byMenu" + treeId)) {
+                    SiemensHvacMetadataMenu menu = (SiemensHvacMetadataMenu) dptMap.get("byMenu" + treeId);
 
-                    ChannelType channelType = channelTypeProvider.getInternalChannelType(channelTypeUID);
-                    if (channelType == null) {
-                        channelType = createChannelType("dp" + i, channelTypeUID);
-                        channelTypeProvider.addChannelType(channelType);
+                    for (SiemensHvacMetadata child : menu.getChilds().values()) {
+
+                        if (child instanceof SiemensHvacMetadataMenu) {
+                            SiemensHvacMetadataMenu subMenu = (SiemensHvacMetadataMenu) child;
+
+                            List<ChannelDefinition> channelDefinitions = new ArrayList<>();
+
+                            for (SiemensHvacMetadata childDt : subMenu.getChilds().values()) {
+
+                                if (childDt instanceof SiemensHvacMetadataDataPoint) {
+                                    SiemensHvacMetadataDataPoint dataPoint = (SiemensHvacMetadataDataPoint) childDt;
+
+                                    ChannelTypeUID channelTypeUID = UidUtils.generateChannelTypeUID(dataPoint);
+
+                                    ChannelType channelType = channelTypeProvider
+                                            .getInternalChannelType(channelTypeUID);
+                                    if (channelType == null) {
+                                        channelType = createChannelType(dataPoint, channelTypeUID);
+                                        channelTypeProvider.addChannelType(channelType);
+                                    }
+
+                                    Map<String, String> props = new Hashtable<String, String>();
+                                    props.put("test", "test");
+
+                                    ChannelDefinition channelDef = new ChannelDefinitionBuilder(
+                                            dataPoint.getShortDesc(), channelType.getUID())
+                                                    .withLabel(dataPoint.getShortDesc())
+                                                    .withDescription(dataPoint.getLongDesc()).withProperties(props)
+                                                    .build();
+
+                                    channelDefinitions.add(channelDef);
+                                }
+                            }
+
+                            // generate group
+                            ChannelGroupTypeUID groupTypeUID = UidUtils.generateChannelGroupTypeUID(subMenu);
+                            ChannelGroupType groupType = channelGroupTypeProvider
+                                    .getInternalChannelGroupType(groupTypeUID);
+
+                            if (groupType == null) {
+                                String groupLabel = subMenu.getShortDesc();
+                                groupType = ChannelGroupTypeBuilder.instance(groupTypeUID, groupLabel)
+                                        .withChannelDefinitions(channelDefinitions).withCategory("")
+                                        .withDescription(menu.getLongDesc()).build();
+                                channelGroupTypeProvider.addChannelGroupType(groupType);
+                                groupTypes.add(groupType);
+                            }
+
+                        }
                     }
 
-                    ChannelDefinition channelDef = new ChannelDefinitionBuilder("name" + i, channelType.getUID())
-                            .build();
-                    channelDefinitions.add(channelDef);
-
-                    // generate group
-                    ChannelGroupTypeUID groupTypeUID = UidUtils.generateChannelGroupTypeUID(i);
-                    ChannelGroupType groupType = channelGroupTypeProvider.getInternalChannelGroupType(groupTypeUID);
-
-                    if (groupType == null) {
-                        String groupLabel = "groupLabel" + i;
-                        groupType = ChannelGroupTypeBuilder.instance(groupTypeUID, groupLabel)
-                                .withChannelDefinitions(channelDefinitions).build();
-                        channelGroupTypeProvider.addChannelGroupType(groupType);
-                        groupTypes.add(groupType);
-                    }
                 }
 
                 tt = createThingType(device, groupTypes);
@@ -247,70 +280,45 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
         }
     }
 
-    private ChannelType createChannelType(String name, ChannelTypeUID channelTypeUID) {
+    private ChannelType createChannelType(SiemensHvacMetadataDataPoint dpt, ChannelTypeUID channelTypeUID) {
         ChannelType channelType;
-        if (name.equals(SiemensHvacBindingConstants.DATAPOINT_NAME_LOWBAT)
-                || name.equals(SiemensHvacBindingConstants.DATAPOINT_NAME_LOWBAT_IP)) {
-            channelType = DefaultSystemChannelTypeProvider.SYSTEM_CHANNEL_LOW_BATTERY;
-        } else if (name.equals(SiemensHvacBindingConstants.VIRTUAL_DATAPOINT_NAME_SIGNAL_STRENGTH)) {
-            channelType = DefaultSystemChannelTypeProvider.SYSTEM_CHANNEL_SIGNAL_STRENGTH;
-        } else if (name.equals(SiemensHvacBindingConstants.VIRTUAL_DATAPOINT_NAME_BUTTON)) {
-            channelType = DefaultSystemChannelTypeProvider.SYSTEM_BUTTON;
-        } else {
-            String itemType = SiemensHvacBindingConstants.ITEM_TYPE_CONTACT;
-            // MetadataUtils.getItemType(dp);
-            String category = SiemensHvacBindingConstants.CATEGORY_TEMPERATURE;
-            // MetadataUtils.getCategory(dp, itemType);
-            String label = name;
-            // MetadataUtils.getLabel(dp);
-            String description = "desc" + name;
-            // MetadataUtils.getDatapointDescription(dp);
 
-            /*
-             * List<StateOption> options = null;
-             * if (dp.isEnumType()) {
-             * options = MetadataUtils.generateOptions(dp, new OptionsBuilder<StateOption>() {
-             *
-             * @Override
-             * public StateOption createOption(String value, String description) {
-             * return new StateOption(value, description);
-             * }
-             * });
-             * }
-             *
-             */
-            StateDescriptionFragmentBuilder stateFragment = StateDescriptionFragmentBuilder.create();
-            /*
-             * if (dp.isNumberType()) {
-             * BigDecimal min = MetadataUtils.createBigDecimal(dp.getMinValue());
-             * BigDecimal max = MetadataUtils.createBigDecimal(dp.getMaxValue());
-             * BigDecimal step = MetadataUtils.createBigDecimal(dp.getStep());
-             * if (ITEM_TYPE_DIMMER.equals(itemType)
-             * && (max.compareTo(new BigDecimal("1.0")) == 0 || max.compareTo(new BigDecimal("1.01")) == 0)) {
-             * // For dimmers with a max value of 1.01 or 1.0 the values must be corrected
-             * min = MetadataUtils.createBigDecimal(0);
-             * max = MetadataUtils.createBigDecimal(100);
-             * step = MetadataUtils.createBigDecimal(1);
-             * } else {
-             * if (step == null) {
-             * step = MetadataUtils
-             * .createBigDecimal(dp.isFloatType() ? Float.valueOf(0.1f) : Long.valueOf(1L));
-             * }
-             * }
-             */
-            stateFragment.withMinimum(new BigDecimal(0)).withMaximum(new BigDecimal(20)).withStep(new BigDecimal(1))
-                    .withReadOnly(false);
+        String itemType = getItemType(dpt);
+        String category = SiemensHvacBindingConstants.CATEGORY_CHANNEL_PROPS_TEMP;
+        String label = dpt.getShortDesc();
+        String description = dpt.getLongDesc();
 
-            ChannelTypeBuilder channelTypeBuilder;
-            EventDescription eventDescription = null;
-            channelTypeBuilder = ChannelTypeBuilder.state(channelTypeUID, label, itemType)
-                    .withStateDescriptionFragment(stateFragment.build());
+        StateDescriptionFragmentBuilder stateFragment = StateDescriptionFragmentBuilder.create();
 
-            channelType = channelTypeBuilder.isAdvanced(false).withDescription(description).withCategory(category)
-                    .build();
+        List<StateOption> options = new ArrayList<StateOption>();
+        if (dpt.getDptType().equals(SiemensHvacBindingConstants.DPT_TYPE_ENUM)) {
+            for (SiemensHvacMetadataPointChild opt : dpt.getChild()) {
+                StateOption stOpt = new StateOption(opt.getValue(), opt.getOpt0());
+                options.add(stOpt);
+            }
         }
 
+        if (dpt.getDptType().equals(SiemensHvacBindingConstants.DPT_TYPE_NUMERIC)) {
+            BigDecimal min = new BigDecimal(dpt.getMin());
+            BigDecimal max = new BigDecimal(dpt.getMax());
+            BigDecimal step = new BigDecimal(dpt.getResolution());
+
+            stateFragment.withMinimum(min).withMaximum(max).withStep(step).withReadOnly(false);
+        } else {
+            stateFragment.withPattern(getStatePattern(dpt)).withReadOnly(dpt.getWriteAccess() == false);
+        }
+
+        if (options != null && !options.isEmpty()) {
+            stateFragment.withOptions(options);
+        }
+
+        ChannelTypeBuilder channelTypeBuilder = ChannelTypeBuilder.state(channelTypeUID, label, itemType)
+                .withStateDescriptionFragment(stateFragment.build());
+
+        channelType = channelTypeBuilder.isAdvanced(false).withDescription(description).withCategory(category).build();
+
         return channelType;
+
     }
 
     /**
@@ -330,7 +338,7 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
 
         URI configDescriptionURI = getConfigDescriptionURI(device);
         if (configDescriptionProvider.getInternalConfigDescription(configDescriptionURI) == null) {
-            generateConfigDescription(name, configDescriptionURI);
+            generateConfigDescription(device, groupTypes, configDescriptionURI);
         }
 
         List<ChannelGroupDefinition> groupDefinitions = new ArrayList<>();
@@ -342,7 +350,7 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
         return ThingTypeBuilder.instance(thingTypeUID, name).withSupportedBridgeTypeUIDs(supportedBridgeTypeUids)
                 .withDescription(description).withChannelGroupDefinitions(groupDefinitions).withProperties(properties)
                 .withRepresentationProperty(Thing.PROPERTY_SERIAL_NUMBER).withConfigDescriptionURI(configDescriptionURI)
-                .build();
+                .withCategory(SiemensHvacBindingConstants.CATEGORY_THING_HVAC).build();
     }
 
     private URI getConfigDescriptionURI(SiemensHvacMetadataDevice device) {
@@ -355,37 +363,97 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
         }
     }
 
-    private void generateConfigDescription(String name, URI configDescriptionURI) {
+    private void generateConfigDescription(SiemensHvacMetadataDevice device, List<ChannelGroupType> groupTypes,
+            URI configDescriptionURI) {
         List<ConfigDescriptionParameter> parms = new ArrayList<>();
         List<ConfigDescriptionParameterGroup> groups = new ArrayList<>();
 
-        for (int i = 0; i < 3; i++) {
-            String groupName = "HMG_" + i;
-            String groupLabel = "desc" + i;
+        for (ChannelGroupType groupTp : groupTypes) {
+            String groupName = groupTp.getLabel();
+            String groupLabel = groupTp.getLabel();
+            List<ChannelDefinition> channelDefinitions = groupTp.getChannelDefinitions();
             groups.add(ConfigDescriptionParameterGroupBuilder.create(groupName).withLabel(groupLabel).build());
 
-            for (int j = 0; j < 3; j++) {
+            for (ChannelDefinition chanDef : channelDefinitions) {
 
-                ConfigDescriptionParameterBuilder builder = ConfigDescriptionParameterBuilder.create("pName" + j,
-                        Type.INTEGER);
+                try {
+                    ConfigDescriptionParameterBuilder builder = ConfigDescriptionParameterBuilder
+                            .create(chanDef.getLabel(), Type.INTEGER);
 
-                builder.withLabel("label" + j);
-                builder.withDefault("0");
-                builder.withDescription("desc" + j);
+                    ChannelTypeUID channelTypeUID = chanDef.getChannelTypeUID();
+                    ChannelType channelType = channelTypeProvider.getInternalChannelType(channelTypeUID);
 
-                builder.withMinimum(new BigDecimal(0));
-                builder.withMaximum(new BigDecimal(20));
-                builder.withStepSize(new BigDecimal(1));
-                builder.withUnitLabel("°C");
+                    String chanId = chanDef.getId();
+                    builder.withLabel(chanDef.getLabel());
 
-                builder.withGroupName(groupName);
-                parms.add(builder.build());
+                    builder.withDefault("0");
+                    builder.withDescription(chanDef.getDescription());
 
+                    builder.withMinimum(channelType.getState().getMinimum());
+                    builder.withMaximum(channelType.getState().getMaximum());
+                    builder.withStepSize(channelType.getState().getStep());
+                    // builder.withUnitLabel(channelType.getState().getMaximum());
+
+                    builder.withGroupName(groupName);
+                    parms.add(builder.build());
+
+                    Map<String, String> chanProps = chanDef.getProperties();
+                } catch (Exception ex) {
+                    logger.debug("p1");
+                }
             }
+
         }
+
         configDescriptionProvider.addConfigDescription(ConfigDescriptionBuilder.create(configDescriptionURI)
                 .withParameters(parms).withParameterGroups(groups).build());
+    }
 
+    public static String getCategory(SiemensHvacMetadataDataPoint dpt, String itemType) {
+        return "";
+    }
+
+    public static String getItemType(SiemensHvacMetadataDataPoint dpt) {
+        if (dpt.getDptType().equals(SiemensHvacBindingConstants.DPT_TYPE_STRING)) {
+            return SiemensHvacBindingConstants.ITEM_TYPE_STRING;
+        } else if (dpt.getDptType().equals(SiemensHvacBindingConstants.DPT_TYPE_NUMERIC)) {
+            return SiemensHvacBindingConstants.ITEM_TYPE_NUMBER;
+        } else if (dpt.getDptType().equals(SiemensHvacBindingConstants.DPT_TYPE_ENUM)) {
+            return SiemensHvacBindingConstants.ITEM_TYPE_NUMBER;
+        } else if (dpt.getDptType().equals(SiemensHvacBindingConstants.DPT_TYPE_DATE)) {
+            return SiemensHvacBindingConstants.ITEM_TYPE_DATETIME;
+        } else if (dpt.getDptType().equals(SiemensHvacBindingConstants.DPT_TYPE_TIME)) {
+            return SiemensHvacBindingConstants.ITEM_TYPE_DATETIME;
+        } else if (dpt.getDptType().equals(SiemensHvacBindingConstants.DPT_TYPE_RADIO)) {
+            return SiemensHvacBindingConstants.ITEM_TYPE_CONTACT;
+        } else if (dpt.getDptType().equals(SiemensHvacBindingConstants.DPT_TYPE_SCHEDULER)) {
+        } else if (dpt.getDptType().equals(SiemensHvacBindingConstants.DPT_TYPE_CALENDAR)) {
+        } else {
+            logger.debug("unknow type in getItemType()");
+
+        }
+
+        return "";
+
+    }
+
+    /**
+     * Returns the state pattern metadata string with unit for the given Datapoint.
+     */
+    public static String getStatePattern(SiemensHvacMetadataDataPoint dpt) {
+        String unit = dpt.getDptUnit();
+
+        if ("%".equals(unit)) {
+            return "%d %%";
+        }
+
+        if (unit != null && unit != "") {
+            if (dpt.getDptType().equals(SiemensHvacBindingConstants.DPT_TYPE_NUMERIC)) {
+                return String.format("%s %s", "%d", "%unit%");
+            }
+        }
+
+        return "";
     }
 
     public void ReadDeviceList() {
@@ -444,11 +512,19 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
                 deviceObj.setTreeTime(TreeTime);
                 deviceObj.setTreeGenerated(TreeGenerated);
 
-                devices.add(deviceObj);
-                logger.debug("p2");
-            }
+                String request2 = "api/menutree/device_root.json?TreeName=Web&SerialNumber=" + SerialNr;
+                JsonObject response2 = hvacConnector.DoRequest(request2, null);
 
-            logger.debug("p1");
+                if (response2.has("TreeItem")) {
+                    JsonObject tree = response2.getAsJsonObject("TreeItem");
+                    if (tree.has("Id")) {
+                        int treeId = tree.get("Id").getAsInt();
+                        deviceObj.setTreeId(treeId);
+                    }
+                }
+
+                devices.add(deviceObj);
+            }
 
         } catch (Exception e) {
             logger.error("siemensHvac:ResolveDpt:Error during dp reading: " + e.getLocalizedMessage());
@@ -523,6 +599,8 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
                     itemId = menuItem.get("Id").getAsInt();
                 }
 
+                childNode.setMenuId(itemId);
+
                 if (menuItem.has("Text")) {
                     JsonObject descObj = menuItem.getAsJsonObject("Text");
 
@@ -548,7 +626,7 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
                         shortDesc = descObj.get("Short").getAsString();
                     }
 
-                    childNode.setMenuId(subItemId);
+                    childNode.setId(subItemId);
                     childNode.setCatId(catId);
                     childNode.setGroupId(groupId);
                     childNode.setShortDesc(shortDesc);

@@ -1,6 +1,7 @@
 package org.openhab.binding.siemenshvac.internal.Metadata;
 
 public class SiemensHvacMetadata {
+    private int Id = -1;
     private int menuId = -1;
     private int groupId = -1;
     private int catId = -1;
@@ -9,6 +10,14 @@ public class SiemensHvacMetadata {
     private transient SiemensHvacMetadata parent;
 
     public SiemensHvacMetadata() {
+    }
+
+    public int getId() {
+        return Id;
+    }
+
+    public void setId(int Id) {
+        this.Id = Id;
     }
 
     public int getMenuId() {

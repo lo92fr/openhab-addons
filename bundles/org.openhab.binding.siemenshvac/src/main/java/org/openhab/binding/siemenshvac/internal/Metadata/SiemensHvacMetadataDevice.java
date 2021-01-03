@@ -8,6 +8,7 @@ public class SiemensHvacMetadataDevice {
     private String treeDate;
     private String treeTime;
     private boolean treeGenerated;
+    private int treeId;
 
     public String getName() {
         return name;
@@ -61,8 +62,16 @@ public class SiemensHvacMetadataDevice {
         return treeGenerated;
     }
 
-    public void setTreeGenerated(boolean treeTime) {
+    public void setTreeGenerated(boolean treeGenerated) {
         this.treeGenerated = treeGenerated;
+    }
+
+    public int getTreeId() {
+        return treeId;
+    }
+
+    public void setTreeId(int treeId) {
+        this.treeId = treeId;
     }
 
 }

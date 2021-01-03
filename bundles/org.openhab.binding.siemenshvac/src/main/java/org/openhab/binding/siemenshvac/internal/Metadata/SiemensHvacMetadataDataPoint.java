@@ -3,6 +3,8 @@ package org.openhab.binding.siemenshvac.internal.Metadata;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openhab.binding.siemenshvac.internal.constants.SiemensHvacBindingConstants;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
@@ -153,7 +155,7 @@ public class SiemensHvacMetadataDataPoint extends SiemensHvacMetadata {
         if (desc != null) {
             this.dptType = desc.get("Type").getAsString();
 
-            if (dptType.equals("Enumeration")) {
+            if (dptType.equals(SiemensHvacBindingConstants.DPT_TYPE_ENUM)) {
 
                 JsonArray enums = desc.getAsJsonArray("Enums");
                 child = new ArrayList<SiemensHvacMetadataPointChild>();
@@ -167,18 +169,17 @@ public class SiemensHvacMetadataDataPoint extends SiemensHvacMetadata {
                     ch.setIsActive(entry.get("IsCurrentValue").getAsString());
                     child.add(ch);
                 }
-            } else if (dptType.equals("Numeric")) {
+            } else if (dptType.equals(SiemensHvacBindingConstants.DPT_TYPE_NUMERIC)) {
                 this.dptUnit = desc.get("Unit").getAsString();
                 this.min = desc.get("Min").getAsString();
                 this.max = desc.get("Max").getAsString();
                 this.resolution = desc.get("Resolution").getAsString();
                 this.fieldWitdh = desc.get("FieldWitdh").getAsString();
                 this.decimalDigits = desc.get("DecimalDigits").getAsString();
-            } else if (dptType.equals("String")) {
-
+            } else if (dptType.equals(SiemensHvacBindingConstants.DPT_TYPE_STRING)) {
                 this.dialogType = desc.get("DialogType").getAsString();
                 this.maxLength = desc.get("MaxLength").getAsString();
-            } else if (dptType.equals("RadioButton")) {
+            } else if (dptType.equals(SiemensHvacBindingConstants.DPT_TYPE_RADIO)) {
                 JsonArray buttons = desc.getAsJsonArray("Buttons");
 
                 child = new ArrayList<SiemensHvacMetadataPointChild>();
@@ -194,13 +195,13 @@ public class SiemensHvacMetadataDataPoint extends SiemensHvacMetadata {
 
                     String signifiance = button.get("Significance").getAsString();
                 }
-            } else if (dptType.equals("DateTime")) {
+            } else if (dptType.equals(SiemensHvacBindingConstants.DPT_TYPE_DATE)) {
                 System.out.println("");
-            } else if (dptType.equals("TimeOfDay")) {
+            } else if (dptType.equals(SiemensHvacBindingConstants.DPT_TYPE_TIME)) {
                 System.out.println("");
-            } else if (dptType.equals("Scheduler")) {
+            } else if (dptType.equals(SiemensHvacBindingConstants.DPT_TYPE_SCHEDULER)) {
                 System.out.println("");
-            } else if (dptType.equals("Calendar")) {
+            } else if (dptType.equals(SiemensHvacBindingConstants.DPT_TYPE_CALENDAR)) {
                 System.out.println("");
             } else {
                 System.out.println("");

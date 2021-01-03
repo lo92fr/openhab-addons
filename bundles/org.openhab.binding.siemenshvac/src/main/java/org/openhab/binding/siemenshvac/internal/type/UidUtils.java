@@ -12,7 +12,9 @@
  */
 package org.openhab.binding.siemenshvac.internal.type;
 
+import org.openhab.binding.siemenshvac.internal.Metadata.SiemensHvacMetadataDataPoint;
 import org.openhab.binding.siemenshvac.internal.Metadata.SiemensHvacMetadataDevice;
+import org.openhab.binding.siemenshvac.internal.Metadata.SiemensHvacMetadataMenu;
 import org.openhab.binding.siemenshvac.internal.constants.SiemensHvacBindingConstants;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.ChannelUID;
@@ -28,14 +30,25 @@ import org.openhab.core.thing.type.ChannelTypeUID;
  */
 public class UidUtils {
 
+    public static String sanetizeId(String st) {
+        st = st.replace(" ", "_");
+        st = st.replace("é", "e");
+        st = st.replace("è", "e");
+        st = st.replace("à", "a");
+        st = st.replace("/", "_");
+        st = st.replace(".", "_");
+        st = st.replace("(", "_");
+        st = st.replace(")", "_");
+
+        return st;
+    }
+
     /**
      * Generates the ThingTypeUID for the given device. If it's a Homegear device, add a prefix because a Homegear
      * device has more datapoints.
      */
     public static ThingTypeUID generateThingTypeUID(SiemensHvacMetadataDevice device) {
-        String type = device.getType();
-        type = type.replace(".", "_");
-        type = type.replace("/", "_");
+        String type = sanetizeId(device.getType());
         return new ThingTypeUID(SiemensHvacBindingConstants.BINDING_ID, type);
     }
 
@@ -46,19 +59,11 @@ public class UidUtils {
     /**
      * Generates the ChannelTypeUID for the given datapoint with deviceType, channelNumber and datapointName.
      */
-    public static ChannelTypeUID generateChannelTypeUID(int i) {
-        return new ChannelTypeUID(SiemensHvacBindingConstants.BINDING_ID, "chanid" + i);
-        // "String.format("%s_%s_%s", dp.getChannel().getDevice().getType(),
-        // dp.getChannel().getNumber(), dp.getName())");
-    }
+    public static ChannelTypeUID generateChannelTypeUID(SiemensHvacMetadataDataPoint dpt) {
 
-    /**
-     * Generates the ChannelTypeUID for the given datapoint with deviceType and channelNumber.
-     */
-    public static ChannelGroupTypeUID generateChannelGroupTypeUID(int i) {
-        return new ChannelGroupTypeUID(SiemensHvacBindingConstants.BINDING_ID, "chan" + i);
-
-        // String.format("%s_%s", channel.getDevice().getType(), channel.getNumber()));
+        String shortDesc = sanetizeId(dpt.getShortDesc());
+        return new ChannelTypeUID(SiemensHvacBindingConstants.BINDING_ID,
+                String.format("%s_%s_%s", dpt.getDptType(), dpt.getDptId(), shortDesc));
     }
 
     /**
@@ -77,4 +82,10 @@ public class UidUtils {
         // String.valueOf(dp.getChannel().getNumber()), dp.getName());
     }
 
+    /**
+     * Generates the ChannelTypeUID for the given datapoint with deviceType and channelNumber.
+     */
+    public static ChannelGroupTypeUID generateChannelGroupTypeUID(SiemensHvacMetadataMenu menu) {
+        return new ChannelGroupTypeUID(SiemensHvacBindingConstants.BINDING_ID, String.format("%s", menu.getMenuId()));
+    }
 }
