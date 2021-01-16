@@ -49,7 +49,7 @@ public class SiemensHvacDeviceDiscoveryService extends AbstractDiscoveryService
     private static final Logger logger = LoggerFactory.getLogger(SiemensHvacDeviceDiscoveryService.class);
 
     public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES = Collections
-            .singleton(SiemensHvacBindingConstants.THING_TYPE_DEVICE);
+            .singleton(SiemensHvacBindingConstants.THING_TYPE_RVS41_813_327);
 
     private @Nullable SiemensHvacMetadataRegistry metadataRegistry;
     private @Nullable SiemensHvacBridgeBaseThingHandler siemensHvacBridgeHandler;
@@ -93,7 +93,7 @@ public class SiemensHvacDeviceDiscoveryService extends AbstractDiscoveryService
         if (siemensHvacBridgeHandler != null) {
             ThingUID localBridgeUID = siemensHvacBridgeHandler.getThing().getUID();
             if (localBridgeUID != null) {
-                ThingTypeUID thingTypeUID = SiemensHvacBindingConstants.THING_TYPE_DEVICE;
+                ThingTypeUID thingTypeUID = SiemensHvacBindingConstants.THING_TYPE_RVS41_813_327;
 
                 if (thingTypeUID != null && getSupportedThingTypes().contains(thingTypeUID)) {
                     return new ThingUID(thingTypeUID, localBridgeUID, "-1");

@@ -12,9 +12,6 @@
  */
 package org.openhab.binding.siemenshvac.internal.factory;
 
-import java.util.Arrays;
-import java.util.Collection;
-
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.siemenshvac.internal.Metadata.SiemensHvacMetadataRegistry;
@@ -49,9 +46,6 @@ public class SiemensHvacHandlerFactory extends BaseThingHandlerFactory {
 
     private final Logger logger = LoggerFactory.getLogger(SiemensHvacHandlerFactory.class);
 
-    public static final Collection<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Arrays
-            .asList(SiemensHvacBindingConstants.THING_TYPE_DEVICE, SiemensHvacBindingConstants.THING_TYPE_OZW672);
-
     private @Nullable NetworkAddressService networkAddressService;
     private @Nullable HttpClientFactory httpClientFactory;
     private @Nullable SiemensHvacMetadataRegistry metaDataRegistry;
@@ -67,21 +61,21 @@ public class SiemensHvacHandlerFactory extends BaseThingHandlerFactory {
 
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
-        boolean result = SUPPORTED_THING_TYPES_UIDS.contains(thingTypeUID);
-        return result;
+        return SiemensHvacBindingConstants.BINDING_ID.equals(thingTypeUID.getBindingId());
     }
 
     @Override
     public @Nullable Thing createThing(ThingTypeUID thingTypeUID, Configuration configuration,
             @Nullable ThingUID thingUID, @Nullable ThingUID bridgeUID) {
+
         if (SiemensHvacBindingConstants.THING_TYPE_OZW672.equals(thingTypeUID)) {
             ThingUID IPBridgeUID = getIPBridgeThingUID(thingTypeUID, thingUID, configuration);
             return super.createThing(thingTypeUID, configuration, IPBridgeUID, null);
-        }
-        if (SiemensHvacBindingConstants.THING_TYPE_DEVICE.equals(thingTypeUID)) {
+        } else if (SiemensHvacBindingConstants.BINDING_ID.equals(thingTypeUID.getBindingId())) {
             return super.createThing(thingTypeUID, configuration, thingUID, bridgeUID);
         }
         throw new IllegalArgumentException("The thing type " + thingTypeUID + " is not supported by the KNX binding.");
+
     }
 
     @Override
@@ -89,7 +83,7 @@ public class SiemensHvacHandlerFactory extends BaseThingHandlerFactory {
         if (thing.getThingTypeUID().equals(SiemensHvacBindingConstants.THING_TYPE_OZW672)) {
             return new SiemensHvacOZW672BridgeThingHandler((Bridge) thing, networkAddressService, httpClientFactory,
                     metaDataRegistry);
-        } else if (thing.getThingTypeUID().equals(SiemensHvacBindingConstants.THING_TYPE_DEVICE)) {
+        } else if (SiemensHvacBindingConstants.BINDING_ID.equals(thing.getThingTypeUID().getBindingId())) {
             return new SiemensHvacHandler(thing);
         }
         return null;

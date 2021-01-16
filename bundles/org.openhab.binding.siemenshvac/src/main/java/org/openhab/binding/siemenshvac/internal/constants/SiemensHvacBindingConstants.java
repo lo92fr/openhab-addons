@@ -31,7 +31,7 @@ public class SiemensHvacBindingConstants {
     // List of all Thing Type UIDs
     // Thing Type UIDs
     public static final ThingTypeUID THING_TYPE_OZW672 = new ThingTypeUID(BINDING_ID, "ozw672");
-    public static final ThingTypeUID THING_TYPE_DEVICE = new ThingTypeUID(BINDING_ID, "device");
+    public static final ThingTypeUID THING_TYPE_RVS41_813_327 = new ThingTypeUID(BINDING_ID, "RVS41_813_327");
 
     // List of all Channel ids
     public static final String CHANNEL_1 = "channel1";

@@ -180,7 +180,7 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
         if (root == null) {
             logger.debug("siemensHvac:InitDptMap():begin");
 
-            LoadMetaDataFromCache();
+            // LoadMetaDataFromCache();
 
             ReadDeviceList();
 
@@ -245,9 +245,9 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
                                     Map<String, String> props = new Hashtable<String, String>();
                                     props.put("test", "test");
 
-                                    ChannelDefinition channelDef = new ChannelDefinitionBuilder(
-                                            dataPoint.getShortDesc(), channelType.getUID())
-                                                    .withLabel(dataPoint.getShortDesc())
+                                    String id = UidUtils.sanetizeId(dataPoint.getShortDesc());
+                                    ChannelDefinition channelDef = new ChannelDefinitionBuilder(id,
+                                            channelType.getUID()).withLabel(dataPoint.getShortDesc())
                                                     .withDescription(dataPoint.getLongDesc()).withProperties(props)
                                                     .build();
 
@@ -636,8 +636,7 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
                     // logger.debug(String.format("siemensHvac:ResolveDpt():findMenuItem: %d, %s, %s, %s, %s", itemId,
                     // subItemId, groupId, catId, longDesc));
 
-                    if (itemId == 931 || itemId == 932 || itemId == 992 || itemId == 1505) {
-
+                    if (itemId == 931 || itemId == 932) {
                         ReadMetaData(childNode, itemId);
                     }
 

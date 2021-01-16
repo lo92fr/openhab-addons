@@ -26,7 +26,7 @@ import org.openhab.core.thing.type.ChannelTypeUID;
 /**
  * Utility class for generating some UIDs.
  *
- * @author Gerhard Riegler - Initial contribution
+ * @author Laurent Arnal - Initial contribution
  */
 public class UidUtils {
 
