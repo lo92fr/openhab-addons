@@ -24,9 +24,7 @@ import org.openhab.core.thing.type.ThingType;
 import org.osgi.service.component.annotations.Component;
 
 /**
- * Provides all ThingTypes from all Homematic bridges. Getters will exclude
- * ThingTypes which occur in any registered {@link HomematicThingTypeExcluder},
- * which allows external injection of customized thing-types at runtime.
+ * Provides all ThingTypes from SiemensHvac bridges.
  *
  * @author Laurent Arnal - Initial contribution
  */

@@ -16,7 +16,7 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.siemenshvac.internal.Metadata.SiemensHvacMetadataRegistry;
 import org.openhab.binding.siemenshvac.internal.constants.SiemensHvacBindingConstants;
-import org.openhab.binding.siemenshvac.internal.handler.SiemensHvacHandler;
+import org.openhab.binding.siemenshvac.internal.handler.SiemensHvacHandlerImpl;
 import org.openhab.binding.siemenshvac.internal.handler.SiemensHvacOZW672BridgeThingHandler;
 import org.openhab.core.config.core.Configuration;
 import org.openhab.core.io.net.http.HttpClientFactory;
@@ -84,7 +84,10 @@ public class SiemensHvacHandlerFactory extends BaseThingHandlerFactory {
             return new SiemensHvacOZW672BridgeThingHandler((Bridge) thing, networkAddressService, httpClientFactory,
                     metaDataRegistry);
         } else if (SiemensHvacBindingConstants.BINDING_ID.equals(thing.getThingTypeUID().getBindingId())) {
-            return new SiemensHvacHandler(thing);
+            SiemensHvacHandlerImpl handler = new SiemensHvacHandlerImpl(thing);
+            handler.setChannelTypeProvider(metaDataRegistry.getChannelTypeProvider());
+            handler.setSiemensHvacConnector(metaDataRegistry.getSiemensHvacConnector());
+            return handler;
         }
         return null;
     }

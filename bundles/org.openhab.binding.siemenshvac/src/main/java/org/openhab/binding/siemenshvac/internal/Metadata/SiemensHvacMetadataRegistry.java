@@ -14,6 +14,8 @@ package org.openhab.binding.siemenshvac.internal.Metadata;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.siemenshvac.internal.network.SiemensHvacConnector;
+import org.openhab.binding.siemenshvac.internal.type.SiemensHvacChannelTypeProvider;
 
 /**
  *
@@ -31,4 +33,11 @@ public interface SiemensHvacMetadataRegistry {
 
     @Nullable
     SiemensHvacMetadataMenu getRoot();
+
+    @Nullable
+    SiemensHvacChannelTypeProvider getChannelTypeProvider();
+
+    @Nullable
+    SiemensHvacConnector getSiemensHvacConnector();
+
 }

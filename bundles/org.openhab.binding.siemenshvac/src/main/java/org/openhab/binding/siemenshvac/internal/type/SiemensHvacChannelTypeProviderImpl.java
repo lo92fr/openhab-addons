@@ -26,16 +26,13 @@ import org.openhab.core.thing.type.ChannelTypeUID;
 import org.osgi.service.component.annotations.Component;
 
 /**
- * Provides all ChannelTypes from all Homematic bridges.
+ * Provides all ChannelTypes from SiemensHvac bridges.
  *
  * @author Laurent Arnal - Initial contribution
  */
 @Component(service = { SiemensHvacChannelTypeProvider.class, ChannelTypeProvider.class })
 public class SiemensHvacChannelTypeProviderImpl implements SiemensHvacChannelTypeProvider {
     private final Map<ChannelTypeUID, ChannelType> channelTypesByUID = new HashMap<>();
-
-    // protected List<HomematicThingTypeExcluder> homematicThingTypeExcluders = new CopyOnWriteArrayList<>();
-    //
 
     public SiemensHvacChannelTypeProviderImpl() {
     }
@@ -66,7 +63,7 @@ public class SiemensHvacChannelTypeProviderImpl implements SiemensHvacChannelTyp
     }
 
     @Override
-    public ChannelType getInternalChannelType(ChannelTypeUID channelTypeUID) {
+    public ChannelType getInternalChannelType(@Nullable ChannelTypeUID channelTypeUID) {
         return channelTypesByUID.get(channelTypeUID);
     }
 

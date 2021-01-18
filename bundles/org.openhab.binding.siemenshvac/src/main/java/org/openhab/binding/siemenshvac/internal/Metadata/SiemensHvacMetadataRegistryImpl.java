@@ -70,7 +70,6 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
     private @Nullable SiemensHvacMetadata root = null;
     private @Nullable ArrayList<SiemensHvacMetadataDevice> devices = null;
 
-    // private siemensHvacConnector cnx = null;
     private boolean interrupted = false;
 
     private static final String CONFIG_DIR = "." + File.separator + "configurations";
@@ -133,6 +132,16 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
         this.configDescriptionProvider = null;
     }
 
+    @Override
+    public @Nullable SiemensHvacConnector getSiemensHvacConnector() {
+        return this.hvacConnector;
+    }
+
+    @Override
+    public @Nullable SiemensHvacChannelTypeProvider getChannelTypeProvider() {
+        return this.channelTypeProvider;
+    }
+
     /**
      * Initializes the type generator.
      */
@@ -180,7 +189,7 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
         if (root == null) {
             logger.debug("siemensHvac:InitDptMap():begin");
 
-            // LoadMetaDataFromCache();
+            LoadMetaDataFromCache();
 
             ReadDeviceList();
 
@@ -242,10 +251,14 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
                                         channelTypeProvider.addChannelType(channelType);
                                     }
 
-                                    Map<String, String> props = new Hashtable<String, String>();
-                                    props.put("test", "test");
+                                    SiemensHvacMetadataDataPoint dpt = ((SiemensHvacMetadataDataPoint) childDt);
 
-                                    String id = UidUtils.sanetizeId(dataPoint.getShortDesc());
+                                    Map<String, String> props = new Hashtable<String, String>();
+                                    props.put("dptId", "" + dpt.getDptId());
+                                    props.put("groupdId", "" + subMenu.getMenuId());
+
+                                    String id = dataPoint.getDptId() + "_"
+                                            + UidUtils.sanetizeId(dataPoint.getShortDesc());
                                     ChannelDefinition channelDef = new ChannelDefinitionBuilder(id,
                                             channelType.getUID()).withLabel(dataPoint.getShortDesc())
                                                     .withDescription(dataPoint.getLongDesc()).withProperties(props)
@@ -636,7 +649,7 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
                     // logger.debug(String.format("siemensHvac:ResolveDpt():findMenuItem: %d, %s, %s, %s, %s", itemId,
                     // subItemId, groupId, catId, longDesc));
 
-                    if (itemId == 931 || itemId == 932) {
+                    if (itemId == 931 || itemId == 932 || itemId == 1505) {
                         ReadMetaData(childNode, itemId);
                     }
 
@@ -861,5 +874,3 @@ public class SiemensHvacMetadataRegistryImpl implements SiemensHvacMetadataRegis
     }
 
 }
-
-// https://stackoverflow.com/questions/5737923/how-do-i-limit-the-number-of-connections-jetty-will-accept

@@ -369,40 +369,8 @@ public class SiemensHvacConnectorImpl implements SiemensHvacConnector {
      */
 
     /*
-     * public String ReadDp(String name, int dp, String type) {
-     * String value = _readDpInternal(name, dp, type);
      *
-     * logger.debug("siemensHvac:ReadDP:" + name + ":" + dp + ":" + value);
      *
-     * if (value == null || value.equals("----") || value.equals("")) {
-     * return null;
-     * }
-     *
-     * if (type == null) {
-     * logger.debug("siemensHvac:ReadDP:null type" + name + ":" + dp);
-     * return "Err";
-     * }
-     * if (type.equals("Numeric")) {
-     * hvacBinding.getEventPublisher().postUpdate(name, new DecimalType(value));
-     * } else if (type.equals("Enumeration")) {
-     * String valueEnum = value;
-     * String valueText = value;
-     * String[] values = value.split(":");
-     * valueEnum = values[0];
-     * valueText = values[1];
-     *
-     * hvacBinding.getEventPublisher().postUpdate(name, new StringType(value));
-     * } else if (type.equals("Text")) {
-     * hvacBinding.getEventPublisher().postUpdate(name, new StringType(value));
-     * } else {
-     * hvacBinding.getEventPublisher().postUpdate(name, new StringType(value));
-     * }
-     *
-     * return value;
-     * }
-     */
-
-    /*
      * public void WriteDp(String name, Type dp) {
      * siemensHvacGenericBindingProvider provider = hvacBinding.getProvider();
      * siemensHvacBindingConfig bindingConfig = (siemensHvacBindingConfig) provider.getBindingConfigs().get(name);
@@ -464,57 +432,9 @@ public class SiemensHvacConnectorImpl implements SiemensHvacConnector {
      *
      * ReadDp(name, dpt, type);
      * }
-     */
-
-    /*
-     * private String _readDpInternal(String name, int dp, String type) {
-     * if (dp == -1) {
-     * return "";
-     * }
      *
-     * try {
-     * String request = "api/menutree/read_datapoint.json?Id=" + dp;
      *
-     * // logger.debug("siemensHvac:ReadDp:DoRequest():" + request);
      *
-     * JSONObject result = DoRequest(request);
-     *
-     * if (result != null && result.containsKey("Data")) {
-     * JSONObject subResult = (JSONObject) result.get("Data");
-     *
-     * // {"Value":"Automatique","Type":"Enumeration","EnumValue":"1","Unit":""}
-     * String typer = "";
-     * String value = "";
-     * String enumValue = "";
-     *
-     * if (subResult.containsKey("Type")) {
-     * typer = subResult.get("Type").toString().trim();
-     * }
-     * if (subResult.containsKey("Value")) {
-     * value = subResult.get("Value").toString().trim();
-     * }
-     * if (subResult.containsKey("EnumValue")) {
-     * enumValue = subResult.get("EnumValue").toString().trim();
-     * }
-     *
-     * if (typer.equals("Enumeration")) {
-     * return "" + enumValue + ":" + value;
-     * } else {
-     * return value;
-     * }
-     * } else {
-     * sessionId = null;
-     * }
-     * } catch (Exception e) {
-     * logger.error("siemensHvac:ReadDp:Error during dp reading: " + name + " ; " + e.getLocalizedMessage());
-     * // Reset sessionId so we redone _auth on error
-     * sessionId = null;
-     * }
-     *
-     * return "";
-     * }
-     */
-    /*
      * public void AddDpUpdate(String itemName, Type dp) {
      * synchronized (updateCommand) {
      * updateCommand.put(itemName, dp);
