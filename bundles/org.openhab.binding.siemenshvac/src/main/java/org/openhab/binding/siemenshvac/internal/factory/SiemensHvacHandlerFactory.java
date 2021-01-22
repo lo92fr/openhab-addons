@@ -87,6 +87,7 @@ public class SiemensHvacHandlerFactory extends BaseThingHandlerFactory {
             SiemensHvacHandlerImpl handler = new SiemensHvacHandlerImpl(thing);
             handler.setChannelTypeProvider(metaDataRegistry.getChannelTypeProvider());
             handler.setSiemensHvacConnector(metaDataRegistry.getSiemensHvacConnector());
+            handler.setSiemensHvacMetadataRegistry(metaDataRegistry);
             return handler;
         }
         return null;

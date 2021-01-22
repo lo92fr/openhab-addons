@@ -35,6 +35,9 @@ public interface SiemensHvacMetadataRegistry {
     SiemensHvacMetadataMenu getRoot();
 
     @Nullable
+    SiemensHvacMetadata getDptMap(String key);
+
+    @Nullable
     SiemensHvacChannelTypeProvider getChannelTypeProvider();
 
     @Nullable

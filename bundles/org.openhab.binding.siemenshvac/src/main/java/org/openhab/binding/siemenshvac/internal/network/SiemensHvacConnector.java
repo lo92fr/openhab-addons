@@ -2,6 +2,7 @@ package org.openhab.binding.siemenshvac.internal.network;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.api.Request;
+import org.openhab.binding.siemenshvac.internal.handler.SiemensHvacBridgeBaseThingHandler;
 
 import com.google.gson.JsonObject;
 
@@ -12,4 +13,7 @@ public interface SiemensHvacConnector {
     public void WaitAllPendingRequest();
 
     public void onComplete(Request request);
+
+    public void setSiemensHvacBridgeBaseThingHandler(
+            @Nullable SiemensHvacBridgeBaseThingHandler hvacBridgeBaseThingHandler);
 }

@@ -1,6 +1,8 @@
 package org.openhab.binding.siemenshvac.internal.network;
 
 import java.util.Date;
+import java.util.Hashtable;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -19,7 +21,10 @@ import org.openhab.binding.siemenshvac.internal.Metadata.RuntimeTypeAdapterFacto
 import org.openhab.binding.siemenshvac.internal.Metadata.SiemensHvacMetadata;
 import org.openhab.binding.siemenshvac.internal.Metadata.SiemensHvacMetadataDataPoint;
 import org.openhab.binding.siemenshvac.internal.Metadata.SiemensHvacMetadataMenu;
+import org.openhab.binding.siemenshvac.internal.handler.SiemensHvacBridgeBaseThingHandler;
+import org.openhab.core.config.core.Configuration;
 import org.openhab.core.io.net.http.HttpClientFactory;
+import org.openhab.core.types.Type;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -52,20 +57,13 @@ public class SiemensHvacConnectorImpl implements SiemensHvacConnector {
     private static int completedRequest = 0;
     private Lock lockObj = new ReentrantLock();
 
-    // private siemensMetadataRegistry registry = new siemensMetadataRegistry(this);
+    private Map<String, Type> updateCommand;
 
-    // private Map<String, Type> updateCommand;
-
-    // private boolean interrupted = false;
-
-    // private siemensHvacBinding hvacBinding;
-
-    // siemensHvacBinding hvacBinding
+    private @Nullable SiemensHvacBridgeBaseThingHandler hvacBridgeBaseThingHandler;
 
     @Activate
     public SiemensHvacConnectorImpl(@Reference HttpClientFactory httpClientFactory) {
-        // this.hvacBinding = hvacBinding;
-        // this.updateCommand = new Hashtable<String, Type>();
+        this.updateCommand = new Hashtable<String, Type>();
         this.httpClientFactory = httpClientFactory;
 
         initHttpClient();
@@ -85,6 +83,16 @@ public class SiemensHvacConnectorImpl implements SiemensHvacConnector {
             logger.warn("Failed to start insecure http client: {}", e.getMessage());
         }
 
+    }
+
+    @Override
+    public void setSiemensHvacBridgeBaseThingHandler(
+            @Nullable SiemensHvacBridgeBaseThingHandler hvacBridgeBaseThingHandler) {
+        this.hvacBridgeBaseThingHandler = hvacBridgeBaseThingHandler;
+    }
+
+    public void unsetSiemensHvacBridgeBaseThingHandler(SiemensHvacBridgeBaseThingHandler hvacBridgeBaseThingHandler) {
+        this.hvacBridgeBaseThingHandler = null;
     }
 
     public void setBaseUrl(String baseUrl) {
@@ -145,13 +153,24 @@ public class SiemensHvacConnectorImpl implements SiemensHvacConnector {
         return response;
     }
 
+    private void _initConfig() {
+        Configuration config = this.hvacBridgeBaseThingHandler.getThing().getConfiguration();
+        if (config.containsKey("baseUrl")) {
+            baseUrl = (String) config.get("baseUrl");
+        }
+        if (config.containsKey("userName")) {
+            userName = (String) config.get("userName");
+        }
+        if (config.containsKey("userPassword")) {
+            userPassword = (String) config.get("userPassword");
+        }
+    }
+
     private void _doAuth() {
         logger.debug("siemensHvac:doAuth()");
 
-        userName = "Administrator";
-        userPassword = "Drf67tio1!";
-
-        String baseUri = "https://192.168.254.53/";
+        _initConfig();
+        String baseUri = baseUrl;
         String uri = "api/auth/login.json?user=" + userName + "&pwd=" + userPassword;
         final Request request = httpClientInsecure.newRequest(baseUri + uri);
         request.method(HttpMethod.GET);
@@ -221,7 +240,7 @@ public class SiemensHvacConnectorImpl implements SiemensHvacConnector {
         }
 
         try {
-            String baseUri = "https://192.168.254.53/";
+            String baseUri = baseUrl;
             if (!uri.endsWith("?")) {
                 uri = uri + "&";
             }
@@ -337,38 +356,6 @@ public class SiemensHvacConnectorImpl implements SiemensHvacConnector {
     }
 
     /*
-     * siemensHvacGenericBindingProvider provider = hvacBinding.getProvider();
-     *
-     * if (provider.getBindingConfigs().values().isEmpty()) {
-     * return;
-     * }
-     *
-     * try {
-     * registry.Init();
-     *
-     * logger.debug("siemensHvac:readAllDP():begin");
-     *
-     * Iterator<BindingConfig> it = provider.getBindingConfigs().values().iterator();
-     *
-     * while (it.hasNext()) {
-     * siemensHvacBindingConfig config = (siemensHvacBindingConfig) it.next();
-     * String name = config.getName();
-     * registry.VerifyBindingConfig(config);
-     * String type = config.getDptType();
-     * int dp = config.getDptId();
-     *
-     * ReadDp(name, dp, type);
-     * }
-     * } catch (Exception ex) {
-     * logger.error("siemensHvac:ReadAllDp: " + ex.getLocalizedMessage());
-     * throw ex;
-     * }
-     * logger.debug("siemensHvac:readAllDP():end");
-     *
-     * }
-     */
-
-    /*
      *
      *
      * public void WriteDp(String name, Type dp) {
@@ -382,8 +369,6 @@ public class SiemensHvacConnectorImpl implements SiemensHvacConnector {
      * String valActEnum = valAct;
      * String valActLabel = valAct;
      *
-     * String valUpdateEnum = "";
-     * String valUpdateLabel = "";
      *
      * if (type.equals("Enumeration")) {
      * String[] values = valAct.split(":");
@@ -391,27 +376,6 @@ public class SiemensHvacConnectorImpl implements SiemensHvacConnector {
      * valActLabel = values[1];
      * }
      *
-     * String valUpdate = "";
-     *
-     * if (dp instanceof PercentType) {
-     * PercentType pct = (PercentType) dp;
-     * valUpdate = pct.toString();
-     * } else if (dp instanceof DecimalType) {
-     * DecimalType bdc = (DecimalType) dp;
-     * valUpdate = bdc.toString();
-     * } else if (dp instanceof StringType) {
-     * StringType bdc = (StringType) dp;
-     * valUpdate = bdc.toString();
-     *
-     * if (type.equals("Enumeration")) {
-     * String[] valuesUpdateDp = valUpdate.split(":");
-     * valUpdateEnum = valuesUpdateDp[0];
-     * valUpdateLabel = valuesUpdateDp[1];
-     *
-     * // For enumeration, we always update using the raw value
-     * valUpdate = valUpdateEnum;
-     * }
-     * }
      *
      * // Exit there if new value is the same as old value
      * if (valAct != null && valUpdate.equals(valAct)) {
@@ -435,13 +399,14 @@ public class SiemensHvacConnectorImpl implements SiemensHvacConnector {
      *
      *
      *
-     * public void AddDpUpdate(String itemName, Type dp) {
-     * synchronized (updateCommand) {
-     * updateCommand.put(itemName, dp);
-     * lastUpdate = new java.util.Date();
-     * }
-     * }
      */
+
+    public void AddDpUpdate(String itemName, Type dp) {
+        synchronized (updateCommand) {
+            updateCommand.put(itemName, dp);
+            lastUpdate = new java.util.Date();
+        }
+    }
 
     /*
      * @Override

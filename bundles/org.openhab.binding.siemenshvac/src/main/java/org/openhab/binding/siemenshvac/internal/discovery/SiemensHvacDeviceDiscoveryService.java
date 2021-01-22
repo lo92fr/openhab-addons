@@ -55,16 +55,6 @@ public class SiemensHvacDeviceDiscoveryService extends AbstractDiscoveryService
     private @Nullable SiemensHvacBridgeBaseThingHandler siemensHvacBridgeHandler;
     private @Nullable SiemensHvacConnector hvacConnector;
 
-    /*
-     * Collections.unmodifiableSet(Stream
-     * .of(HueLightHandler.SUPPORTED_THING_TYPES.stream(), DimmerSwitchHandler.SUPPORTED_THING_TYPES.stream(),
-     * TapSwitchHandler.SUPPORTED_THING_TYPES.stream(), PresenceHandler.SUPPORTED_THING_TYPES.stream(),
-     * GeofencePresenceHandler.SUPPORTED_THING_TYPES.stream(),
-     * TemperatureHandler.SUPPORTED_THING_TYPES.stream(), LightLevelHandler.SUPPORTED_THING_TYPES.stream(),
-     * ClipHandler.SUPPORTED_THING_TYPES.stream(), HueGroupHandler.SUPPORTED_THING_TYPES.stream())
-     * .flatMap(i -> i).collect(Collectors.toSet()));
-     */
-
     private static final int SEARCH_TIME = 10;
 
     public SiemensHvacDeviceDiscoveryService() {
@@ -102,12 +92,6 @@ public class SiemensHvacDeviceDiscoveryService extends AbstractDiscoveryService
         }
         return null;
     }
-
-    /*
-     * private @Nullable ThingTypeUID getThingTypeUID() {
-     * return thingTypeId != null ? new ThingTypeUID(BINDING_ID, thingTypeId) : null;
-     * }
-     */
 
     @Override
     public void startScan() {

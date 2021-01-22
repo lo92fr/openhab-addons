@@ -34,11 +34,17 @@ public class UidUtils {
         st = st.replace(" ", "_");
         st = st.replace("é", "e");
         st = st.replace("è", "e");
+        st = st.replace("ê", "e");
+
+        st = st.replace("î", "i");
+        st = st.replace("ô", "o");
         st = st.replace("à", "a");
         st = st.replace("/", "_");
         st = st.replace(".", "_");
         st = st.replace("(", "_");
         st = st.replace(")", "_");
+        st = st.replace("°", "_");
+        st = st.replace("É", "E");
 
         return st;
     }

@@ -12,11 +12,17 @@
  */
 package org.openhab.binding.siemenshvac.internal.handler;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.siemenshvac.internal.Metadata.SiemensHvacMetadataDataPoint;
+import org.openhab.binding.siemenshvac.internal.Metadata.SiemensHvacMetadataRegistry;
 import org.openhab.binding.siemenshvac.internal.config.SiemensHvacConfiguration;
 import org.openhab.binding.siemenshvac.internal.network.SiemensHvacCallback;
 import org.openhab.binding.siemenshvac.internal.network.SiemensHvacConnector;
@@ -26,6 +32,7 @@ import org.openhab.binding.siemenshvac.internal.type.SiemensHvacConfigDescriptio
 import org.openhab.binding.siemenshvac.internal.type.SiemensHvacThingTypeProvider;
 import org.openhab.core.library.types.DateTimeType;
 import org.openhab.core.library.types.DecimalType;
+import org.openhab.core.library.types.PercentType;
 import org.openhab.core.library.types.StringType;
 import org.openhab.core.thing.Channel;
 import org.openhab.core.thing.ChannelUID;
@@ -35,11 +42,13 @@ import org.openhab.core.thing.binding.BaseThingHandler;
 import org.openhab.core.thing.type.ChannelType;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.RefreshType;
+import org.openhab.core.types.Type;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 /**
@@ -62,6 +71,7 @@ public class SiemensHvacHandlerImpl extends BaseThingHandler implements SiemensH
     private @Nullable SiemensHvacChannelGroupTypeProvider channelGroupTypeProvider;
     private @Nullable SiemensHvacConfigDescriptionProvider configDescriptionProvider;
     private @Nullable SiemensHvacConnector hvacConnector;
+    private @Nullable SiemensHvacMetadataRegistry metaDataRegistry;
 
     public SiemensHvacHandlerImpl(Thing thing) {
         super(thing);
@@ -71,14 +81,6 @@ public class SiemensHvacHandlerImpl extends BaseThingHandler implements SiemensH
         logger.debug("===========================================================");
     }
 
-    @Override
-    public void handleCommand(ChannelUID channelUID, Command command) {
-        logger.debug("handleCommand");
-        if (command instanceof RefreshType) {
-            logger.debug("handleCommand1");
-        }
-    }
-
     @Reference
     public void setSiemensHvacConnector(@Nullable SiemensHvacConnector hvacConnector) {
         this.hvacConnector = hvacConnector;
@@ -86,6 +88,15 @@ public class SiemensHvacHandlerImpl extends BaseThingHandler implements SiemensH
 
     public void unsetSiemensHvacConnector(SiemensHvacConnector hvacConnector) {
         this.hvacConnector = null;
+    }
+
+    @Reference
+    public void setSiemensHvacMetadataRegistry(@Nullable SiemensHvacMetadataRegistry metaDataRegistry) {
+        this.metaDataRegistry = metaDataRegistry;
+    }
+
+    public void unsetSiemensHvacMetadataRegistry(SiemensHvacMetadataRegistry metaDataRegistry) {
+        this.metaDataRegistry = null;
     }
 
     @Reference
@@ -100,22 +111,10 @@ public class SiemensHvacHandlerImpl extends BaseThingHandler implements SiemensH
     @Override
     public void initialize() {
 
-        // TODO: Initialize the handler.
-        // The framework requires you to return from this method quickly. Also, before leaving this method a thing
-        // case you can decide it directly.
-        // In case you can not decide the thing status directly (e.g. for long running connection handshake using WAN
-        // access or similar) you should set status UNKNOWN here and then decide the real status asynchronously in the
-        // background.
-
-        // set the thing status to UNKNOWN temporarily and let the background task decide for the real status.
-        // the framework is then able to reuse the resources from the thing handler initialization.
-        // we set this upfront to reliably check status updates in unit tests.
         updateStatus(ThingStatus.UNKNOWN);
 
-        // Example for background initialization:
         scheduler.execute(() -> {
-            boolean thingReachable = true; // <background task with long running initialization here>
-            // when done do:
+            boolean thingReachable = true;
             if (thingReachable) {
                 updateStatus(ThingStatus.ONLINE);
             } else {
@@ -127,18 +126,12 @@ public class SiemensHvacHandlerImpl extends BaseThingHandler implements SiemensH
         var c1 = getThing().getConfiguration();
         var c2 = getBridge().getConfiguration();
 
-        // These logging types should be primarily used by bindings
-        // logger.trace("Example trace message");
-        // logger.debug("Example debug message");
-        // logger.warn("Example warn message");
-
-        // Note: When initialization can NOT be done set the status with more details for further
-        // analysis. See also class ThingStatusDetail for all available status details.
-        // Add a description to give user information to understand why thing does not work as expected. E.g.
-        // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-        // "Can not access device as username and/or password are invalid");
-
         pollingJob = scheduler.scheduleWithFixedDelay(this::pollingCode, 0, 10, TimeUnit.SECONDS);
+    }
+
+    @Override
+    public void dispose() {
+        pollingJob.cancel(true);
     }
 
     private void pollingCode() {
@@ -163,72 +156,72 @@ public class SiemensHvacHandlerImpl extends BaseThingHandler implements SiemensH
             String groupId = ch.getProperties().get("groupdId");
             String label = ch.getLabel();
             String uid = ch.getUID().getId();
+            String type = tp.getItemType();
 
-            ReadDp(groupId, dptId, label, uid, "");
+            ReadDp(dptId, uid, type, false);
             logger.debug("" + isLink);
         }
     }
 
-    public void DecodeReadDp(JsonObject response, @Nullable String groupId, @Nullable String dp, @Nullable String uid,
-            @Nullable String label, String type) {
+    public void DecodeReadDp(JsonObject response, @Nullable String uid, @Nullable String dp, @Nullable String type) {
         if (response != null && response.has("Data")) {
             JsonObject subResult = (JsonObject) response.get("Data");
 
-            String updateKey = "" + label;
+            String updateKey = "" + uid;
             String typer = "";
-            String value = "";
-            String enumValue = "";
+            JsonElement value = null;
+            JsonElement enumValue = null;
             String result = "";
-
-            if (dp.equals("1506")) {
-                type = "Numeric";
-            }
+            String unit = "";
 
             if (subResult.has("Type")) {
-                typer = subResult.get("Type").toString().trim();
+                typer = subResult.get("Type").getAsString().trim();
             }
             if (subResult.has("Value")) {
-                value = "" + subResult.get("Value").getAsDouble();
+                value = subResult.get("Value");
             }
             if (subResult.has("EnumValue")) {
-                enumValue = subResult.get("EnumValue").toString().trim();
+                enumValue = subResult.get("EnumValue");
+            }
+            if (subResult.has("Unit")) {
+                unit = subResult.get("Unit").toString().trim();
             }
 
-            if (typer.equals("Enumeration")) {
-                result = "" + enumValue + ":" + value;
-            } else {
-                result = value;
-            }
-
-            if (value == null || value.equals("----") || value.equals("")) {
+            if (value == null) {
                 return;
             }
 
             if (type == null) {
                 logger.debug("siemensHvac:ReadDP:null type" + dp);
-                return;
             }
-            if (type.equals("Numeric")) {
-                updateState(updateKey, new DecimalType(value));
-            } else if (type.equals("Enumeration")) {
-                String valueEnum = value;
-                String valueText = value;
-                String[] values = value.split(":");
-                valueEnum = values[0];
-                valueText = values[1];
+            if (typer == null) {
+                logger.debug("siemensHvac:ReadDP:null typer" + dp);
+            }
 
-                updateState(updateKey, new StringType(value));
-            } else if (type.equals("Text")) {
-                updateState(updateKey, new StringType(value));
+            if (typer.equals("Numeric")) {
+                updateState(updateKey, new DecimalType(value.getAsDouble()));
+            } else if (typer.equals("Enumeration")) {
+                updateState(updateKey, new DecimalType(enumValue.getAsInt()));
+            } else if (typer.equals("Text")) {
+                updateState(updateKey, new StringType(value.getAsString()));
+            } else if (typer.equals("RadioButton")) {
+                updateState(updateKey, new StringType(value.getAsString()));
+            } else if (typer.equals("DayOfTime") || typer.equals("DateTime")) {
+                try {
+                    SimpleDateFormat dtf = new SimpleDateFormat("EEEE, d. MMMM yyyy hh:mm"); // first example
+                    ZonedDateTime zdt = dtf.parse(value.getAsString()).toInstant().atZone(ZoneId.systemDefault());
+                    updateState(updateKey, new DateTimeType(zdt));
+                } catch (ParseException ex) {
+                    logger.debug("error decoding date!");
+                }
             } else {
-                updateState(updateKey, new DateTimeType());
+                updateState(updateKey, new StringType(value.getAsString()));
             }
 
         }
     }
 
-    private void ReadDp(@Nullable String groupId, @Nullable String dp, @Nullable String label, @Nullable String uid,
-            String type) {
+    private void ReadDp(@Nullable String dp, String uid, @Nullable String type, boolean async) {
         if (dp.equals("-1")) {
             return;
         }
@@ -238,12 +231,71 @@ public class SiemensHvacHandlerImpl extends BaseThingHandler implements SiemensH
 
             // logger.debug("siemensHvac:ReadDp:DoRequest():" + request);
 
+            if (async) {
+                hvacConnector.DoRequest(request, new SiemensHvacCallback() {
+
+                    @Override
+                    public void execute(java.net.URI uri, int status, @Nullable Object response) {
+                        if (response instanceof JsonObject) {
+                            DecodeReadDp((JsonObject) response, uid, dp, type);
+                        }
+                    }
+
+                });
+            } else {
+                JsonObject js = hvacConnector.DoRequest(request, null);
+                DecodeReadDp(js, uid, dp, type);
+            }
+
+        } catch (Exception e) {
+            logger.error("siemensHvac:ReadDp:Error during dp reading: " + dp + " ; " + e.getLocalizedMessage());
+            // Reset sessionId so we redone _auth on error
+        }
+    }
+
+    private void WriteDp(@Nullable String dp, Type dpVal, @Nullable String type) {
+        if (dp.equals("-1")) {
+            return;
+        }
+
+        try {
+            String valUpdate = "0";
+            String valUpdateEnum = "";
+            String valUpdateLabel = "";
+
+            if (dpVal instanceof PercentType) {
+                PercentType pct = (PercentType) dpVal;
+                valUpdate = pct.toString();
+            } else if (dpVal instanceof DecimalType) {
+                DecimalType bdc = (DecimalType) dpVal;
+                valUpdate = bdc.toString();
+            } else if (dpVal instanceof StringType) {
+                StringType bdc = (StringType) dpVal;
+                valUpdate = bdc.toString();
+
+                if (type.equals("Enumeration")) {
+                    String[] valuesUpdateDp = valUpdate.split(":");
+                    valUpdateEnum = valuesUpdateDp[0];
+                    valUpdateLabel = valuesUpdateDp[1];
+
+                    // For enumeration, we always update using the raw value
+                    valUpdate = valUpdateEnum;
+                }
+            }
+
+            SiemensHvacMetadataDataPoint md = (SiemensHvacMetadataDataPoint) metaDataRegistry.getDptMap(dp);
+            String dptType = md.getDptType();
+
+            String request = "api/menutree/write_datapoint.json?Id=" + dp + "&Value=" + valUpdate + "&Type=" + dptType;
+
+            // logger.debug("siemensHvac:ReadDp:DoRequest():" + request);
+
             hvacConnector.DoRequest(request, new SiemensHvacCallback() {
 
                 @Override
                 public void execute(java.net.URI uri, int status, @Nullable Object response) {
                     if (response instanceof JsonObject) {
-                        DecodeReadDp((JsonObject) response, groupId, dp, label, uid, type);
+                        logger.debug("p1");
                     }
                 }
 
@@ -252,6 +304,28 @@ public class SiemensHvacHandlerImpl extends BaseThingHandler implements SiemensH
         } catch (Exception e) {
             logger.error("siemensHvac:ReadDp:Error during dp reading: " + dp + " ; " + e.getLocalizedMessage());
             // Reset sessionId so we redone _auth on error
+        }
+    }
+
+    @Override
+    public void handleCommand(ChannelUID channelUID, Command command) {
+        logger.debug("handleCommand");
+        if (command instanceof RefreshType) {
+            logger.debug("handleCommandRefresh");
+        } else {
+
+            Channel channel = getThing().getChannel(channelUID);
+
+            ChannelType tp = channelTypeProvider.getInternalChannelType(channel.getChannelTypeUID());
+
+            String dptId = channel.getProperties().get("dptId");
+            String groupId = channel.getProperties().get("groupdId");
+            String label = channel.getLabel();
+            String uid = channel.getUID().getId();
+            String type = tp.getItemType();
+
+            WriteDp(dptId, command, type);
+            ReadDp(dptId, uid, type, false);
         }
     }
 

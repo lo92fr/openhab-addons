@@ -49,7 +49,7 @@ public abstract class SiemensHvacBridgeBaseThingHandler extends BaseBridgeHandle
         this.networkAddressService = networkAddressService;
         this.httpClientFactory = httpClientFactory;
         this.metaDataRegistry = metaDataRegistry;
-
+        this.metaDataRegistry.getSiemensHvacConnector().setSiemensHvacBridgeBaseThingHandler(this);
     }
 
     @Override

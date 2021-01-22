@@ -79,7 +79,7 @@ public class SiemensHvacRequestListener extends BufferingResponseListener
                             callback.execute(result.getRequest().getURI(), result.getResponse().getStatus(), resultObj);
                             return;
                         } else {
-                            logger.debug("error");
+                            logger.debug("error : " + subResultObj);
                         }
                     } else {
                         logger.debug("error");
