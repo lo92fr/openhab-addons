@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="mbus"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+
+	<!-- Parameter Thing Type -->
+	<thing-type id="mbuscounter">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="mbustcpgateway"/>
+		</supported-bridge-type-refs>
+
+		<label>MBus Generic Counter</label>
+		<description>Represents a generic MBus counter.</description>
+
+		<channels>
+			<channel id="current_reading" typeId="current_reading"/>
+		</channels>
+
+		<config-description>
+			<parameter name="id" type="integer" required="false">
+				<label>Parameter ID</label>
+				<description>Specific parameter identifier</description>
+			</parameter>
+		</config-description>
+	</thing-type>
+
+
+</thing:thing-descriptions>

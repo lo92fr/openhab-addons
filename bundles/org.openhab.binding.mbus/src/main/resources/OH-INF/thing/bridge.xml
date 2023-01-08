@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="mbus"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+
+	<!-- Bridge Thing Type -->
+	<bridge-type id="mbustcpgateway">
+		<label>MBus TCP Gateway</label>
+		<description>This is a MBus TCP interface</description>
+
+		<config-description>
+			<parameter name="ipAddress" type="text">
+				<label>IP Adress</label>
+				<description>The IP address of the gateway gateway</description>
+				<context>network-address</context>
+			</parameter>
+		</config-description>
+	</bridge-type>
+
+</thing:thing-descriptions>
