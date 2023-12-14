@@ -57,10 +57,9 @@ public class MBusCounterHandlerImpl extends MBusBaseThingHandler implements MBus
     public MBusCounterHandlerImpl(Thing thing) {
         super(thing);
 
-        logger.debug("===========================================================");
-        logger.debug("MBus");
-        logger.debug("===========================================================");
-        logger.info("MBusTest");
+        logger.info("===========================================================");
+        logger.info("MBus8");
+        logger.info("===========================================================");
     }
 
     @Override
@@ -150,12 +149,12 @@ public class MBusCounterHandlerImpl extends MBusBaseThingHandler implements MBus
         } finally {
             lck.unlock();
         }
-
     }
 
     private void pollingCode() {
         try {
             lck.lock();
+            logger.info("poolingCode:Enter()");
             int idx = 0;
             Map<String, String> properties = this.getThing().getProperties();
             String idS = properties.get("primaryAddr");
@@ -164,8 +163,11 @@ public class MBusCounterHandlerImpl extends MBusBaseThingHandler implements MBus
                 idx = (int) Double.parseDouble(idS);
             }
 
-            logger.info("read counter:" + idx);
+            // Make sure we don't overlap counter addressing on bus by adding delay on reseting address
+            Thread.sleep(500);
+            logger.info("Read counter:" + idx);
             this.connector.resetSlave(idx);
+            Thread.sleep(500);
             VariableDataStructure result = connector.readSlave(idx);
             List<DataRecord> dRecord = result.getDataRecords();
             int id = 0;
@@ -200,13 +202,14 @@ public class MBusCounterHandlerImpl extends MBusBaseThingHandler implements MBus
                 }
                 id++;
             }
+
             Thread.sleep(1000);
         } catch (Exception ex) {
             logger.error(ex.getMessage(), ex);
         } finally {
             lck.unlock();
         }
-
+        logger.info("poolingCode:Exit()");
     }
 
     @Override
