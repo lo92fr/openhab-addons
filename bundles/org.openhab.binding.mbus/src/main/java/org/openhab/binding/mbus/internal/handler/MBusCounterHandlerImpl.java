@@ -58,7 +58,7 @@ public class MBusCounterHandlerImpl extends MBusBaseThingHandler implements MBus
         super(thing);
 
         logger.info("===========================================================");
-        logger.info("MBus8");
+        logger.info("MBus9");
         logger.info("===========================================================");
     }
 

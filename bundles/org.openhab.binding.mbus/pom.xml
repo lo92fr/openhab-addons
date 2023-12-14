@@ -4,11 +4,6 @@
 
   <modelVersion>4.0.0</modelVersion>
 
-  <properties>
-    <bnd.importpackage>org.openmuc.jmbus.*;resolution:=optional
-    </bnd.importpackage>
-  </properties>
-
   <parent>
     <groupId>org.openhab.addons.bundles</groupId>
     <artifactId>org.openhab.addons.reactor.bundles</artifactId>
@@ -17,7 +12,7 @@
 
   <artifactId>org.openhab.binding.mbus</artifactId>
 
-  <name>openHAB Add-ons::Bundles::MBus Binding</name>
+  <name>openHAB Add-ons :: Bundles :: MBus Binding</name>
   <!-- https://mvnrepository.com/artifact/org.openmuc/jmbus -->
 
   <dependencies>
