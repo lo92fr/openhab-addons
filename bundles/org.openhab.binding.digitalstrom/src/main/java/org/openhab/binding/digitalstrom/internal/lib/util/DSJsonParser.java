@@ -19,14 +19,14 @@ import java.util.Map.Entry;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.binding.digitalstrom.internal.lib.serverconnection.constants.JSONApiResponseKeysEnum;
 import org.openhab.binding.digitalstrom.internal.lib.structure.devices.deviceparameters.constants.OutputChannelEnum;
-import org.openhab.binding.digitalstrom.internal.lib.structure.devices.impl.DeviceImpl;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 /**
- * digitalSTROM JSON Parser class. Externalizes code from {@link DeviceImpl}
+ * digitalSTROM JSON Parser class. Externalizes code from
+ * {@link org.openhab.binding.digitalstrom.internal.lib.structure.devices.impl.DeviceImpl}
  *
  * @author Rouven Schürch - Initial contribution
  *

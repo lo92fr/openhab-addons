@@ -16,44 +16,42 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.Optional;
 
-import org.openhab.automation.jsscripting.internal.GraalJSScriptEngineFactory;
+import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.core.automation.module.script.ScriptDependencyTracker;
 import org.openhab.core.automation.module.script.ScriptEngineManager;
 import org.openhab.core.automation.module.script.rulesupport.loader.AbstractScriptFileWatcher;
 import org.openhab.core.automation.module.script.rulesupport.loader.ScriptFileWatcher;
 import org.openhab.core.service.ReadyService;
 import org.openhab.core.service.StartLevelService;
+import org.openhab.core.service.WatchService;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * Monitors <openHAB-conf>/automation/js for Javascript files, but not libraries
+ * Monitors {@code <openHAB-conf>/automation/js} for Javascript files, but not libraries
  *
  * @author Jonathan Gilbert - Initial contribution
+ * @author Jan N. Klug - Refactored to new WatchService
  */
 @Component(immediate = true, service = { ScriptFileWatcher.class, ScriptDependencyTracker.Listener.class })
+@NonNullByDefault
 public class JSScriptFileWatcher extends AbstractScriptFileWatcher {
     private static final String FILE_DIRECTORY = "automation" + File.separator + "js";
 
     @Activate
-    public JSScriptFileWatcher(final @Reference ScriptEngineManager manager, final @Reference ReadyService readyService,
+    public JSScriptFileWatcher(final @Reference(target = WatchService.CONFIG_WATCHER_FILTER) WatchService watchService,
+            final @Reference ScriptEngineManager manager, final @Reference ReadyService readyService,
             final @Reference StartLevelService startLevelService) {
-        super(manager, readyService, startLevelService, FILE_DIRECTORY);
+        super(watchService, manager, readyService, startLevelService, FILE_DIRECTORY, true);
     }
 
     @Override
     protected Optional<String> getScriptType(Path scriptFilePath) {
-        if (!scriptFilePath.startsWith(pathToWatch + File.separator + "node_modules")
-                && "js".equals(super.getScriptType(scriptFilePath).orElse(null))) {
-            return Optional.of(GraalJSScriptEngineFactory.MIME_TYPE);
-        } else {
-            return Optional.empty();
+        String scriptType = super.getScriptType(scriptFilePath).orElse(null);
+        if (!scriptFilePath.startsWith(getWatchPath().resolve("node_modules")) && ("js".equals(scriptType))) {
+            return Optional.of(scriptType);
         }
-    }
-
-    @Override
-    protected boolean watchSubDirectories() {
-        return false;
+        return Optional.empty();
     }
 }

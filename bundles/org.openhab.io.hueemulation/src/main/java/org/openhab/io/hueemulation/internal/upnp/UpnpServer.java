@@ -194,7 +194,7 @@ public class UpnpServer extends HttpServlet implements Consumer<HueEmulationConf
 
         try {
             httpService.unregister(DISCOVERY_FILE);
-        } catch (IllegalArgumentException ignore) {
+        } catch (RuntimeException ignore) {
         }
 
         try {
@@ -349,9 +349,8 @@ public class UpnpServer extends HttpServlet implements Consumer<HueEmulationConf
         }
         configChangeFuture = root.thenApply(this::createConfiguration)
                 .thenApplyAsync(this::performAddressTest, executor).thenApply(this::applyConfiguration)
-                .thenCompose(c -> {
-                    return c.startNow();
-                }).whenComplete((HueEmulationConfigWithRuntime config, @Nullable Throwable e) -> {
+                .thenCompose(c -> c.startNow())
+                .whenComplete((HueEmulationConfigWithRuntime config, @Nullable Throwable e) -> {
                     if (e != null) {
                         logger.warn("Upnp server: Address test failed", e);
                     }

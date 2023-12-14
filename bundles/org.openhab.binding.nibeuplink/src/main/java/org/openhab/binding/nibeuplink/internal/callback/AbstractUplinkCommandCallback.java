@@ -135,7 +135,7 @@ public abstract class AbstractUplinkCommandCallback extends BufferingResponseLis
     }
 
     /**
-     * @Nullable wrapper of gson which does not 'understand' nonnull annotations
+     * {@code @Nullable} wrapper of gson which does not 'understand' nonnull annotations
      *
      * @param json
      * @return
@@ -167,8 +167,11 @@ public abstract class AbstractUplinkCommandCallback extends BufferingResponseLis
     protected abstract String getURL();
 
     @Override
-    public final @Nullable StatusUpdateListener getListener() {
-        return listener;
+    public final void updateListenerStatus() {
+        StatusUpdateListener listener = this.listener;
+        if (listener != null) {
+            listener.update(communicationStatus);
+        }
     }
 
     @Override

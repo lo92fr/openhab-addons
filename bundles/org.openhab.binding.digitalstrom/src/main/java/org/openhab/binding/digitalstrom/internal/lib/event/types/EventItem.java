@@ -19,7 +19,7 @@ import org.openhab.binding.digitalstrom.internal.lib.event.constants.EventRespon
 /**
  * The {@link EventItem} represents an event item of a digitalSTROM-Event.
  *
- * @author Alexander Betker
+ * @author Alexander Betker - Initial contribution
  * @author Michael Ochel - add getSource()
  * @author Matthias Siegele - add getSource()
  */
@@ -33,7 +33,7 @@ public interface EventItem {
     String getName();
 
     /**
-     * Returns {@link HashMap} with the properties fiels of this {@link EventItem}.
+     * Returns {@link java.util.HashMap} with the properties fiels of this {@link EventItem}.
      * The key is an {@link EventResponseEnum} and represents the property name
      * and the value is the property value.
      *
@@ -42,7 +42,7 @@ public interface EventItem {
     Map<EventResponseEnum, String> getProperties();
 
     /**
-     * Returns {@link HashMap} with the source fields of this {@link EventItem}.
+     * Returns {@link java.util.HashMap} with the source fields of this {@link EventItem}.
      * The key is an {@link EventResponseEnum} and represents the property name
      * and the value is the property value.
      *

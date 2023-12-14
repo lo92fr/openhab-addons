@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -135,7 +136,7 @@ public class LGWebOSHandler extends BaseThingHandler
             return;
         }
 
-        LGWebOSTVSocket s = new LGWebOSTVSocket(webSocketClient, this, host, c.getPort(), scheduler);
+        LGWebOSTVSocket s = new LGWebOSTVSocket(webSocketClient, this, host, c.getUseTLS(), scheduler);
         s.setListener(this);
         socket = s;
 
@@ -373,7 +374,7 @@ public class LGWebOSHandler extends BaseThingHandler
 
     @Override
     public Collection<Class<? extends ThingHandlerService>> getServices() {
-        return Collections.singleton(LGWebOSActions.class);
+        return Set.of(LGWebOSActions.class);
     }
 
     /**

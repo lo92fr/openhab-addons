@@ -6,6 +6,6 @@
 	<type>binding</type>
 	<name>EcoTouch Binding</name>
 	<description>This is the binding for a Waterkotte EcoTouch heat pump.</description>
-	<author>Sebastian Held</author>
+	<connection>local</connection>
 
 </addon:addon>

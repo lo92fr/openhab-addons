@@ -76,8 +76,8 @@ public class UniFiThingDiscoveryService extends AbstractDiscoveryService
 
     @Override
     public void setThingHandler(final ThingHandler handler) {
-        if (handler instanceof UniFiControllerThingHandler) {
-            bridgeHandler = (UniFiControllerThingHandler) handler;
+        if (handler instanceof UniFiControllerThingHandler controllerThingHandler) {
+            bridgeHandler = controllerThingHandler;
         }
     }
 
@@ -147,7 +147,7 @@ public class UniFiThingDiscoveryService extends AbstractDiscoveryService
 
             thingDiscovered(DiscoveryResultBuilder.create(thingUID).withThingType(thingTypeUID).withBridge(bridgeUID)
                     .withRepresentationProperty(PARAMETER_CID).withTTL(TTL_SECONDS).withProperties(properties)
-                    .withLabel(uc.getAlias()).build());
+                    .withLabel(uc.getName()).build());
         }
     }
 

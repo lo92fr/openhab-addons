@@ -26,7 +26,8 @@ import org.openhab.core.thing.ThingTypeUID;
 /**
  * Enumerates the LIFX products, their IDs and feature set.
  *
- * @see https://lan.developer.lifx.com/docs/lifx-products
+ * @see <a href="https://lan.developer.lifx.com/docs/lifx-products">
+ *      https://lan.developer.lifx.com/docs/lifx-products</a>
  *
  * @author Wouter Born - Initial contribution
  * @author Wouter Born - Add temperature ranges and simplify feature definitions
@@ -123,6 +124,8 @@ public enum LifxProduct {
     PRODUCT_118(118, "LIFX Z", new Features(TR_1500_9000, COLOR, EXTENDED_MULTIZONE, MULTIZONE)),
     PRODUCT_119(119, "LIFX Beam", new Features(TR_1500_9000, COLOR, EXTENDED_MULTIZONE, MULTIZONE)),
     PRODUCT_120(120, "LIFX Beam", new Features(TR_1500_9000, COLOR, EXTENDED_MULTIZONE, MULTIZONE)),
+    PRODUCT_121(121, "LIFX Downlight", new Features(TR_1500_9000, COLOR)),
+    PRODUCT_122(122, "LIFX Downlight", new Features(TR_1500_9000, COLOR)),
     PRODUCT_123(123, "LIFX Color", new Features(TR_1500_9000, COLOR)),
     PRODUCT_124(124, "LIFX Color", new Features(TR_1500_9000, COLOR)),
     PRODUCT_125(125, "LIFX White to Warm", new Features(TR_1500_9000)),

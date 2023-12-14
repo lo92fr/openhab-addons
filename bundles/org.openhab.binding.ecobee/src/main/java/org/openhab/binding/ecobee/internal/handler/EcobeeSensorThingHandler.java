@@ -17,7 +17,6 @@ import static org.openhab.binding.ecobee.internal.EcobeeBindingConstants.*;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.lang3.text.WordUtils;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.binding.ecobee.internal.config.EcobeeSensorConfiguration;
 import org.openhab.binding.ecobee.internal.dto.thermostat.RemoteSensorCapabilityDTO;
@@ -37,6 +36,7 @@ import org.openhab.core.types.Command;
 import org.openhab.core.types.RefreshType;
 import org.openhab.core.types.State;
 import org.openhab.core.types.UnDefType;
+import org.openhab.core.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -126,7 +126,7 @@ public class EcobeeSensorThingHandler extends BaseThingHandler {
             ThingBuilder thingBuilder;
             thingBuilder = editThing();
             channel = ChannelBuilder.create(uid, getAcceptedItemType(capability.type))
-                    .withLabel("Sensor " + WordUtils.capitalize(capability.type))
+                    .withLabel("Sensor " + StringUtils.capitalizeByWhitespace(capability.type))
                     .withType(getChannelTypeUID(capability.type)).build();
             thingBuilder.withChannel(channel);
             updateThing(thingBuilder.build());

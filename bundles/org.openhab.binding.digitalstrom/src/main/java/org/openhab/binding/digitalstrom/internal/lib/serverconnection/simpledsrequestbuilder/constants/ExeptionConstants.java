@@ -13,10 +13,14 @@
 package org.openhab.binding.digitalstrom.internal.lib.serverconnection.simpledsrequestbuilder.constants;
 
 /**
- * The {@link ExeptionConstants} contains the {@link SimpleRequestBuilder} exception strings.
+ * The
+ * {@link org.openhab.binding.digitalstrom.internal.lib.serverconnection.simpledsrequestbuilder.constants.ExeptionConstants}
+ * contains the
+ * {@link org.openhab.binding.digitalstrom.internal.lib.serverconnection.simpledsrequestbuilder.SimpleRequestBuilder}
+ * exception strings.
  *
- * @author Michael Ochel - initial contributer
- * @author Matthias Siegele - initial contributer
+ * @author Michael Ochel - Initial contribution
+ * @author Matthias Siegele - Initial contribution
  */
 public class ExeptionConstants {
     public static final String NO_CLASS_ADDED = "No class added! Please add a class first!";

@@ -54,18 +54,17 @@ public class TestStoreMixedTypesTest extends BaseIntegrationTest {
     }
 
     @BeforeEach
-    private void generateUniqueItemId() {
+    public void generateUniqueItemId() {
         uniqueId = testCounter.getAndIncrement();
     }
 
     @AfterEach
-    private void tearDownLocalItems() {
+    public void tearDownLocalItems() {
         ITEMS.remove(getItemName());
     }
 
     @SuppressWarnings("null")
     public void storeItemWithDifferentTypes() {
-
         try {
             // First writing two values with string item
             {
