@@ -232,6 +232,7 @@
     <module>org.openhab.binding.millheat</module>
     <module>org.openhab.binding.milight</module>
     <module>org.openhab.binding.minecraft</module>
+    <module>org.openhab.binding.mbus</module>
     <module>org.openhab.binding.modbus</module>
     <module>org.openhab.binding.modbus.e3dc</module>
     <module>org.openhab.binding.modbus.sbc</module>
@@ -330,7 +331,6 @@
     <module>org.openhab.binding.serialbutton</module>
     <module>org.openhab.binding.shelly</module>
     <module>org.openhab.binding.silvercrestwifisocket</module>
-    <module>org.openhab.binding.mbus</module>
     <module>org.openhab.binding.siemensrds</module>
     <module>org.openhab.binding.sinope</module>
     <module>org.openhab.binding.sleepiq</module>
