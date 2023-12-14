@@ -19,7 +19,7 @@
 	<feature name="openhab-binding-mbus" description="MBus Binding" version="${project.version}">
 		<feature>openhab-runtime-base</feature>
 		<bundle start-level="80">mvn:org.openhab.addons.bundles/org.openhab.binding.mbus/${project.version}</bundle>
-		<bundle dependency="true">mvn:org.openmuc.jmbus/jmbus/3.3.0</bundle>
-		<bundle dependency="true">mvn:org.openmuc.jrxtx/jrxtx/1.0.1</bundle>
+		<bundle dependency="true">mvn:org.openmuc/jmbus/3.3.0</bundle>
+		<bundle dependency="true">mvn:org.openmuc/jrxtx/1.0.1</bundle>
 	</feature>
 </features>
