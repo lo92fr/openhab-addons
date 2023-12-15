@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2021 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -20,7 +20,6 @@ import org.openhab.binding.mbus.internal.constants.MBusBindingConstants;
 import org.openhab.binding.mbus.internal.handler.MBusCounterHandlerImpl;
 import org.openhab.binding.mbus.internal.handler.MBusTCPBridgeHandler;
 import org.openhab.core.config.core.Configuration;
-import org.openhab.core.io.net.http.HttpClientFactory;
 import org.openhab.core.net.NetworkAddressService;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Thing;
@@ -45,11 +44,9 @@ import org.slf4j.LoggerFactory;
 @Component(service = ThingHandlerFactory.class, configurationPid = "binding.mbus")
 public class MBusHandlerFactory extends BaseThingHandlerFactory {
 
-    @SuppressWarnings("unused")
     private final Logger logger = LoggerFactory.getLogger(MBusHandlerFactory.class);
 
     private @Nullable NetworkAddressService networkAddressService;
-    private @Nullable HttpClientFactory httpClientFactory;
     private @Nullable MBusTCPBridgeHandler bridge;
 
     private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set
@@ -58,8 +55,8 @@ public class MBusHandlerFactory extends BaseThingHandlerFactory {
     //
 
     @Activate
-    public MBusHandlerFactory(@Nullable final @Reference HttpClientFactory httpClientFactory) {
-        this.httpClientFactory = httpClientFactory;
+    public MBusHandlerFactory() {
+        logger.info("in MBusHandlerFactory");
     }
 
     @Override
@@ -82,6 +79,7 @@ public class MBusHandlerFactory extends BaseThingHandlerFactory {
 
     @Override
     protected @Nullable ThingHandler createHandler(Thing thing) {
+
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
 
         if (thingTypeUID.equals(MBusBindingConstants.THING_TYPE_MBUSTCPGATEWAY)) {
@@ -92,7 +90,9 @@ public class MBusHandlerFactory extends BaseThingHandlerFactory {
         } else if (thingTypeUID.equals(MBusBindingConstants.THING_TYPE_MBUSCOUNTER)) {
             MBusCounterHandlerImpl handler = new MBusCounterHandlerImpl(thing);
 
-            handler.setMBusConnector(bridge.getMBusConnector());
+            if (bridge != null) {
+                handler.setMBusConnector(bridge.getMBusConnector());
+            }
 
             return handler;
         }

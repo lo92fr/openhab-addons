@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2021 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -13,15 +13,10 @@
 package org.openhab.binding.mbus.internal.network;
 
 import java.util.Date;
-import java.util.Hashtable;
-import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.api.Request;
-import org.openhab.binding.mbus.internal.handler.MBusBaseThingHandler;
-import org.openhab.core.config.core.Configuration;
-import org.openhab.core.types.Type;
 import org.openmuc.jmbus.MBusConnection;
 import org.openmuc.jmbus.MBusConnection.MBusTcpBuilder;
 import org.openmuc.jmbus.VariableDataStructure;
@@ -42,28 +37,22 @@ public class MBusConnectorImpl implements MBusConnector {
 
     private static final Logger logger = LoggerFactory.getLogger(MBusConnectorImpl.class);
 
-    private @Nullable String sessionId = null;
     private @Nullable String host = "192.168.254.41";
     private int port = 10001;
 
     @SuppressWarnings("unused")
     private @Nullable Date lastUpdate;
 
-    private Map<String, Type> updateCommand;
     private @Nullable MBusConnection mBusConnection;
-
-    private @Nullable MBusBaseThingHandler mBusBridgeBaseThingHandler;
 
     @Activate
     public MBusConnectorImpl() {
-        this.updateCommand = new Hashtable<String, Type>();
-
         MBusTcpBuilder builder = MBusConnection.newTcpBuilder(host, port).setTimeout(1000).setConnectionTimeout(2000);
         try {
             mBusConnection = builder.build();
             logger.debug("mbus:: open Sap Connection");
         } catch (Exception ex) {
-            logger.debug("exception:" + ex.getMessage());
+            logger.debug("exception: {}", ex.getMessage());
         }
     }
 
@@ -71,32 +60,28 @@ public class MBusConnectorImpl implements MBusConnector {
     public void resetSlave(int idx) {
         try {
             // mBusConnection.linkReset(idx);
+            Thread.sleep(500);
         } catch (Exception ex) {
-            logger.info("exception:" + ex.getMessage());
+            logger.info("exception: {}", ex.getMessage());
         }
     }
 
     @Override
     public @Nullable VariableDataStructure readSlave(int idx) {
+        MBusConnection lcmBusConnection = mBusConnection;
+        if (lcmBusConnection == null) {
+            return null;
+        }
         try {
-            VariableDataStructure result = mBusConnection.read(idx);
+            VariableDataStructure result = lcmBusConnection.read(idx);
             if (result != null) {
                 return result;
             }
         } catch (Exception ex) {
-            logger.info("exception:" + ex.getMessage());
+            logger.info("exception: {}", ex.getMessage());
         }
 
         return null;
-    }
-
-    @Override
-    public void setMBusBridgeBaseThingHandler(@Nullable MBusBaseThingHandler mbusBridgeBaseThingHandler) {
-        this.mBusBridgeBaseThingHandler = mbusBridgeBaseThingHandler;
-    }
-
-    public void unsetMBusBridgeBaseThingHandler(MBusBaseThingHandler mbusBridgeBaseThingHandler) {
-        this.mBusBridgeBaseThingHandler = null;
     }
 
     @Override
@@ -114,24 +99,6 @@ public class MBusConnectorImpl implements MBusConnector {
 
     @Override
     public void onError(@Nullable Request request) {
-    }
-
-    private void _initConfig() throws Exception {
-
-        Configuration config = null;
-        if (mBusBridgeBaseThingHandler != null) {
-            config = mBusBridgeBaseThingHandler.getThing().getConfiguration();
-        } else {
-            throw new Exception(
-                    "siemensHvac:Exception unable to get config because hvacBridgeBaseThingHandler is null");
-        }
-
-        if (config.containsKey("Host")) {
-            host = (String) config.get("Host");
-        }
-        if (config.containsKey("Port")) {
-            port = (int) config.get("Port");
-        }
     }
 
     public void setHost(String host) {

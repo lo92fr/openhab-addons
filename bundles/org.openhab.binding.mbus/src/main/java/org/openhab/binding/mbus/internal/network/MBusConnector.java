@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2021 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -15,7 +15,6 @@ package org.openhab.binding.mbus.internal.network;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.api.Request;
-import org.openhab.binding.mbus.internal.handler.MBusBaseThingHandler;
 import org.openmuc.jmbus.VariableDataStructure;
 
 import com.google.gson.JsonObject;
@@ -33,8 +32,6 @@ public interface MBusConnector {
     public void onComplete(Request request);
 
     public void onError(Request request);
-
-    public void setMBusBridgeBaseThingHandler(@Nullable MBusBaseThingHandler hvacBridgeBaseThingHandler);
 
     public @Nullable VariableDataStructure readSlave(int idx);
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2021 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -38,13 +38,7 @@ import org.slf4j.LoggerFactory;
 public abstract class MBusBaseThingHandler extends BaseThingHandler {
     private final Logger logger = LoggerFactory.getLogger(MBusBaseThingHandler.class);
     protected @Nullable MBusTCPBridgeHandler bridgeHandler;
-
-    // protected ConcurrentHashMap<IndividualAddress, Destination> destinations = new ConcurrentHashMap<>();
-    // private final ScheduledExecutorService knxScheduler = ThreadPoolManager.getScheduledPool("knx");
-    // private final ScheduledExecutorService backgroundScheduler = Executors.newSingleThreadScheduledExecutor();
-
     private @Nullable MBusDeviceDiscoveryService discoveryService;
-    @SuppressWarnings("unused")
     protected @Nullable MBusConnector connector;
 
     public MBusBaseThingHandler(Thing thing) {
@@ -64,16 +58,6 @@ public abstract class MBusBaseThingHandler extends BaseThingHandler {
     public void unsetSiemensHvacConnector(MBusConnector hvacConnector) {
         this.connector = null;
     }
-
-    /*
-     * public ScheduledExecutorService getScheduler() {
-     * return knxScheduler;
-     * }
-     *
-     * public ScheduledExecutorService getBackgroundScheduler() {
-     * return backgroundScheduler;
-     * }
-     */
 
     @Override
     public void initialize() {

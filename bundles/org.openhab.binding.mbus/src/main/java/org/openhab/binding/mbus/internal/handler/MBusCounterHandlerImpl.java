@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2021 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -22,6 +22,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.mbus.internal.network.MBusConnector;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.StringType;
 import org.openhab.core.thing.Channel;
@@ -51,14 +52,13 @@ public class MBusCounterHandlerImpl extends MBusBaseThingHandler implements MBus
     private final Logger logger = LoggerFactory.getLogger(MBusCounterHandlerImpl.class);
 
     private @Nullable ScheduledFuture<?> pollingJob = null;
-    private boolean firstRead = true;
     private static Lock lck = new ReentrantLock();
 
     public MBusCounterHandlerImpl(Thing thing) {
         super(thing);
 
         logger.info("===========================================================");
-        logger.info("MBus9");
+        logger.info("MBus_1");
         logger.info("===========================================================");
     }
 
@@ -91,6 +91,11 @@ public class MBusCounterHandlerImpl extends MBusBaseThingHandler implements MBus
     }
 
     private void setupChannel() {
+        MBusConnector lcConnector = connector;
+        if (lcConnector == null) {
+            logger.debug("Connector is null in setupChannel, aborting");
+            return;
+        }
 
         try {
             lck.lock();
@@ -106,13 +111,10 @@ public class MBusCounterHandlerImpl extends MBusBaseThingHandler implements MBus
             VariableDataStructure result = null;
 
             while (retry < 3 && result == null) {
-                logger.info("Reset Slave:" + idx);
-                this.connector.resetSlave(idx);
-
-                Thread.sleep(500);
-
-                logger.info("Read Slave:" + idx);
-                result = connector.readSlave(idx);
+                logger.info("Reset Slave: {}", idx);
+                lcConnector.resetSlave(idx);
+                logger.info("Read Slave: {}", idx);
+                result = lcConnector.readSlave(idx);
                 retry++;
             }
 
@@ -120,6 +122,11 @@ public class MBusCounterHandlerImpl extends MBusBaseThingHandler implements MBus
             List<Channel> oldChannels = this.getThing().getChannels();
             List<Channel> newChannels = new ArrayList<Channel>();
             ChannelBuilder channelBuilder;
+
+            if (result == null) {
+                logger.debug("result is null in setupChannel, aborting");
+                return;
+            }
 
             List<DataRecord> dRecord = result.getDataRecords();
             int id = 0;
@@ -132,48 +139,66 @@ public class MBusCounterHandlerImpl extends MBusBaseThingHandler implements MBus
                         .withType(cTypeUuid);
 
                 newChannels.add(channelBuilder.build());
-                logger.info("Find record:" + d.getDescription() + " <> " + d.getDataValueType() + " <> "
-                        + d.getDataValue());
+                logger.info("Find record: {} <> {} <> {}", d.getDescription(), d.getDataValueType(), d.getDataValue());
                 id++;
             }
 
-            logger.info("update thing:" + idx);
+            logger.info("update thing: {}", idx);
 
             thingBuilder.withoutChannels(oldChannels).withChannels(newChannels);
             updateThing(thingBuilder.build());
 
             Thread.sleep(1000);
         } catch (Exception ex) {
-            logger.error(ex.getMessage(), ex);
-
+            logger.error("Error occurs in setupChannel : {}", ex.getMessage(), ex);
         } finally {
             lck.unlock();
         }
     }
 
     private void pollingCode() {
+        MBusConnector lcConnector = connector;
+        if (lcConnector == null) {
+            logger.debug("Connector is null in setupChannel, aborting");
+            return;
+        }
+
         try {
             lck.lock();
             logger.info("poolingCode:Enter()");
             int idx = 0;
             Map<String, String> properties = this.getThing().getProperties();
             String idS = properties.get("primaryAddr");
+            String SerialNR = properties.get("serialNr");
 
             if (idS != null) {
                 idx = (int) Double.parseDouble(idS);
             }
 
             // Make sure we don't overlap counter addressing on bus by adding delay on reseting address
-            Thread.sleep(500);
-            logger.info("Read counter:" + idx);
-            this.connector.resetSlave(idx);
-            Thread.sleep(500);
-            VariableDataStructure result = connector.readSlave(idx);
+            logger.info("Read counter: {}", idx);
+            lcConnector.resetSlave(idx);
+            VariableDataStructure result = lcConnector.readSlave(idx);
+            if (result == null) {
+                logger.info("result is null in poolingCode, aborting");
+                return;
+            }
+
+            // We check that our current result match the device we want
+            // Concurrent access on the bus can mix data, this prevent false result
+            String resultSerialNR = result.getSecondaryAddress().getDeviceId().toString();
+            if (!resultSerialNR.equals(SerialNR)) {
+                logger.info("deviceId don't match the current device, abort pooling: {} <> {}", resultSerialNR,
+                        SerialNR);
+                return;
+            }
+
             List<DataRecord> dRecord = result.getDataRecords();
+
             int id = 0;
             for (DataRecord d : dRecord) {
-                logger.info("Find record:" + idx + " <> " + id + " <> " + d.getDescription() + " <> "
-                        + d.getDataValueType() + " <> " + d.getDataValue());
+                logger.info("Find record: {} <> {} <> {} <> {} <> {}", idx, id, d.getDescription(),
+                        d.getDataValueType(), d.getDataValue());
 
                 ChannelUID chanUid = new ChannelUID(this.getThing().getUID(), "mbus_" + id);
                 int exp = d.getMultiplierExponent();
@@ -205,7 +230,7 @@ public class MBusCounterHandlerImpl extends MBusBaseThingHandler implements MBus
 
             Thread.sleep(1000);
         } catch (Exception ex) {
-            logger.error(ex.getMessage(), ex);
+            logger.error("Error occurs in poolingCode : {}", ex.getMessage(), ex);
         } finally {
             lck.unlock();
         }

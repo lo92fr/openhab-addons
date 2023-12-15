@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2021 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -17,10 +17,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.mbus.internal.constants.MBusBindingConstants;
 import org.openhab.binding.mbus.internal.handler.MBusTCPBridgeHandler;
-import org.openhab.binding.mbus.internal.network.MBusConnector;
 import org.openhab.binding.mbus.internal.network.MBusConnectorImpl;
 import org.openhab.core.config.discovery.AbstractDiscoveryService;
 import org.openhab.core.config.discovery.DiscoveryResult;
@@ -41,13 +41,13 @@ import org.slf4j.LoggerFactory;
  * @author Laurent Arnal - Initial contribution
  */
 
+@NonNullByDefault
 public class MBusDeviceDiscoveryService extends AbstractDiscoveryService
         implements DiscoveryService, ThingHandlerService {
 
     private static final Logger logger = LoggerFactory.getLogger(MBusDeviceDiscoveryService.class);
 
     private @Nullable MBusTCPBridgeHandler mBusBridgeHandler;
-    private @Nullable MBusConnector mbusConnector;
     public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES = Collections
             .singleton(MBusBindingConstants.THING_TYPE_MBUSTCPGATEWAY);
 
@@ -69,9 +69,7 @@ public class MBusDeviceDiscoveryService extends AbstractDiscoveryService
     private @Nullable ThingUID getThingUID(ThingTypeUID thingTypeUID, String serial) {
         if (mBusBridgeHandler != null) {
             ThingUID localBridgeUID = mBusBridgeHandler.getThing().getUID();
-            if (localBridgeUID != null) {
-                return new ThingUID(thingTypeUID, localBridgeUID, serial);
-            }
+            return new ThingUID(thingTypeUID, localBridgeUID, serial);
         }
         return null;
     }
@@ -81,18 +79,27 @@ public class MBusDeviceDiscoveryService extends AbstractDiscoveryService
         logger.debug("call startScan()");
 
         final MBusTCPBridgeHandler handler = mBusBridgeHandler;
-        MBusConnectorImpl cnx = (MBusConnectorImpl) mBusBridgeHandler.getMBusConnector();
+
+        if (handler == null) {
+            logger.debug("MBusTCPBridgeHandler is null in startScan, aborting");
+            return;
+        }
+        MBusConnectorImpl cnx = (MBusConnectorImpl) handler.getMBusConnector();
+
+        if (cnx == null) {
+            logger.debug("Connector is null in startScan, aborting");
+            return;
+        }
 
         for (int idx = 0; idx < 5; idx++) {
-            logger.info("Search devices: " + idx);
-            logger.info("Search devices: " + idx);
+            logger.info("Search devices: {}", idx);
 
             cnx.resetSlave(idx);
 
             VariableDataStructure result = cnx.readSlave(idx);
 
             if (result != null) {
-                logger.info("Find devices: " + idx);
+                logger.info("Find devices: {}", idx);
 
                 SecondaryAddress sAddr = result.getSecondaryAddress();
                 String manufacturer = sAddr.getManufacturerId();
@@ -103,7 +110,7 @@ public class MBusDeviceDiscoveryService extends AbstractDiscoveryService
                 ThingTypeUID thingTypeUID = new ThingTypeUID(MBusBindingConstants.BINDING_ID, "mbuscounter");
 
                 ThingUID thingUID = getThingUID(thingTypeUID, manufacturer + "_" + idx);
-                ThingUID bridgeUID = mBusBridgeHandler.getThing().getUID();
+                ThingUID bridgeUID = handler.getThing().getUID();
 
                 if (thingUID != null) {
                     Map<String, Object> properties = new HashMap<>(1);

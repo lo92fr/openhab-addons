@@ -20,11 +20,13 @@
       <groupId>org.openmuc</groupId>
       <artifactId>jmbus</artifactId>
       <version>3.3.0</version>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.openmuc</groupId>
       <artifactId>jrxtx</artifactId>
       <version>1.0.1</version>
+      <scope>compile</scope>
     </dependency>
 
   </dependencies>
