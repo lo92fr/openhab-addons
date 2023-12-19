@@ -69,7 +69,6 @@ public abstract class MBusBridgeBaseThingHandler extends BaseBridgeHandler {
     public boolean registerDiscoveryListener(MBusDeviceDiscoveryService listener) {
         if (discoveryService == null) {
             discoveryService = listener;
-            // getFullLights().forEach(listener::addLightDiscovery);
             return true;
         }
 

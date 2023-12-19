@@ -47,7 +47,6 @@ public abstract class MBusBaseThingHandler extends BaseThingHandler {
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
-        // Nothing to do here
     }
 
     @Reference
@@ -105,7 +104,6 @@ public abstract class MBusBaseThingHandler extends BaseThingHandler {
     public boolean registerDiscoveryListener(MBusDeviceDiscoveryService listener) {
         if (discoveryService == null) {
             discoveryService = listener;
-            // discoveryService.setSiemensHvacMetadataRegistry(metaDataRegistry);
             return true;
         }
         return false;

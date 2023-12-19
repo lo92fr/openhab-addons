@@ -139,7 +139,6 @@ public class MBusDeviceDiscoveryService extends AbstractDiscoveryService
     public void setThingHandler(@Nullable ThingHandler handler) {
         if (handler instanceof MBusTCPBridgeHandler) {
             mBusBridgeHandler = (MBusTCPBridgeHandler) handler;
-            // bridgeUID = handler.getThing().getUID();
         }
     }
 
@@ -158,12 +157,5 @@ public class MBusDeviceDiscoveryService extends AbstractDiscoveryService
 
     @Override
     public void deactivate() {
-        /*
-         * removeOlderResults(new Date().getTime(), bridgeUID);
-         * final HueBridgeHandler handler = hueBridgeHandler;
-         * if (handler != null) {
-         * handler.unregisterDiscoveryListener();
-         * }
-         */
     }
 }
