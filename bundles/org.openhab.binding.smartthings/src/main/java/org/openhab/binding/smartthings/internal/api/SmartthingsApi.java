@@ -60,7 +60,6 @@ public class SmartthingsApi {
         JsonElement res1 = ((JsonObject) result).get("items");
         JsonArray devices = res1.getAsJsonArray();
         return devices;
-
     }
 
     public void SendCommand(String deviceId, String jsonMsg) {
@@ -82,7 +81,28 @@ public class SmartthingsApi {
         } catch (OAuthException | OAuthResponseException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
+    }
 
+    public @Nullable JsonObject SendStatus(String deviceId, String jsonMsg) {
+        try {
+            final AccessTokenResponse accessTokenResponse = oAuthClientService.getAccessTokenResponse();
+            final String accessToken = accessTokenResponse == null ? null : accessTokenResponse.getAccessToken();
+
+            String uri = "https://api.smartthings.com/v1/devices/" + deviceId + "/status";
+
+            if (accessToken == null || accessToken.isEmpty()) {
+                throw new RuntimeException(
+                        "No Smartthings accesstoken. Did you authorize Smartthings via /connectsmartthings ?");
+            } else {
+
+                JsonObject res = networkConnector.DoRequest(uri, null, accessToken, jsonMsg, HttpMethod.GET);
+                return res;
+            }
+        } catch (final IOException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        } catch (OAuthException | OAuthResponseException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
     }
 
     private @Nullable JsonElement DoRequest(String uri) {
@@ -103,7 +123,6 @@ public class SmartthingsApi {
         } catch (OAuthException | OAuthResponseException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-
     }
 
     /**
@@ -139,5 +158,4 @@ public class SmartthingsApi {
      * }
      * }
      */
-
 }
