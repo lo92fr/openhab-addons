@@ -24,10 +24,10 @@ import java.util.concurrent.TimeUnit;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.smartthings.internal.SmartthingsBindingConstants;
-import org.openhab.binding.smartthings.internal.SmartthingsHandlerFactory;
 import org.openhab.binding.smartthings.internal.api.SmartthingsApi;
 import org.openhab.binding.smartthings.internal.converter.SmartthingsConverter;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsStateData;
+import org.openhab.binding.smartthings.internal.type.SmartthingsException;
 import org.openhab.core.config.core.status.ConfigStatusMessage;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.library.types.PercentType;
@@ -57,16 +57,13 @@ public class SmartthingsThingHandler extends ConfigStatusThingHandler {
 
     private SmartthingsThingConfig config;
     private String smartthingsName;
-    private int timeout;
-    private SmartthingsHandlerFactory smartthingsHandlerFactory;
     private Map<ChannelUID, SmartthingsConverter> converters = new HashMap<>();
 
     private final String smartthingsConverterName = "smartthings-converter";
     private @Nullable ScheduledFuture<?> pollingJob = null;
 
-    public SmartthingsThingHandler(Thing thing, SmartthingsHandlerFactory smartthingsHandlerFactory) {
+    public SmartthingsThingHandler(Thing thing) {
         super(thing);
-        this.smartthingsHandlerFactory = smartthingsHandlerFactory;
         smartthingsName = ""; // Initialize here so it can be NonNull but it should always get a value in initialize()
         config = new SmartthingsThingConfig();
     }
@@ -89,65 +86,66 @@ public class SmartthingsThingHandler extends ConfigStatusThingHandler {
             return;
         }
 
-        SmartthingsBridgeHandler smartthingsBridgeHandler = (SmartthingsBridgeHandler) bridge.getHandler();
-        if (smartthingsBridgeHandler != null
-                && smartthingsBridgeHandler.getThing().getStatus().equals(ThingStatus.ONLINE)) {
-            String thingTypeId = thing.getThingTypeUID().getId();
-            String smartthingsType = getSmartthingsAttributeFromChannel(channelUID);
+        SmartthingsCloudBridgeHandler cloudBridge = (SmartthingsCloudBridgeHandler) bridge.getHandler();
 
+        if (cloudBridge != null && cloudBridge.getThing().getStatus().equals(ThingStatus.ONLINE)) {
             SmartthingsConverter converter = converters.get(channelUID);
 
-            String path;
             String jsonMsg = "";
             if (command instanceof RefreshType) {
-                SmartthingsCloudBridgeHandler cloudBridge = (SmartthingsCloudBridgeHandler) bridge.getHandler();
                 SmartthingsApi api = cloudBridge.getSmartthingsApi();
                 Map<String, String> properties = this.getThing().getProperties();
                 String deviceId = properties.get("deviceId");
 
                 if (deviceId != null) {
-                    JsonObject res = api.SendStatus(deviceId, jsonMsg);
-                    if (res != null) {
-                        JsonObject cp = res.get("components").getAsJsonObject();
-                        JsonObject main = cp.get("main").getAsJsonObject();
-                        JsonObject sw = main.get("switch").getAsJsonObject();
-                        JsonObject sw2 = sw.get("switch").getAsJsonObject();
-                        String value = sw2.get("value").getAsString();
-                        if (value.equals("on")) {
-                            updateState(channelUID, OnOffType.ON);
-                        } else {
-                            updateState(channelUID, OnOffType.OFF);
-                        }
+                    try {
+                        JsonObject res = api.sendStatus(deviceId, jsonMsg);
+                        if (res != null) {
+                            JsonObject cp = res.get("components").getAsJsonObject();
+                            JsonObject main = cp.get("main").getAsJsonObject();
+                            JsonObject sw = main.get("switch").getAsJsonObject();
+                            JsonObject sw2 = sw.get("switch").getAsJsonObject();
+                            String value = sw2.get("value").getAsString();
+                            if (("on".equals(value))) {
+                                updateState(channelUID, OnOffType.ON);
+                            } else {
+                                updateState(channelUID, OnOffType.OFF);
+                            }
 
-                        logger.trace("");
+                            logger.trace("");
+                        }
+                    } catch (SmartthingsException ex) {
+                        logger.error("Unable to update device : {}", deviceId);
                     }
                 }
-
             } else {
                 // @todo : review this
-                jsonMsg = converter.convertToSmartthings(channelUID, command);
+                if (converter != null) {
+                    jsonMsg = converter.convertToSmartthings(channelUID, command);
+                }
             }
 
             // try {
 
             if (command instanceof OnOffType) {
-                OnOffType OnOff = (OnOffType) command;
-                String val = OnOff.toString().toLowerCase();
-
+                OnOffType onOff = (OnOffType) command;
+                String val = onOff.toString().toLowerCase();
                 jsonMsg = String
                         .format("{'commands': [{'component': 'main', 'capability': 'switch', 'command': '%s'}]}", val);
 
-                SmartthingsCloudBridgeHandler cloudBridge = (SmartthingsCloudBridgeHandler) bridge.getHandler();
                 SmartthingsApi api = cloudBridge.getSmartthingsApi();
                 Map<String, String> properties = this.getThing().getProperties();
                 String deviceId = properties.get("deviceId");
 
-                if (deviceId != null) {
-                    api.SendCommand(deviceId, jsonMsg);
+                try {
+                    if (deviceId != null) {
+                        api.sendCommand(deviceId, jsonMsg);
+                    }
+                } catch (SmartthingsException ex) {
+                    logger.error("Unable to send command: {}", ex.getMessage());
                 }
 
-                updateState(channelUID, OnOff);
-
+                updateState(channelUID, onOff);
             }
 
             else if (command instanceof PercentType) {
@@ -158,31 +156,21 @@ public class SmartthingsThingHandler extends ConfigStatusThingHandler {
                         "{'commands': [{'component': 'main', 'capability': 'switchLevel', 'command': 'setLevel', 'arguments': [%s, 2]}]}",
                         val);
 
-                SmartthingsCloudBridgeHandler cloudBridge = (SmartthingsCloudBridgeHandler) bridge.getHandler();
                 SmartthingsApi api = cloudBridge.getSmartthingsApi();
                 Map<String, String> properties = this.getThing().getProperties();
                 String deviceId = properties.get("deviceId");
 
-                if (deviceId != null) {
-                    api.SendCommand(deviceId, jsonMsg);
+                try {
+                    if (deviceId != null) {
+                        api.sendCommand(deviceId, jsonMsg);
+                    }
+                } catch (SmartthingsException ex) {
+                    logger.error("Unable to send command: {}", ex.getMessage());
                 }
 
                 updateState(channelUID, pt);
-
             }
         }
-    }
-
-    /**
-     * Get the Smartthings capability reference "attribute" from the channel properties.
-     * In OpenHAB each channel id corresponds to the Smartthings attribute. In the ChannelUID the
-     * channel id is the last segment
-     *
-     * @param channelUID
-     * @return channel id
-     */
-    private String getSmartthingsAttributeFromChannel(ChannelUID channelUID) {
-        return channelUID.getId();
     }
 
     /**
@@ -207,15 +195,17 @@ public class SmartthingsThingHandler extends ConfigStatusThingHandler {
 
         // If value from Smartthings is null then stop here
         State state;
-        if (stateData.value != null) {
-            state = converter.convertToOpenHab(matchingChannel.getAcceptedItemType(), stateData);
-        } else {
-            state = UnDefType.NULL;
-        }
+        if (converter != null) {
+            if (stateData.value != null) {
+                state = converter.convertToOpenHab(matchingChannel.getAcceptedItemType(), stateData);
+            } else {
+                state = UnDefType.NULL;
+            }
 
-        updateState(matchingChannel.getUID(), state);
-        logger.trace("Smartthings updated State for channel: {} to {}", matchingChannel.getUID().getAsString(),
-                state.toString());
+            updateState(matchingChannel.getUID(), state);
+            logger.trace("Smartthings updated State for channel: {} to {}", matchingChannel.getUID().getAsString(),
+                    state.toString());
+        }
     }
 
     @Override
@@ -225,7 +215,6 @@ public class SmartthingsThingHandler extends ConfigStatusThingHandler {
             return;
         }
         smartthingsName = config.smartthingsName;
-        timeout = config.smartthingsTimeout;
 
         // Create converters for each channel
         for (Channel ch : thing.getChannels()) {
@@ -284,8 +273,6 @@ public class SmartthingsThingHandler extends ConfigStatusThingHandler {
                 return;
             }
         }
-
-        long start = System.currentTimeMillis();
     }
 
     private @Nullable SmartthingsConverter getConverter(String converterName) {

@@ -12,7 +12,6 @@
  */
 package org.openhab.binding.smartthings.internal;
 
-import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -23,7 +22,7 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.smartthings.internal.api.SmartthingsNetworkConnector;
 import org.openhab.binding.smartthings.internal.handler.SmartthingsBridgeHandler;
-import org.osgi.framework.BundleContext;
+import org.openhab.binding.smartthings.internal.type.SmartthingsException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -49,12 +48,10 @@ public class SmartthingsAuthService {
     // private final List<SpotifyAccountHandler> handlers = new ArrayList<>();
 
     private @NonNullByDefault({}) HttpService httpService;
-    private @NonNullByDefault({}) BundleContext bundleContext;
     private @Nullable SmartthingsAccountHandler accountHandler;
 
     @Activate
     protected void activate(ComponentContext componentContext, Map<String, Object> properties) {
-        bundleContext = componentContext.getBundleContext();
     }
 
     protected void initialize() {
@@ -71,7 +68,6 @@ public class SmartthingsAuthService {
      * Creates a new {@link SpotifyAuthServlet}.
      *
      * @return the newly created servlet
-     * @throws IOException thrown when an HTML template could not be read
      */
 
     public void registerServlet() {
@@ -86,15 +82,14 @@ public class SmartthingsAuthService {
         }
     }
 
-    private HttpServlet createServlet() throws Exception {
+    private HttpServlet createServlet() throws SmartthingsException {
         SmartthingsBridgeHandler bridgeHandler = (SmartthingsBridgeHandler) accountHandler;
-        SmartthingsNetworkConnector networkConnector = bridgeHandler.getNetworkConnector();
-        if (bridgeHandler != null) {
-            return new SmartthingsAuthServlet(bridgeHandler, this, httpService, networkConnector, "");
-        } else {
-
-            throw new Exception("BridgeHandler is null");
+        if (bridgeHandler == null) {
+            throw new SmartthingsException("BridgeHandler is null");
         }
+
+        SmartthingsNetworkConnector networkConnector = bridgeHandler.getNetworkConnector();
+        return new SmartthingsAuthServlet(bridgeHandler, this, httpService, networkConnector, "");
     }
 
     /**
@@ -106,13 +101,13 @@ public class SmartthingsAuthService {
      * @param code The Spotify returned code value
      * @return returns the name of the Spotify user that is authorized
      */
-    public String authorize(String servletBaseURL, String state, String code) {
+    public String authorize(String servletBaseURL, String state, String code) throws SmartthingsException {
         SmartthingsAccountHandler accountHandler = getSmartthingsAccountHandler();
         if (accountHandler == null) {
             logger.debug(
                     "Smartthings redirected with state '{}' but no matching bridge was found. Possible bridge has been removed.",
                     state);
-            throw new RuntimeException(ERROR_UKNOWN_BRIDGE);
+            throw new SmartthingsException(ERROR_UKNOWN_BRIDGE);
         } else {
             return accountHandler.authorize(servletBaseURL, code);
         }

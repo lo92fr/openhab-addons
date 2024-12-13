@@ -22,7 +22,6 @@ import java.util.concurrent.TimeoutException;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.jetty.client.HttpClient;
 import org.openhab.binding.smartthings.internal.discovery.SmartthingsDiscoveryService;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsStateData;
 import org.openhab.binding.smartthings.internal.handler.SmartthingsBridgeHandler;
@@ -69,7 +68,6 @@ public class SmartthingsHandlerFactory extends BaseThingHandlerFactory
     private Gson gson;
     private List<SmartthingsThingHandler> thingHandlers = Collections.synchronizedList(new ArrayList<>());
     private @NonNullByDefault({}) HttpService httpService;
-    private @NonNullByDefault({}) HttpClient httpClient;
     private final HttpClientFactory httpClientFactory;
     private final SmartthingsAuthService authService;
     private final OAuthFactory oAuthFactory;
@@ -125,7 +123,6 @@ public class SmartthingsHandlerFactory extends BaseThingHandlerFactory
             logger.debug("SmartthingsHandlerFactory created CloudBridgeHandler for {}", thingTypeUID.getAsString());
             return bridgeHandler;
         } else if (SmartthingsBindingConstants.BINDING_ID.equals(thing.getThingTypeUID().getBindingId())) {
-
             // Everything but the bridge is handled by this one handler
             // Make sure this thing belongs to the registered Bridge
             if (bridgeUID != null && !bridgeUID.equals(thing.getBridgeUID())) {
@@ -133,7 +130,7 @@ public class SmartthingsHandlerFactory extends BaseThingHandlerFactory
                         thing.getLabel());
                 return null;
             }
-            SmartthingsThingHandler thingHandler = new SmartthingsThingHandler(thing, this);
+            SmartthingsThingHandler thingHandler = new SmartthingsThingHandler(thing);
             thingHandlers.add(thingHandler);
             logger.debug("SmartthingsHandlerFactory created ThingHandler for {}, {}",
                     thing.getConfiguration().get("smartthingsName"), thing.getUID().getAsString());
@@ -154,27 +151,6 @@ public class SmartthingsHandlerFactory extends BaseThingHandlerFactory
     @Override
     public void sendDeviceCommand(String path, int timeout, String data)
             throws InterruptedException, TimeoutException, ExecutionException {
-
-        /*
-         * if (bridgeHandler instanceof SmartthingsHubBridgeHandler) {
-         * SmartthingsHubBridgeHandler hubBridgeHandler = (SmartthingsHubBridgeHandler) bridgeHandler;
-         * ContentResponse response = httpClient
-         * .newRequest(hubBridgeHandler.getSmartthingsIp(), hubBridgeHandler.getSmartthingsPort())
-         * .timeout(timeout, TimeUnit.SECONDS).path(path).method(HttpMethod.POST)
-         * .content(new StringContentProvider(data), "application/json").send();
-         *
-         * int status = response.getStatus();
-         * if (status == 202) {
-         * logger.debug(
-         * "Sent message \"{}\" with path \"{}\" to the Smartthings hub, received HTTP status {} (This is the normal code from Smartthings)"
-         * ,
-         * data, path, status);
-         * } else {
-         * logger.warn("Sent message \"{}\" with path \"{}\" to the Smartthings hub, received HTTP status {}",
-         * data, path, status);
-         * }
-         * }
-         */
     }
 
     /**
@@ -219,15 +195,6 @@ public class SmartthingsHandlerFactory extends BaseThingHandlerFactory
         return null;
     }
 
-    @Reference
-    protected void setHttpClientFactory(HttpClientFactory httpClientFactory) {
-        this.httpClient = httpClientFactory.getCommonHttpClient();
-    }
-
-    protected void unsetHttpClientFactory() {
-        this.httpClient = null;
-    }
-
     @Override
     @Nullable
     public SmartthingsBridgeHandler getBridgeHandler() {
@@ -237,6 +204,9 @@ public class SmartthingsHandlerFactory extends BaseThingHandlerFactory
     @Override
     @Nullable
     public ThingUID getBridgeUID() {
-        return bridgeHandler.getThing().getUID();
+        if (bridgeHandler != null) {
+            return bridgeHandler.getThing().getUID();
+        }
+        return null;
     }
 }

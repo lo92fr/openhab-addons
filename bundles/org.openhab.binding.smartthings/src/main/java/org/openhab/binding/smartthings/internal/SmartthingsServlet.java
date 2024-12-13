@@ -21,7 +21,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -33,15 +32,15 @@ import org.openhab.binding.smartthings.internal.api.SmartthingsApi;
 import org.openhab.binding.smartthings.internal.api.SmartthingsNetworkConnector;
 import org.openhab.binding.smartthings.internal.dto.AppResponse;
 import org.openhab.binding.smartthings.internal.dto.ConfigurationResponse;
-import org.openhab.binding.smartthings.internal.dto.ConfigurationResponse.configurationData.Page;
-import org.openhab.binding.smartthings.internal.dto.ConfigurationResponse.configurationData.initialize;
+import org.openhab.binding.smartthings.internal.dto.ConfigurationResponse.ConfigurationData.Initialize;
+import org.openhab.binding.smartthings.internal.dto.ConfigurationResponse.ConfigurationData.Page;
 import org.openhab.binding.smartthings.internal.dto.LifeCycle;
 import org.openhab.binding.smartthings.internal.dto.LifeCycle.Data;
 import org.openhab.binding.smartthings.internal.dto.SMEvent;
 import org.openhab.binding.smartthings.internal.dto.SMEvent.device;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsLocation;
 import org.openhab.binding.smartthings.internal.handler.SmartthingsBridgeHandler;
-import org.osgi.framework.BundleContext;
+import org.openhab.binding.smartthings.internal.type.SmartthingsException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.http.HttpService;
@@ -87,17 +86,11 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
 
     public SmartthingsServlet(SmartthingsBridgeHandler bridgeHandler, HttpService httpService,
             SmartthingsNetworkConnector networkConnector, String token) {
-
         super(bridgeHandler, httpService, networkConnector, token);
     }
 
     @Activate
     public void activate() {
-        if (httpService == null) {
-            logger.info("SmartthingsServlet.activate: httpService is unexpectedly null");
-            return;
-        }
-
         try {
             Dictionary<String, String> servletParams = new Hashtable<String, String>();
             logger.info("registerServlet:" + PATH);
@@ -115,20 +108,16 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
     }
 
     protected void deactivate(ComponentContext componentContext) {
-        if (httpService != null) {
-            try {
-                httpService.unregister(PATH);
-            } catch (IllegalArgumentException e) {
-                logger.warn("Could not stop Smartthings servlet service: {}", e.getMessage());
-            }
+        try {
+            httpService.unregister(PATH);
+        } catch (IllegalArgumentException e) {
+            logger.warn("Could not stop Smartthings servlet service: {}", e.getMessage());
         }
     }
 
     @Override
     public void init(@Nullable ServletConfig servletConfig) throws ServletException {
         logger.info("SmartthingsServlet:init");
-        ServletContext context = servletConfig.getServletContext();
-        BundleContext bundleContext = (BundleContext) context.getAttribute("osgi-bundlecontext");
     }
 
     @Override
@@ -138,15 +127,18 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
         StringBuffer optionBuffer = new StringBuffer();
         SmartthingsApi api = bridgeHandler.getSmartthingsApi();
 
-        logger.info("SmartthingsServlet:service");
-
         if (req == null) {
             logger.debug("SmartthingsServlet.service unexpectedly received a null request. Request not processed");
             return;
         }
+        if (resp == null) {
+            return;
+        }
+
+        logger.info("SmartthingsServlet:service");
         String path = req.getRequestURI();
 
-        if (!path.contains("/smartthings/cb")) {
+        if (path != null && !path.contains("/smartthings/cb")) {
             String template = "";
             if (path.contains("index")) {
                 template = indexTemplate;
@@ -160,21 +152,25 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
                 template = indexTemplate;
             }
 
-            if (template == selectLocationTemplate) {
-                SetupApp();
+            if (selectLocationTemplate != null && selectLocationTemplate.equals(template)) {
+                setupApp();
 
-                SmartthingsLocation[] locationList = api.GetAllLocations();
-                for (SmartthingsLocation loc : locationList) {
-                    optionBuffer.append("<option value=\"" + loc.locationId + "\">" + loc.name + "</option>");
+                try {
+                    SmartthingsLocation[] locationList = api.getAllLocations();
+                    for (SmartthingsLocation loc : locationList) {
+                        optionBuffer.append("<option value=\"" + loc.locationId + "\">" + loc.name + "</option>");
+                    }
+                } catch (SmartthingsException ex) {
+                    optionBuffer.append("Unable to retrieve locations !!");
                 }
                 setupInProgress = true;
-            } else if (template == poolTemplate) {
+            } else if (poolTemplate != null && poolTemplate.equals(template)) {
                 if (setupInProgress) {
                     replaceMap.put(KEY_POOL_STATUS, "false");
                 } else {
                     replaceMap.put(KEY_POOL_STATUS, "true");
                 }
-            } else if (template == confirmationTemplate) {
+            } else if (confirmationTemplate != null && confirmationTemplate.equals(template)) {
                 replaceMap.put(KEY_LOCATION, installedLocation);
                 replaceMap.put(KEY_APP_ID, installedAppId);
             }
@@ -200,7 +196,6 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
                 resp.getWriter().close();
             }
         } else {
-
             BufferedReader rdr = new BufferedReader(req.getReader());
             String s = rdr.lines().collect(Collectors.joining());
 
@@ -216,53 +211,51 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
                     String value = data.events[0].deviceEvent.value;
 
                     logger.info("EVENT: {} {} {} {} {}", deviceId, componentId, capa, atttr, value);
-
                 } else if (resultObj.lifecycle.equals("INSTALL")) {
                     logger.info("");
-                    String token = resultObj.installData.authToken;
+                    // String token = resultObj.installData.authToken;
                     installedAppId = resultObj.installData.installedApp.installedAppId;
 
-                    SmartthingsLocation loc = api.GetLocation(resultObj.installData.installedApp.locationId);
-                    installedLocation = loc.name;
+                    try {
+                        SmartthingsLocation loc = api.getLocation(resultObj.installData.installedApp.locationId);
+                        installedLocation = loc.name;
+                    } catch (SmartthingsException ex) {
+                        installedLocation = "Unable to retrieve location!!";
+                    }
 
                     setupInProgress = false;
                     logger.info("");
-
                 } else if (resultObj.lifecycle.equals("UPDATE")) {
                     String token = resultObj.updateData.authToken;
                     String installedAppId = resultObj.updateData.installedApp.installedAppId;
                     String subscriptionUri = "https://api.smartthings.com/v1/installedapps/" + installedAppId
                             + "/subscriptions";
 
-                    JsonObject res = networkConnector.DoRequest(JsonObject.class, subscriptionUri, null, token, "",
-                            HttpMethod.GET);
+                    networkConnector.doRequest(JsonObject.class, subscriptionUri, null, token, "", HttpMethod.GET);
 
                     SMEvent evt = new SMEvent();
                     evt.sourceType = "DEVICE";
                     evt.device = new device("97806abc-ce85-4b28-9df2-31e33323cf62", "main", true, null);
 
                     String body = gson.toJson(evt);
-                    JsonObject res2 = networkConnector.DoRequest(JsonObject.class, subscriptionUri, null, token, body,
-                            HttpMethod.POST);
+                    networkConnector.doRequest(JsonObject.class, subscriptionUri, null, token, body, HttpMethod.POST);
 
                     evt = new SMEvent();
                     evt.sourceType = "DEVICE";
                     evt.device = new device("ee87617f-0c84-40a3-be25-e70e53f3fc6a", "main", true, null);
 
                     body = gson.toJson(evt);
-                    res2 = networkConnector.DoRequest(JsonObject.class, subscriptionUri, null, token, body,
-                            HttpMethod.POST);
+                    networkConnector.doRequest(JsonObject.class, subscriptionUri, null, token, body, HttpMethod.POST);
 
                     logger.info("UPDATE");
                 } else if (resultObj.lifecycle.equals("EXECUTE")) {
                     logger.info("EXCUTE");
-
                 } else if (resultObj.lifecycle.equals("CONFIGURATION")
                         && resultObj.configurationData.phase().equals("INITIALIZE")) {
                     ConfigurationResponse response = new ConfigurationResponse();
-                    response.configurationData = response.new configurationData();
+                    response.configurationData = response.new ConfigurationData();
 
-                    initialize init = response.configurationData.new initialize();
+                    Initialize init = response.configurationData.new Initialize();
                     response.configurationData.initialize = init;
                     init.name = "Openhab";
                     init.description = "Openhab";
@@ -276,9 +269,8 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
                     resp.getWriter().print(responseSt);
                 } else if (resultObj.lifecycle.equals("CONFIGURATION")
                         && resultObj.configurationData.phase().equals("PAGE")) {
-
                     ConfigurationResponse response = new ConfigurationResponse();
-                    response.configurationData = response.new configurationData();
+                    response.configurationData = response.new ConfigurationData();
 
                     Page page1 = response.configurationData.new Page();
                     response.configurationData.page = page1;
@@ -304,12 +296,16 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
 
                     try {
                         Thread.sleep(2000);
-                        this.networkConnector.DoBasicRequest(confirmUrl, null, "", "", HttpMethod.GET);
+                        this.networkConnector.doBasicRequest(confirmUrl, null, "", "", HttpMethod.GET);
                     } catch (Exception ex) {
                         logger.error("error during confirmation {}", confirmUrl);
                     }
 
-                    api.CreateAppOAuth(appId);
+                    try {
+                        api.createAppOAuth(appId);
+                    } catch (SmartthingsException ex) {
+                        logger.error("Unable to setup app oauth settings!!");
+                    }
 
                     logger.trace("CONFIRMATION {}", confirmUrl);
                 }
@@ -318,12 +314,16 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
         logger.trace("Smartthings servlet returning.");
     }
 
-    protected void SetupApp() {
+    protected void setupApp() {
         SmartthingsApi api = bridgeHandler.getSmartthingsApi();
 
-        AppResponse appResponse = api.SetupApp();
-        if (appResponse.oauthClientId != null && appResponse.oauthClientSecret != null) {
-            bridgeHandler.updateConfig(appResponse.oauthClientId, appResponse.oauthClientSecret);
+        try {
+            AppResponse appResponse = api.setupApp();
+            if (appResponse.oauthClientId != null && appResponse.oauthClientSecret != null) {
+                bridgeHandler.updateConfig(appResponse.oauthClientId, appResponse.oauthClientSecret);
+            }
+        } catch (SmartthingsException ex) {
+            logger.info("Unable to setup Smartthings app !!");
         }
     }
 }
