@@ -10,16 +10,20 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-
 package org.openhab.binding.smartthings.internal.dto;
 
 /**
- * Data object for smartthings app creation response
+ * Data object for Viper device description
  *
  * @author Laurent ARNAL - Initial contribution
  */
-public class AppResponse {
-    public SmartthingsApp app;
-    public String oauthClientId;
-    public String oauthClientSecret;
+public class SmartthingsDeviceViper {
+    public class viper {
+        public String uniqueIdentifier;
+        public String manufacturerName;
+        public String modelName;
+        public String swVersion;
+        public String hwVersion;
+        public String endpointAppId;
+    }
 }

@@ -33,7 +33,9 @@ import javax.validation.constraints.NotNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.smartthings.internal.SmartthingsBindingConstants;
-import org.openhab.binding.smartthings.internal.dto.SmartthingsDeviceData;
+import org.openhab.binding.smartthings.internal.dto.SmartthingsCapabilitie;
+import org.openhab.binding.smartthings.internal.dto.SmartthingsComponent;
+import org.openhab.binding.smartthings.internal.dto.SmartthingsDevice;
 import org.openhab.core.config.core.ConfigDescriptionBuilder;
 import org.openhab.core.config.core.ConfigDescriptionParameter;
 import org.openhab.core.config.core.ConfigDescriptionParameterGroup;
@@ -61,7 +63,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -183,51 +184,7 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
         while (entries.hasMoreElements()) {
             String entry = entries.nextElement();
 
-            boolean shouldLoad = false;
-            if (entry.indexOf("colorControl") >= 0) {
-                shouldLoad = true;
-            } else if (entry.indexOf("colorTemperature") >= 0) {
-                shouldLoad = true;
-            } else if (entry.indexOf("switch") >= 0) {
-                shouldLoad = true;
-            } else if (entry.indexOf("switchLevel") >= 0) {
-                shouldLoad = true;
-            } else if (entry.indexOf("powerMeter") >= 0) {
-                shouldLoad = true;
-            } else if (entry.indexOf("switch") >= 0) {
-                shouldLoad = true;
-            } else if (entry.indexOf("energyMeter") >= 0) {
-                shouldLoad = true;
-            } else if (entry.indexOf("powerConsumptionReport") >= 0) {
-                shouldLoad = true;
-            } else if (entry.indexOf("battery") >= 0) {
-                shouldLoad = true;
-            } else if (entry.indexOf("waterSensor") >= 0) {
-                shouldLoad = true;
-            } else if (entry.indexOf("doorControl") >= 0) {
-                shouldLoad = true;
-            } else if (entry.indexOf("thermostatHeatingSetpoint") >= 0) {
-                shouldLoad = true;
-            } else if (entry.indexOf("execute") >= 0) {
-                shouldLoad = true;
-            } else if (entry.indexOf("ovenOperationalState") >= 0) {
-                shouldLoad = true;
-            } else if (entry.indexOf("ovenSetpoint") >= 0) {
-                shouldLoad = true;
-            } else if (entry.indexOf("ovenMode") >= 0) {
-                shouldLoad = true;
-            } else if (entry.indexOf("ovenOperatingState") >= 0) {
-                shouldLoad = true;
-            } else if (entry.indexOf("temperatureMeasurement") >= 0) {
-                shouldLoad = true;
-            } else if (entry.indexOf("healthCheck") >= 0) {
-                shouldLoad = true;
-            } else if (entry.indexOf("refresh") >= 0) {
-                shouldLoad = true;
-            } else if (entry.indexOf("firmwareUpdate") >= 0) {
-                shouldLoad = true;
-            }
-
+            boolean shouldLoad = true;
             if (entry.indexOf("Presentation") >= 0) {
                 shouldLoad = false;
             }
@@ -319,12 +276,11 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
     }
 
     @Override
-    public void Register(SmartthingsDeviceData deviceData, JsonObject devObj) {
-        generateThingsType(deviceData.id, deviceData.label, deviceData.deviceType, deviceData.description, devObj);
+    public void Register(String deviceType, SmartthingsDevice device) {
+        generateThingsType(device.deviceId, device.label, deviceType, device);
     }
 
-    private void generateThingsType(String deviceId, String deviceLabel, String deviceType, String deviceDescription,
-            JsonObject devObj) {
+    private void generateThingsType(String deviceId, String deviceLabel, String deviceType, SmartthingsDevice device) {
 
         SmartthingsThingTypeProvider lcThingTypeProvider = thingTypeProvider;
         SmartthingsChannelTypeProvider lcChannelTypeProvider = channelTypeProvider;
@@ -340,42 +296,37 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
                 List<ChannelGroupType> groupTypes = new ArrayList<>();
                 List<ChannelDefinition> channelDefinitions = new ArrayList<>();
 
-                JsonElement components = devObj.get("components");
-                if (components == null || !components.isJsonArray()) {
+                if (device.components == null || device.components.length == 0) {
                     return;
                 }
-                JsonArray componentsArray = (JsonArray) components;
 
-                for (JsonElement elm : componentsArray) {
-                    JsonObject component = (JsonObject) elm;
-                    String compId = component.get("id").getAsString();
-                    String compLabel = component.get("label").getAsString();
+                for (SmartthingsComponent component : device.components) {
+                    String compId = component.id;
+                    String compLabel = component.label;
 
                     if (!compId.equals("main")) {
                         continue;
                     }
 
-                    JsonElement capabilitites = component.get("capabilities");
-                    if (capabilitites != null && capabilitites.isJsonArray()) {
-                        JsonArray capabilititesArray = (JsonArray) capabilitites;
-                        for (JsonElement elmCap : capabilititesArray) {
-                            JsonObject elmCapObj = (JsonObject) elmCap;
-                            String capId = elmCapObj.get("id").getAsString();
-                            String capVersion = elmCapObj.get("version").getAsString();
-
-                            capId = capId.replace('.', '_');
-
-                            SmartthingsJSonCapabilities capa = capabilitiesDict.get(capId);
-
-                            addChannel(deviceType, groupTypes, channelDefinitions, capId + "channel", capId);
-
-                            logger.info("");
-                        }
+                    if (component.capabilities != null && component.capabilities.length > 0) {
+                        continue;
                     }
 
+                    for (SmartthingsCapabilitie cap : component.capabilities) {
+                        String capId = cap.id;
+                        String capVersion = cap.version;
+
+                        capId = capId.replace('.', '_');
+
+                        SmartthingsJSonCapabilities capa = capabilitiesDict.get(capId);
+
+                        addChannel(deviceType, groupTypes, channelDefinitions, capId + "channel", capId);
+
+                        logger.info("");
+                    }
                 }
 
-                tt = createThingType(deviceType, deviceId, deviceDescription, groupTypes);
+                tt = createThingType(deviceType, deviceId, "", groupTypes);
                 lcThingTypeProvider.addThingType(tt);
             }
         }

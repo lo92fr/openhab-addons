@@ -10,16 +10,18 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-
 package org.openhab.binding.smartthings.internal.dto;
 
 /**
- * Data object for smartthings app creation response
+ * Data object for ZigBee device description
  *
  * @author Laurent ARNAL - Initial contribution
  */
-public class AppResponse {
-    public SmartthingsApp app;
-    public String oauthClientId;
-    public String oauthClientSecret;
+public class SmartthingsDeviceZigBee {
+    public String eui;
+    public String networkId;
+    public String driverId;
+    public Boolean executingLocally;
+    public String hubId;
+    public String provisioningState;
 }

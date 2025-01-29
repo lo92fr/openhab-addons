@@ -10,16 +10,15 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-
 package org.openhab.binding.smartthings.internal.dto;
 
 /**
- * Data object for smartthings app creation response
+ * Data object for Smartthings category description
  *
  * @author Laurent ARNAL - Initial contribution
  */
-public class AppResponse {
-    public SmartthingsApp app;
-    public String oauthClientId;
-    public String oauthClientSecret;
+public class SmartthingsCategory {
+
+    public String name;
+    public String categoryType;
 }
