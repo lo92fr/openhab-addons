@@ -31,6 +31,7 @@ import org.openhab.binding.heos.internal.handler.HeosThingBaseHandler;
 import org.openhab.core.audio.AudioHTTPServer;
 import org.openhab.core.audio.AudioSink;
 import org.openhab.core.config.discovery.DiscoveryService;
+import org.openhab.core.media.MediaService;
 import org.openhab.core.net.HttpServiceUtil;
 import org.openhab.core.net.NetworkAddressService;
 import org.openhab.core.thing.Bridge;
@@ -65,6 +66,7 @@ public class HeosHandlerFactory extends BaseThingHandlerFactory {
     private @NonNullByDefault({}) AudioHTTPServer audioHTTPServer;
     private @NonNullByDefault({}) NetworkAddressService networkAddressService;
     private @NonNullByDefault({}) HeosDynamicStateDescriptionProvider heosDynamicStateDescriptionProvider;
+    private @NonNullByDefault({}) MediaService mediaService;
 
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
@@ -82,8 +84,8 @@ public class HeosHandlerFactory extends BaseThingHandlerFactory {
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
 
         if (THING_TYPE_BRIDGE.equals(thingTypeUID)) {
-            HeosBridgeHandler bridgeHandler = new HeosBridgeHandler((Bridge) thing,
-                    heosDynamicStateDescriptionProvider);
+            HeosBridgeHandler bridgeHandler = new HeosBridgeHandler((Bridge) thing, heosDynamicStateDescriptionProvider,
+                    mediaService);
             HeosPlayerDiscovery playerDiscovery = new HeosPlayerDiscovery(bridgeHandler);
             discoveryServiceRegs.put(bridgeHandler.getThing().getUID(), bundleContext
                     .registerService(DiscoveryService.class.getName(), playerDiscovery, new Hashtable<>()));
@@ -140,6 +142,15 @@ public class HeosHandlerFactory extends BaseThingHandlerFactory {
 
     protected void unsetAudioHTTPServer(AudioHTTPServer audioHTTPServer) {
         this.audioHTTPServer = null;
+    }
+
+    @Reference
+    protected void setMediaService(MediaService mediaService) {
+        this.mediaService = mediaService;
+    }
+
+    protected void unsetMediaService(MediaService mediaService) {
+        this.mediaService = null;
     }
 
     @Reference
