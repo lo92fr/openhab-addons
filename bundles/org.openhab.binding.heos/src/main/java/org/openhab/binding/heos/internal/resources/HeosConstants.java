@@ -20,6 +20,8 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
  *
  * @author Johannes Einig - Initial contribution
  */
+
+// https://rn.dmglobal.com/usmodel/HEOS_CLI_ProtocolSpecification-Version-1.17.pdf
 @NonNullByDefault
 public class HeosConstants {
 

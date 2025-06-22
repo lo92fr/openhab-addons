@@ -28,6 +28,7 @@ import org.openhab.binding.heos.internal.json.payload.BrowseResult;
 import org.openhab.binding.heos.internal.json.payload.Group;
 import org.openhab.binding.heos.internal.json.payload.Media;
 import org.openhab.binding.heos.internal.json.payload.Player;
+import org.openhab.binding.heos.internal.json.payload.Source;
 import org.openhab.binding.heos.internal.resources.HeosCommands;
 import org.openhab.binding.heos.internal.resources.HeosEventListener;
 import org.openhab.binding.heos.internal.resources.Telnet.ReadException;
@@ -53,6 +54,11 @@ public class HeosFacade {
     public HeosFacade(HeosSystem heosSystem, HeosEventController eventController) {
         this.heosSystem = heosSystem;
         this.eventController = eventController;
+    }
+
+    public synchronized List<Source> getSources() throws IOException, ReadException {
+        HeosResponseObject<Source[]> response = heosSystem.send(HeosCommands.getMusicSources(), Source[].class);
+        return Arrays.asList(response.payload);
     }
 
     public synchronized List<BrowseResult> getFavorites() throws IOException, ReadException {

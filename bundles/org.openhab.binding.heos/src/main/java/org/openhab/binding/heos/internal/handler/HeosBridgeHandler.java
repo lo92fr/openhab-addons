@@ -14,8 +14,8 @@ package org.openhab.binding.heos.internal.handler;
 
 import static org.openhab.binding.heos.internal.HeosBindingConstants.*;
 import static org.openhab.binding.heos.internal.handler.FutureUtil.cancel;
-import static org.openhab.core.thing.ThingStatus.OFFLINE;
-import static org.openhab.core.thing.ThingStatus.ONLINE;
+import static org.openhab.binding.heos.internal.resources.HeosConstants.*;
+import static org.openhab.core.thing.ThingStatus.*;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -51,12 +51,20 @@ import org.openhab.binding.heos.internal.json.dto.HeosResponseObject;
 import org.openhab.binding.heos.internal.json.payload.Group;
 import org.openhab.binding.heos.internal.json.payload.Media;
 import org.openhab.binding.heos.internal.json.payload.Player;
+import org.openhab.binding.heos.internal.json.payload.Source;
 import org.openhab.binding.heos.internal.resources.HeosEventListener;
 import org.openhab.binding.heos.internal.resources.HeosMediaEventListener;
 import org.openhab.binding.heos.internal.resources.Telnet;
 import org.openhab.binding.heos.internal.resources.Telnet.ReadException;
 import org.openhab.core.library.CoreItemFactory;
 import org.openhab.core.library.types.OnOffType;
+import org.openhab.core.media.MediaDevice;
+import org.openhab.core.media.MediaListenner;
+import org.openhab.core.media.MediaService;
+import org.openhab.core.media.model.MediaCollection;
+import org.openhab.core.media.model.MediaEntry;
+import org.openhab.core.media.model.MediaRegistry;
+import org.openhab.core.media.model.MediaSource;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Channel;
 import org.openhab.core.thing.ChannelUID;
@@ -82,7 +90,9 @@ import org.slf4j.LoggerFactory;
  * @author Martin van Wingerden - change handling of stop/pause depending on playing item type
  */
 @NonNullByDefault
-public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventListener {
+public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventListener, MediaListenner {
+    private final Logger logger = LoggerFactory.getLogger(HeosBridgeHandler.class);
+
     private static final int HEOS_PORT = 1255;
 
     private final Logger logger = LoggerFactory.getLogger(HeosBridgeHandler.class);
@@ -91,6 +101,7 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
     private final List<HeosPlayerDiscoveryListener> playerDiscoveryList = new CopyOnWriteArrayList<>();
     private final HeosChannelManager channelManager = new HeosChannelManager(this);
     private final HeosChannelHandlerFactory channelHandlerFactory;
+    // private final MediaService mediaService;
 
     private final Map<String, HeosGroupHandler> groupHandlerMap = new ConcurrentHashMap<>();
     private final Map<String, String> hashToGidMap = new ConcurrentHashMap<>();
@@ -107,13 +118,16 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
     private boolean bridgeHandlerDisposalOngoing = false;
 
     private @NonNullByDefault({}) BridgeConfiguration configuration;
+    private @NonNullByDefault({}) MediaService mediaService;
 
     private int failureCount;
 
-    public HeosBridgeHandler(Bridge bridge, HeosDynamicStateDescriptionProvider heosDynamicStateDescriptionProvider) {
+    public HeosBridgeHandler(Bridge bridge, HeosDynamicStateDescriptionProvider heosDynamicStateDescriptionProvider,
+            MediaService mediaService) {
         super(bridge);
         heosSystem = new HeosSystem(scheduler);
         channelHandlerFactory = new HeosChannelHandlerFactory(this, heosDynamicStateDescriptionProvider);
+        this.mediaService = mediaService;
     }
 
     @Override
@@ -151,6 +165,37 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
         configuration = thing.getConfiguration().as(BridgeConfiguration.class);
         cancel(startupFuture);
         startupFuture = scheduler.submit(this::delayedInitialize);
+
+        mediaService.addMediaListenner("Heos", this);
+
+        MediaRegistry mediaRegistry = mediaService.getMediaRegistry();
+
+        MediaSource mediaSource = mediaRegistry.registerEntry("Heos", () -> {
+            return new MediaSource("Heos", "Heos", "/static/Heos.png");
+        });
+
+    }
+
+    @Override
+    public void refreshEntry(MediaEntry mediaEntry) {
+        if (mediaEntry.getKey().equals("Heos")) {
+
+            try {
+                if (apiConnection != null) {
+                    List<Source> sources = apiConnection.getSources();
+
+                    for (Source source : sources) {
+                        MediaCollection targetSource = mediaEntry.registerEntry("" + source.name, () -> {
+                            return new MediaCollection("" + source.sourceId, "" + source.name, "" + source.imageUrl);
+                        });
+                    }
+
+                }
+            } catch (Exception ex) {
+                logger.debug(ex.toString());
+            }
+
+        }
     }
 
     private void delayedInitialize() {
@@ -211,6 +256,8 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
                 if (handler instanceof HeosThingBaseHandler heosHandler) {
                     Set<String> target = handler instanceof HeosPlayerHandler ? players : groups;
                     String id = heosHandler.getId();
+
+                    mediaService.registerDevice(new MediaDevice(id, "" + handler.getThing().getLabel(), "", "Heos"));
 
                     if (target.contains(id)) {
                         heosHandler.setStatusOnline();
