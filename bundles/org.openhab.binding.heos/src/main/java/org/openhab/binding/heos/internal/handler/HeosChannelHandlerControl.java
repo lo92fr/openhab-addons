@@ -80,6 +80,7 @@ public class HeosChannelHandlerControl extends BaseHeosChannelHandler implements
             String param = mediaType.getParam().toFullString();
             MediaCommandType mediaCommandType = ((MediaType) command).getCommand();
 
+            // heos://browse/add_to_queue?sid=2135624688&pid=638477575&mid=/l/1025/t/12268&cid=/l/1025/t&aid=1
             if (mediaCommandType == MediaCommandType.PLAY) {
                 getApi().addToQueue("638477575&sid=10&mid=276390152&cid=LIBALBUM-276390151&aid=1");
             } else if (mediaCommandType == MediaCommandType.PAUSE) {
