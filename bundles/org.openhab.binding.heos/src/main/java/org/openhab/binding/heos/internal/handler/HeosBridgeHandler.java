@@ -106,7 +106,6 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
     private final List<HeosPlayerDiscoveryListener> playerDiscoveryList = new CopyOnWriteArrayList<>();
     private final HeosChannelManager channelManager = new HeosChannelManager(this);
     private final HeosChannelHandlerFactory channelHandlerFactory;
-    // private final MediaService mediaService;
 
     private final Map<String, HeosGroupHandler> groupHandlerMap = new ConcurrentHashMap<>();
     private final Map<String, String> hashToGidMap = new ConcurrentHashMap<>();
@@ -179,6 +178,10 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
             return new MediaSource("Heos", "Heos", "/static/Heos.png");
         });
 
+    }
+
+    public MediaService getMediaService() {
+        return mediaService;
     }
 
     @Override
