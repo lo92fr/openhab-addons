@@ -27,6 +27,9 @@ import org.openhab.binding.heos.internal.resources.HeosMediaEventListener;
 import org.openhab.binding.heos.internal.resources.Telnet.ReadException;
 import org.openhab.core.library.types.MediaCommandType;
 import org.openhab.core.library.types.MediaType;
+import org.openhab.core.media.MediaService;
+import org.openhab.core.media.model.MediaEntry;
+import org.openhab.core.media.model.MediaRegistry;
 import org.openhab.core.thing.ThingUID;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.RefreshType;
@@ -82,7 +85,23 @@ public class HeosChannelHandlerControl extends BaseHeosChannelHandler implements
 
             // heos://browse/add_to_queue?sid=2135624688&pid=638477575&mid=/l/1025/t/12268&cid=/l/1025/t&aid=1
             if (mediaCommandType == MediaCommandType.PLAY) {
-                getApi().addToQueue("638477575&sid=10&mid=276390152&cid=LIBALBUM-276390151&aid=1");
+                MediaService mediaService = bridge.getMediaService();
+                MediaRegistry registry = mediaService.getMediaRegistry();
+                MediaEntry mediaEntry = registry.getEntry(param);
+
+                MediaEntry parentEntry = mediaEntry.getParent();
+
+                String cid = parentEntry.getSubPath();
+                String mid = mediaEntry.getSubPath();
+
+                if (cid.startsWith("/music")) {
+                    cid = cid.substring(6);
+                }
+                if (mid.startsWith("/music")) {
+                    mid = mid.substring(6);
+                }
+
+                getApi().addToQueue("638477575&sid=2135624688&mid=" + mid + "&cid=" + cid + "&aid=1");
             } else if (mediaCommandType == MediaCommandType.PAUSE) {
                 getApi().pause(id);
             }
