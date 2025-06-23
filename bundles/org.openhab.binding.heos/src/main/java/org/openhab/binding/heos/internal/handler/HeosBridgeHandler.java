@@ -48,10 +48,11 @@ import org.openhab.binding.heos.internal.json.dto.HeosError;
 import org.openhab.binding.heos.internal.json.dto.HeosEvent;
 import org.openhab.binding.heos.internal.json.dto.HeosEventObject;
 import org.openhab.binding.heos.internal.json.dto.HeosResponseObject;
+import org.openhab.binding.heos.internal.json.payload.BrowseResult;
+import org.openhab.binding.heos.internal.json.payload.BrowseResultType;
 import org.openhab.binding.heos.internal.json.payload.Group;
 import org.openhab.binding.heos.internal.json.payload.Media;
 import org.openhab.binding.heos.internal.json.payload.Player;
-import org.openhab.binding.heos.internal.json.payload.Source;
 import org.openhab.binding.heos.internal.resources.HeosEventListener;
 import org.openhab.binding.heos.internal.resources.HeosMediaEventListener;
 import org.openhab.binding.heos.internal.resources.Telnet;
@@ -61,10 +62,14 @@ import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.media.MediaDevice;
 import org.openhab.core.media.MediaListenner;
 import org.openhab.core.media.MediaService;
+import org.openhab.core.media.model.MediaAlbum;
+import org.openhab.core.media.model.MediaArtist;
 import org.openhab.core.media.model.MediaCollection;
 import org.openhab.core.media.model.MediaEntry;
+import org.openhab.core.media.model.MediaPlayList;
 import org.openhab.core.media.model.MediaRegistry;
 import org.openhab.core.media.model.MediaSource;
+import org.openhab.core.media.model.MediaTrack;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Channel;
 import org.openhab.core.thing.ChannelUID;
@@ -170,7 +175,7 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
 
         MediaRegistry mediaRegistry = mediaService.getMediaRegistry();
 
-        MediaSource mediaSource = mediaRegistry.registerEntry("Heos", () -> {
+        mediaRegistry.registerEntry("Heos", () -> {
             return new MediaSource("Heos", "Heos", "/static/Heos.png");
         });
 
@@ -178,24 +183,179 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
 
     @Override
     public void refreshEntry(MediaEntry mediaEntry) {
-        if (mediaEntry.getKey().equals("Heos")) {
+        try {
+            HeosFacade lcApiConnection = apiConnection;
+            if (lcApiConnection != null) {
+                if (mediaEntry.getKey().equals("Heos")) {
+                    List<BrowseResult> results = lcApiConnection.getSources();
 
-            try {
-                if (apiConnection != null) {
-                    List<Source> sources = apiConnection.getSources();
+                    for (BrowseResult result : results) {
+                        String sid = result.sid == null ? "" : result.sid;
+                        String name = result.name == null ? "" : result.name;
+                        String imageUrl = result.imageUrl == null ? "" : result.imageUrl;
 
-                    for (Source source : sources) {
-                        MediaCollection targetSource = mediaEntry.registerEntry("" + source.name, () -> {
-                            return new MediaCollection("" + source.sourceId, "" + source.name, "" + source.imageUrl);
+                        mediaEntry.registerEntry(sid, () -> {
+                            return new MediaSource(sid, name, imageUrl);
                         });
+                    }
+                } else if (mediaEntry instanceof MediaSource) {
+                    MediaSource mediaSource = (MediaSource) mediaEntry;
+                    List<BrowseResult> results = lcApiConnection.getBrowseResults(mediaSource.getKey());
+
+                    for (BrowseResult result : results) {
+                        String sid = result.sid == null ? "" : result.sid;
+                        String containerId = result.containerId == null ? "" : result.containerId;
+                        String mediaId = result.mediaId == null ? "" : result.mediaId;
+                        String name = result.name == null ? "" : result.name;
+
+                        String rawImageUrl = result.imageUrl == null ? "" : result.imageUrl;
+                        rawImageUrl = resolveImageUrl(rawImageUrl, result.type, name);
+
+                        String imageUrl = rawImageUrl;
+
+                        String rawKey = "";
+                        if (!sid.isEmpty()) {
+                            rawKey = sid;
+                        } else if (!containerId.isEmpty()) {
+                            rawKey = containerId;
+                        } else if (!mediaId.isEmpty()) {
+                            rawKey = mediaId;
+                        }
+
+                        rawKey = rawKey.startsWith("/") ? rawKey.substring(1) : rawKey;
+
+                        String key = rawKey;
+                        mediaEntry.registerEntry(key, () -> {
+                            if (!sid.isEmpty()) {
+                                return new MediaSource(key, name, imageUrl);
+                            } else {
+
+                                return new MediaCollection(key, name, imageUrl);
+                            }
+                        });
+                    }
+                } else if (mediaEntry instanceof MediaCollection) {
+                    MediaCollection mediaCollection = (MediaCollection) mediaEntry;
+
+                    MediaSource mediaSource = mediaCollection.getMediaSource(true);
+
+                    if (mediaSource != null) {
+                        String sourceKey = mediaSource.getKey();
+                        String colKey = mediaCollection.getKey();
+
+                        boolean tp2Behaviour = (mediaSource.getPath().indexOf("1024") >= 0);
+
+                        if (tp2Behaviour) {
+                            colKey = mediaCollection.getSubPath();
+                        }
+
+                        if (colKey.startsWith("/music") && colKey.length() > 6) {
+                            colKey = colKey.substring(6);
+                        }
+
+                        List<BrowseResult> results = lcApiConnection.getBrowseResults(sourceKey, colKey);
+
+                        for (BrowseResult result : results) {
+                            String sid = result.sid == null ? "" : result.sid;
+                            String containerId = result.containerId == null ? "" : result.containerId;
+                            String mediaId = result.mediaId == null ? "" : result.mediaId;
+
+                            String rawKey = "";
+                            if (!sid.isEmpty()) {
+                                rawKey = sid;
+                            } else if (!containerId.isEmpty()) {
+                                rawKey = containerId;
+                            } else if (!mediaId.isEmpty()) {
+                                rawKey = mediaId;
+                            }
+
+                            if (tp2Behaviour && rawKey.startsWith(colKey)) {
+                                rawKey = rawKey.substring(colKey.length());
+                            }
+                            rawKey = rawKey.startsWith("/") ? rawKey.substring(1) : rawKey;
+
+                            String name = result.name == null ? "" : result.name;
+                            String rawImageUrl = result.imageUrl == null ? "" : result.imageUrl;
+                            rawImageUrl = resolveImageUrl(rawImageUrl, result.type, name);
+
+                            String imageUrl = rawImageUrl;
+
+                            String key = rawKey == null ? "" : rawKey;
+
+                            BrowseResultType brType = result.type;
+                            if (brType == BrowseResultType.SONG) {
+                                mediaEntry.registerEntry(key, () -> {
+                                    MediaTrack res = new MediaTrack(key, name);
+                                    res.setArtUri(imageUrl);
+                                    return res;
+                                });
+                            } else if (brType == BrowseResultType.ALBUM) {
+                                mediaEntry.registerEntry(key, () -> {
+                                    MediaAlbum res = new MediaAlbum(key, name);
+                                    res.setArtUri(imageUrl);
+                                    return res;
+                                });
+
+                            } else if (brType == BrowseResultType.ARTIST) {
+                                mediaEntry.registerEntry(key, () -> {
+                                    MediaArtist res = new MediaArtist(key, name);
+                                    res.setArtUri(imageUrl);
+                                    return res;
+                                });
+                            } else if (brType == BrowseResultType.PLAYLIST) {
+                                mediaEntry.registerEntry(key, () -> {
+                                    MediaPlayList res = new MediaPlayList(key, name);
+                                    res.setArtUri(imageUrl);
+                                    return res;
+                                });
+                            } else {
+                                mediaEntry.registerEntry(key, () -> {
+                                    return new MediaCollection(key, name, imageUrl);
+                                });
+                            }
+
+                        }
                     }
 
                 }
-            } catch (Exception ex) {
-                logger.debug(ex.toString());
             }
 
+        } catch (
+
+        Exception ex) {
+            logger.debug(ex.toString());
         }
+
+    }
+
+    public String resolveImageUrl(String imageUrl, @Nullable BrowseResultType type, String key) {
+        if (!imageUrl.isEmpty()) {
+            return imageUrl;
+        }
+
+        if (type != null) {
+            if (type == BrowseResultType.ALBUM) {
+                return "/static/Albums.png";
+            } else if (type == BrowseResultType.ARTIST) {
+                return "/static/Artists.png";
+            } else if (type == BrowseResultType.PLAYLIST) {
+                return "/static/playlist.png";
+            } else if (type == BrowseResultType.CONTAINER) {
+                if (key.indexOf("Playlists") >= 0) {
+                    return "/static/playlist.png";
+                } else if (key.indexOf("Tracks") >= 0) {
+                    return "/static/Tracks.png";
+                } else if (key.indexOf("Artists") >= 0) {
+                    return "/static/Artists.png";
+                } else if (key.indexOf("Albums") >= 0) {
+                    return "/static/Albums.png";
+                }
+                return "/static/Folder.png";
+            } else if (type == BrowseResultType.SONG) {
+                return "/static/Tracks.png";
+            }
+        }
+        return "/static/Folder.png";
     }
 
     private void delayedInitialize() {

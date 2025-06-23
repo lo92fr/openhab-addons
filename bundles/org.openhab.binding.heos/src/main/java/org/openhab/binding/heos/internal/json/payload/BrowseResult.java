@@ -34,11 +34,15 @@ public class BrowseResult {
     public @Nullable String name;
     @SerializedName("image_url")
     public @Nullable String imageUrl;
+    @SerializedName("sid")
+    public @Nullable String sid;
+
+    public boolean available;
 
     @Override
     public String toString() {
         return "BrowseResult{" + "container=" + container + ", mediaId='" + mediaId + '\'' + ", playable=" + playable
-                + ", type=" + type + ", containerId='" + containerId + '\'' + ", name='" + name + '\'' + ", imageUrl='"
-                + imageUrl + '\'' + '}';
+                + ", type=" + type + ", containerId='" + containerId + '\'' + ", sid='" + sid + '\'' + ", name='" + name
+                + '\'' + ", imageUrl='" + imageUrl + '\'' + '}';
     }
 }
