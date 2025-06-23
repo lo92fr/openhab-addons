@@ -28,7 +28,6 @@ import org.openhab.binding.heos.internal.json.payload.BrowseResult;
 import org.openhab.binding.heos.internal.json.payload.Group;
 import org.openhab.binding.heos.internal.json.payload.Media;
 import org.openhab.binding.heos.internal.json.payload.Player;
-import org.openhab.binding.heos.internal.json.payload.Source;
 import org.openhab.binding.heos.internal.resources.HeosCommands;
 import org.openhab.binding.heos.internal.resources.HeosEventListener;
 import org.openhab.binding.heos.internal.resources.Telnet.ReadException;
@@ -36,6 +35,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonElement;
+
+// https://rn.dmglobal.com/usmodel/HEOS_CLI_ProtocolSpecification-Version-1.17.pdf
 
 /**
  * The {@link HeosFacade} is the interface for handling commands, which are
@@ -56,8 +57,9 @@ public class HeosFacade {
         this.eventController = eventController;
     }
 
-    public synchronized List<Source> getSources() throws IOException, ReadException {
-        HeosResponseObject<Source[]> response = heosSystem.send(HeosCommands.getMusicSources(), Source[].class);
+    public synchronized List<BrowseResult> getSources() throws IOException, ReadException {
+        HeosResponseObject<BrowseResult[]> response = heosSystem.send(HeosCommands.getMusicSources(),
+                BrowseResult[].class);
         return Arrays.asList(response.payload);
     }
 
@@ -73,8 +75,13 @@ public class HeosFacade {
         return getBrowseResults(PLAYLISTS_SID);
     }
 
-    private List<BrowseResult> getBrowseResults(String sourceIdentifier) throws IOException, ReadException {
-        HeosResponseObject<BrowseResult[]> response = browseSource(sourceIdentifier);
+    public List<BrowseResult> getBrowseResults(String sourceIdentifier) throws IOException, ReadException {
+        return getBrowseResults(sourceIdentifier, "");
+    }
+
+    public List<BrowseResult> getBrowseResults(String sourceIdentifier, String containerIdentifier)
+            throws IOException, ReadException {
+        HeosResponseObject<BrowseResult[]> response = browseSource(sourceIdentifier, containerIdentifier);
         logger.debug("Response: {}", response);
 
         if (response.payload == null) {
@@ -321,8 +328,8 @@ public class HeosFacade {
      * @param sid The source sid which shall be browsed
      * @return
      */
-    public HeosResponseObject<BrowseResult[]> browseSource(String sid) throws IOException, ReadException {
-        return heosSystem.send(HeosCommands.browseSource(sid), BrowseResult[].class);
+    public HeosResponseObject<BrowseResult[]> browseSource(String sid, String cid) throws IOException, ReadException {
+        return heosSystem.send(HeosCommands.browseSource(sid, cid), BrowseResult[].class);
     }
 
     /**

@@ -34,5 +34,14 @@ public enum BrowseResultType {
     @SerializedName("station")
     STATION,
     @SerializedName("playlist")
-    PLAYLIST
+    PLAYLIST,
+    @SerializedName("heos_server")
+    HEOSSERVER,
+    @SerializedName("heos_service")
+    HEOSSERVICE,
+    @SerializedName("dlna_server")
+    DLNASERVER,
+    @SerializedName("music_service")
+    MUSICSERVICE
+
 }
