@@ -30,6 +30,7 @@ import org.openhab.core.library.types.MediaType;
 import org.openhab.core.media.MediaService;
 import org.openhab.core.media.model.MediaEntry;
 import org.openhab.core.media.model.MediaRegistry;
+import org.openhab.core.media.model.MediaSource;
 import org.openhab.core.thing.ThingUID;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.RefreshType;
@@ -93,7 +94,14 @@ public class HeosChannelHandlerControl extends BaseHeosChannelHandler implements
 
                 String cid = parentEntry.getSubPath();
                 String mid = mediaEntry.getSubPath();
+                MediaSource mediaSource = mediaEntry.getMediaSource(true);
+                String mediaSourceKey = mediaSource.getKey();
 
+                if (mediaSourceKey.equals("10")) {
+                    cid = parentEntry.getKey();
+                    mid = mediaEntry.getKey();
+
+                }
                 if (cid.startsWith("/music")) {
                     cid = cid.substring(6);
                 }
@@ -101,7 +109,7 @@ public class HeosChannelHandlerControl extends BaseHeosChannelHandler implements
                     mid = mid.substring(6);
                 }
 
-                getApi().addToQueue("638477575&sid=2135624688&mid=" + mid + "&cid=" + cid + "&aid=1");
+                getApi().addToQueue("638477575&sid=" + mediaSourceKey + "&mid=" + mid + "&cid=" + cid + "&aid=1");
             } else if (mediaCommandType == MediaCommandType.PAUSE) {
                 getApi().pause(id);
             }
