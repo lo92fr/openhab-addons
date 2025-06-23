@@ -25,6 +25,8 @@ import org.openhab.binding.heos.internal.json.payload.Media;
 import org.openhab.binding.heos.internal.resources.HeosEventListener;
 import org.openhab.binding.heos.internal.resources.HeosMediaEventListener;
 import org.openhab.binding.heos.internal.resources.Telnet.ReadException;
+import org.openhab.core.library.types.MediaCommandType;
+import org.openhab.core.library.types.MediaType;
 import org.openhab.core.thing.ThingUID;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.RefreshType;
@@ -70,6 +72,20 @@ public class HeosChannelHandlerControl extends BaseHeosChannelHandler implements
         if (command instanceof RefreshType) {
             eventListener.playerStateChangeEvent(getApi().getPlayState(id));
             return;
+        }
+
+        if (command instanceof MediaType) {
+            MediaType mediaType = (MediaType) command;
+            String device = mediaType.getDevice().toFullString();
+            String param = mediaType.getParam().toFullString();
+            MediaCommandType mediaCommandType = ((MediaType) command).getCommand();
+
+            if (mediaCommandType == MediaCommandType.PLAY) {
+                getApi().addToQueue("638477575&sid=10&mid=276390152&cid=LIBALBUM-276390151&aid=1");
+            } else if (mediaCommandType == MediaCommandType.PAUSE) {
+                getApi().pause(id);
+            }
+
         }
         switch (command.toString()) {
             case "PLAY":

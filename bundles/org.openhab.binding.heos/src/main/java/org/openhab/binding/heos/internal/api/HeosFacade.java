@@ -145,6 +145,10 @@ public class HeosFacade {
         heosSystem.send(HeosCommands.setPlayStatePlay(pid));
     }
 
+    public void addToQueue(String args) throws IOException, ReadException {
+        heosSystem.send(HeosCommands.addToQueue(args));
+    }
+
     /**
      * Stops the HEOS player
      *
