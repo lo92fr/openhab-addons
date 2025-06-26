@@ -185,7 +185,7 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
     }
 
     @Override
-    public void refreshEntry(MediaEntry mediaEntry) {
+    public void refreshEntry(MediaEntry mediaEntry, long start, long size) {
         try {
             HeosFacade lcApiConnection = apiConnection;
             if (lcApiConnection != null) {
