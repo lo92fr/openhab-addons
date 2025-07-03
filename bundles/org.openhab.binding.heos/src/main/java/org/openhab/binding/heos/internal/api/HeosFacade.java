@@ -76,12 +76,12 @@ public class HeosFacade {
     }
 
     public List<BrowseResult> getBrowseResults(String sourceIdentifier) throws IOException, ReadException {
-        return getBrowseResults(sourceIdentifier, "");
+        return getBrowseResults(sourceIdentifier, "", -1, -1);
     }
 
-    public List<BrowseResult> getBrowseResults(String sourceIdentifier, String containerIdentifier)
-            throws IOException, ReadException {
-        HeosResponseObject<BrowseResult[]> response = browseSource(sourceIdentifier, containerIdentifier);
+    public List<BrowseResult> getBrowseResults(String sourceIdentifier, String containerIdentifier, long start,
+            long end) throws IOException, ReadException {
+        HeosResponseObject<BrowseResult[]> response = browseSource(sourceIdentifier, containerIdentifier, start, end);
         logger.debug("Response: {}", response);
 
         if (response.payload == null) {
@@ -332,8 +332,9 @@ public class HeosFacade {
      * @param sid The source sid which shall be browsed
      * @return
      */
-    public HeosResponseObject<BrowseResult[]> browseSource(String sid, String cid) throws IOException, ReadException {
-        return heosSystem.send(HeosCommands.browseSource(sid, cid), BrowseResult[].class);
+    public HeosResponseObject<BrowseResult[]> browseSource(String sid, String cid, long start, long end)
+            throws IOException, ReadException {
+        return heosSystem.send(HeosCommands.browseSource(sid, cid, start, end), BrowseResult[].class);
     }
 
     /**

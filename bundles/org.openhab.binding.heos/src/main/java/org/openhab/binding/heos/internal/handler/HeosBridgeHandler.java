@@ -35,6 +35,7 @@ import java.util.stream.Stream;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.heos.internal.HeosBindingConstants;
 import org.openhab.binding.heos.internal.HeosChannelHandlerFactory;
 import org.openhab.binding.heos.internal.HeosChannelManager;
 import org.openhab.binding.heos.internal.action.HeosActions;
@@ -170,12 +171,13 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
         cancel(startupFuture);
         startupFuture = scheduler.submit(this::delayedInitialize);
 
-        mediaService.addMediaListenner("Heos", this);
+        mediaService.addMediaListenner(HeosBindingConstants.BINDING_ID, this);
 
         MediaRegistry mediaRegistry = mediaService.getMediaRegistry();
 
-        mediaRegistry.registerEntry("Heos", () -> {
-            return new MediaSource("Heos", "Heos", "/static/Heos.png");
+        mediaRegistry.registerEntry(HeosBindingConstants.BINDING_ID, () -> {
+            return new MediaSource(HeosBindingConstants.BINDING_ID, HeosBindingConstants.BINDING_LABEL,
+                    "/static/Heos.png");
         });
 
     }
@@ -189,7 +191,7 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
         try {
             HeosFacade lcApiConnection = apiConnection;
             if (lcApiConnection != null) {
-                if (mediaEntry.getKey().equals("Heos")) {
+                if (mediaEntry.getKey().equals(HeosBindingConstants.BINDING_ID)) {
                     List<BrowseResult> results = lcApiConnection.getSources();
 
                     for (BrowseResult result : results) {
@@ -256,7 +258,8 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
                             colKey = colKey.substring(6);
                         }
 
-                        List<BrowseResult> results = lcApiConnection.getBrowseResults(sourceKey, colKey);
+                        List<BrowseResult> results = lcApiConnection.getBrowseResults(sourceKey, colKey, start,
+                                start + size);
 
                         for (BrowseResult result : results) {
                             String sid = result.sid == null ? "" : result.sid;
@@ -283,7 +286,7 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
 
                             String imageUrl = rawImageUrl;
 
-                            String key = rawKey == null ? "" : rawKey;
+                            String key = rawKey;
 
                             BrowseResultType brType = result.type;
                             if (brType == BrowseResultType.SONG) {
@@ -420,7 +423,8 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
                     Set<String> target = handler instanceof HeosPlayerHandler ? players : groups;
                     String id = heosHandler.getId();
 
-                    mediaService.registerDevice(new MediaDevice(id, "" + handler.getThing().getLabel(), "", "Heos"));
+                    mediaService.registerDevice(new MediaDevice(id, "" + handler.getThing().getLabel(), "",
+                            HeosBindingConstants.BINDING_ID));
 
                     if (target.contains(id)) {
                         heosHandler.setStatusOnline();

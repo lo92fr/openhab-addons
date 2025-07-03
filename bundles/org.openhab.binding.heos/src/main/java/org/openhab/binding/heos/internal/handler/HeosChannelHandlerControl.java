@@ -25,8 +25,8 @@ import org.openhab.binding.heos.internal.json.payload.Media;
 import org.openhab.binding.heos.internal.resources.HeosEventListener;
 import org.openhab.binding.heos.internal.resources.HeosMediaEventListener;
 import org.openhab.binding.heos.internal.resources.Telnet.ReadException;
+import org.openhab.core.library.types.MediaCommandEnumType;
 import org.openhab.core.library.types.MediaCommandType;
-import org.openhab.core.library.types.MediaType;
 import org.openhab.core.media.MediaService;
 import org.openhab.core.media.model.MediaEntry;
 import org.openhab.core.media.model.MediaRegistry;
@@ -78,14 +78,14 @@ public class HeosChannelHandlerControl extends BaseHeosChannelHandler implements
             return;
         }
 
-        if (command instanceof MediaType) {
-            MediaType mediaType = (MediaType) command;
+        if (command instanceof MediaCommandType) {
+            MediaCommandType mediaType = (MediaCommandType) command;
             String device = mediaType.getDevice().toFullString();
             String param = mediaType.getParam().toFullString();
-            MediaCommandType mediaCommandType = ((MediaType) command).getCommand();
+            MediaCommandEnumType mediaCommandType = ((MediaCommandType) command).getCommand();
 
             // heos://browse/add_to_queue?sid=2135624688&pid=638477575&mid=/l/1025/t/12268&cid=/l/1025/t&aid=1
-            if (mediaCommandType == MediaCommandType.PLAY) {
+            if (mediaCommandType == MediaCommandEnumType.PLAY) {
                 MediaService mediaService = bridge.getMediaService();
                 MediaRegistry registry = mediaService.getMediaRegistry();
                 MediaEntry mediaEntry = registry.getEntry(param);
@@ -110,7 +110,7 @@ public class HeosChannelHandlerControl extends BaseHeosChannelHandler implements
                 }
 
                 getApi().addToQueue("638477575&sid=" + mediaSourceKey + "&mid=" + mid + "&cid=" + cid + "&aid=1");
-            } else if (mediaCommandType == MediaCommandType.PAUSE) {
+            } else if (mediaCommandType == MediaCommandEnumType.PAUSE) {
                 getApi().pause(id);
             }
 
