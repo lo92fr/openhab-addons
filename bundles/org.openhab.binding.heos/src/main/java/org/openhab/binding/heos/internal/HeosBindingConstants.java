@@ -32,6 +32,7 @@ import org.openhab.core.thing.type.ChannelTypeUID;
 public class HeosBindingConstants extends HeosConstants {
 
     public static final String BINDING_ID = "heos";
+    public static final String BINDING_LABEL = "Heos";
 
     // List of all Bridge Type UIDs
 

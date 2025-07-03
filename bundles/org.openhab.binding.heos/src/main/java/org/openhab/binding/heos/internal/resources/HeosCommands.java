@@ -200,12 +200,20 @@ public class HeosCommands {
         return DELETE_QUEUE_ITEM + pid + "&qid=" + qid;
     }
 
-    public static String browseSource(String sid, String cid) {
+    public static String browseSource(String sid, String cid, long start, long end) {
+        String result = "";
+
         if (cid.isEmpty()) {
-            return browseSource + sid;
+            result = browseSource + sid;
         } else {
-            return browseSource + sid + "&cid=" + cid;
+            result = browseSource + sid + "&cid=" + cid;
         }
+
+        if (start != -1 && end != -1) {
+            result = result + "&range=" + start + "," + end;
+        }
+
+        return result;
     }
 
     public static String playStream(String pid) {
