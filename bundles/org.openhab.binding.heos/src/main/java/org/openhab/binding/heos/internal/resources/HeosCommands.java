@@ -204,9 +204,9 @@ public class HeosCommands {
         String result = "";
 
         if (cid.isEmpty()) {
-            result = browseSource + sid;
+            result = BROWSE_SOURCE + sid;
         } else {
-            result = browseSource + sid + "&cid=" + cid;
+            result = BROWSE_SOURCE + sid + "&cid=" + cid;
         }
 
         if (start != -1 && end != -1) {
