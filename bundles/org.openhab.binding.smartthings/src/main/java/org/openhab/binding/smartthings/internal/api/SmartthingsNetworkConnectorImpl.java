@@ -187,6 +187,11 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
             request = request.content(new StringContentProvider(data), "application/json");
         }
 
+        if (uri.indexOf("activate") > 0) {
+            request = request.header("Accept", "text/event-stream");
+            request = request.header("Cache-Control", "no-cache");
+        }
+
         ContentResponse response = executeRequest(request, callback);
         if (callback == null && response != null) {
             int statusCode = response.getStatus();

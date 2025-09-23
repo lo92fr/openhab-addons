@@ -132,7 +132,7 @@ public class SmartthingsAuthServlet extends SmartthingsBaseServlet {
             replaceMap.put(KEY_PAGE_REFRESH,
                     params.isEmpty() ? "" : String.format(HTML_META_REFRESH_CONTENT, servletBaseURL));
             if (!StringUtil.isBlank(reqError)) {
-                logger.debug("Spotify redirected with an error: {}", reqError);
+                logger.debug("Smartthings redirected with an error: {}", reqError);
                 replaceMap.put(KEY_ERROR, String.format(HTML_ERROR, reqError));
             } else if (!StringUtil.isBlank(reqState)) {
                 try {

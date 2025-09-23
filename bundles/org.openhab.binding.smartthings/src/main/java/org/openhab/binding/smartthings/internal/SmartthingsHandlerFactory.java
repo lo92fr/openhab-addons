@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.ws.rs.client.ClientBuilder;
+
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.smartthings.internal.handler.SmartthingsBridgeHandler;
@@ -60,6 +62,7 @@ public class SmartthingsHandlerFactory extends BaseThingHandlerFactory implement
     private final SmartthingsAuthService authService;
     private final OAuthFactory oAuthFactory;
     private final SmartthingsTypeRegistry typeRegistry;
+    private final ClientBuilder clientBuilder;
 
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
@@ -70,12 +73,13 @@ public class SmartthingsHandlerFactory extends BaseThingHandlerFactory implement
     public SmartthingsHandlerFactory(final @Reference HttpService httpService,
             final @Reference SmartthingsAuthService authService, final @Reference OAuthFactory oAuthFactory,
             final @Reference HttpClientFactory httpClientFactory,
-            final @Reference SmartthingsTypeRegistry typeRegistery) {
+            final @Reference SmartthingsTypeRegistry typeRegistery, final @Reference ClientBuilder clientBuilder) {
         this.httpService = httpService;
         this.authService = authService;
         this.httpClientFactory = httpClientFactory;
         this.oAuthFactory = oAuthFactory;
         this.typeRegistry = typeRegistery;
+        this.clientBuilder = clientBuilder;
     }
 
     @Override
@@ -93,7 +97,7 @@ public class SmartthingsHandlerFactory extends BaseThingHandlerFactory implement
             }
 
             bridgeHandler = new SmartthingsCloudBridgeHandler((Bridge) thing, this, authService, bundleContext,
-                    httpService, oAuthFactory, httpClientFactory, typeRegistry);
+                    httpService, oAuthFactory, httpClientFactory, typeRegistry, clientBuilder);
 
             SmartthingsAccountHandler accountHandler = bridgeHandler;
             authService.setSmartthingsAccountHandler(accountHandler);
