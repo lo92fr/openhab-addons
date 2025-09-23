@@ -12,8 +12,18 @@
  */
 package org.openhab.binding.smartthings.internal.api;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Optional;
+
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -28,6 +38,10 @@ import org.openhab.binding.smartthings.internal.dto.SmartthingsLocation;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsRoom;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsStatus;
 import org.openhab.binding.smartthings.internal.type.SmartthingsException;
+import org.openhab.core.auth.client.oauth2.AccessTokenResponse;
+import org.openhab.core.auth.client.oauth2.OAuthClientService;
+import org.openhab.core.auth.client.oauth2.OAuthException;
+import org.openhab.core.auth.client.oauth2.OAuthResponseException;
 import org.openhab.core.io.net.http.HttpClientFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,9 +60,11 @@ public class SmartthingsApi {
     private final Logger logger = LoggerFactory.getLogger(SmartthingsApi.class);
 
     private final SmartthingsNetworkConnector networkConnector;
+    private final OAuthClientService oAuthClientService;
+    private final ClientBuilder clientBuilder;
     private final String token;
 
-    private static final String APP_NAME = "openhabnew0141";
+    private static final String APP_NAME = "openhabnew0150";
     private Gson gson = new Gson();
     private String baseUrl = "https://api.smartthings.com/v1";
     private String deviceEndPoint = "/devices";
@@ -65,9 +81,11 @@ public class SmartthingsApi {
      * @param token The token to access the API
      */
     public SmartthingsApi(HttpClientFactory httpClientFactory, SmartthingsNetworkConnector networkConnector,
-            String token) {
+            OAuthClientService oAuthClientService, ClientBuilder clientBuilder, String token) {
         this.token = token;
         this.networkConnector = networkConnector;
+        this.oAuthClientService = oAuthClientService;
+        this.clientBuilder = clientBuilder;
     }
 
     public SmartthingsDevice[] getAllDevices() throws SmartthingsException {
@@ -230,9 +248,29 @@ public class SmartthingsApi {
         }
     }
 
+    public String getToken2() throws SmartthingsException {
+        try {
+            final AccessTokenResponse accessTokenResponse = oAuthClientService.getAccessTokenResponse();
+            final String accessToken = accessTokenResponse == null ? null : accessTokenResponse.getAccessToken();
+            if (accessToken.isEmpty()) {
+                throw new SmartthingsException(
+                        "No Smartthings accesstoken. Did you authorize Smartthings via /connectsmartthings ?");
+            }
+
+            return accessToken;
+
+        } catch (OAuthException ex) {
+            logger.info("Exception:" + ex.toString());
+        } catch (OAuthResponseException ex) {
+            logger.info("Exception:" + ex.toString());
+        } catch (IOException ex) {
+            logger.info("Exception:" + ex.toString());
+        }
+
+        return "";
+    }
+
     public String getToken() throws SmartthingsException {
-        // final AccessTokenResponse accessTokenResponse = oAuthClientService.getAccessTokenResponse();
-        // final String accessToken = accessTokenResponse == null ? null : accessTokenResponse.getAccessToken();
         String accessToken = token;
         if (accessToken.isEmpty()) {
             throw new SmartthingsException(
@@ -282,5 +320,91 @@ public class SmartthingsApi {
         } catch (final Exception e) {
             throw new SmartthingsException("SmartthingsApi : Unable to do request", e);
         }
+    }
+
+    public void registerSubscriptions(String tokenInstallUpdate, String locationId) {
+        try {
+
+            String installedAppId = "a44863f8-659a-4247-90d4-631e22de04c4";
+            // String installedAppId = "ecc7b4e4-b895-4d03-b13d-003ce45aaee1";
+            // String subscriptionUri = "https://api.smartthings.com/v1/installedapps/" + installedAppId
+            // + "/subscriptions";
+
+            String subscriptionUri = "https://api.smartthings.com/subscriptions";
+
+            // Remove old subscriptions before recreating them
+            // networkConnector.doRequest(JsonObject.class, subscriptionUri, null, tokenInstallUpdate, "",
+            // HttpMethod.DELETE);
+
+            // networkConnector.doRequest(JsonObject.class, subscriptionUri, null, tokenInstallUpdate, "",
+            // HttpMethod.GET);
+
+            // SMEvent evt = new SMEvent();
+            // evt.sourceType = "DEVICE";
+            // evt.device = new device("dev.deviceId", "main", true, null);
+
+            // String body = gson.toJson(evt);
+            String body = "";
+
+            body += "{";
+            body += "   \"name\": \"My Home Assistant sub\",";
+            body += "   \"version\": 20250122,";
+            body += "   \"clientDeviceId\": \"iapp_" + installedAppId + "\",";
+            body += "   \"subscriptionFilters\":";
+            body += "      [";
+            body += "         {";
+            body += "             \"type\": \"LOCATIONIDS\",";
+            body += "             \"value\": [\"cb73e411-15b4-40e8-b6cd-f9a34f6ced4b\"],";
+            body += "             \"eventType\": [";
+            body += "                       \"DEVICE_EVENT\",";
+            body += "                       \"DEVICE_LIFECYCLE_EVENT\",";
+            body += "                       \"DEVICE_HEALTH_EVENT\"";
+            body += "             ]";
+            body += "         }";
+            body += "      ]";
+            body += "}";
+
+            logger.debug("body:" + body);
+            JsonObject result = networkConnector.doRequest(JsonObject.class, subscriptionUri, null, getToken(), body,
+                    HttpMethod.POST);
+            String uri = result.get("registrationUrl").getAsString();
+
+            // uri = "https://stream.wikimedia.org/v2/stream/recentchange";
+
+            Client client = clientBuilder.build();
+
+            String targetUrl = UriBuilder.fromUri(uri).build().toString();
+
+            WebTarget target = client.target(targetUrl);
+            Invocation.Builder builder = target.request("text/event-stream").header("Authorization",
+                    "Bearer " + getToken());
+
+            try (Response response = builder.get()) {
+                if (response.getStatus() != 200) {
+                    throw new RuntimeException("Failed : HTTP error code : " + response.getStatus());
+                }
+
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(response.readEntity(java.io.InputStream.class)));
+                String line;
+                StringBuilder eventData = new StringBuilder();
+
+                while ((line = reader.readLine()) != null) {
+                    if (line.startsWith("data:")) {
+                        eventData.append(line.substring(5).trim());
+                    } else if (line.isEmpty()) {
+                        // Fin d'un event
+                        System.out.println("Received event: " + eventData);
+                        eventData.setLength(0);
+                    }
+                }
+            }
+            // String resp = networkConnector.doBasicRequest(uri, null, getToken(), null, HttpMethod.GET);
+
+            logger.debug("result");
+        } catch (Exception ex) {
+            logger.debug("ex:" + ex.toString());
+        }
+
     }
 }

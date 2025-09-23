@@ -12,6 +12,8 @@
  */
 package org.openhab.binding.smartthings.internal.handler;
 
+import javax.ws.rs.client.ClientBuilder;
+
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.binding.smartthings.internal.SmartthingsAuthService;
 import org.openhab.binding.smartthings.internal.SmartthingsHandlerFactory;
@@ -43,9 +45,10 @@ public class SmartthingsCloudBridgeHandler extends SmartthingsBridgeHandler {
 
     public SmartthingsCloudBridgeHandler(Bridge bridge, SmartthingsHandlerFactory smartthingsHandlerFactory,
             SmartthingsAuthService authService, BundleContext bundleContext, HttpService httpService,
-            OAuthFactory oAuthFactory, HttpClientFactory httpClientFactory, SmartthingsTypeRegistry typeRegistry) {
+            OAuthFactory oAuthFactory, HttpClientFactory httpClientFactory, SmartthingsTypeRegistry typeRegistry,
+            ClientBuilder clientBuilder) {
         super(bridge, smartthingsHandlerFactory, authService, bundleContext, httpService, oAuthFactory,
-                httpClientFactory, typeRegistry);
+                httpClientFactory, typeRegistry, clientBuilder);
     }
 
     @Override
@@ -72,6 +75,12 @@ public class SmartthingsCloudBridgeHandler extends SmartthingsBridgeHandler {
     public void initRegistry() throws SmartthingsException {
         initCapabilites();
         discoService.doScan(false);
+        testSubscription();
+    }
+
+    public void testSubscription() {
+        SmartthingsApi api = this.getSmartthingsApi();
+        api.registerSubscriptions("", "cb73e411-15b4-40e8-b6cd-f9a34f6ced4b");
     }
 
     public void initCapabilites() throws SmartthingsException {
@@ -100,18 +109,6 @@ public class SmartthingsCloudBridgeHandler extends SmartthingsBridgeHandler {
     protected boolean validateConfig(SmartthingsBridgeConfig config) {
         if (!super.validateConfig(config)) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "Unknow");
-            return false;
-        }
-
-        if (config.clientId.isEmpty()) {
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                    "Smartthings Client Id is not specified");
-            return false;
-        }
-
-        if (config.clientSecret.isEmpty()) {
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                    "Smartthings Client Secret is not specified");
             return false;
         }
 

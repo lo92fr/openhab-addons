@@ -38,9 +38,6 @@ import org.openhab.binding.smartthings.internal.dto.ConfigurationResponse.Config
 import org.openhab.binding.smartthings.internal.dto.ConfigurationResponse.ConfigurationData.Page;
 import org.openhab.binding.smartthings.internal.dto.LifeCycle;
 import org.openhab.binding.smartthings.internal.dto.LifeCycle.Data;
-import org.openhab.binding.smartthings.internal.dto.SMEvent;
-import org.openhab.binding.smartthings.internal.dto.SMEvent.device;
-import org.openhab.binding.smartthings.internal.dto.SmartthingsDevice;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsLocation;
 import org.openhab.binding.smartthings.internal.handler.SmartthingsBridgeHandler;
 import org.openhab.binding.smartthings.internal.handler.SmartthingsThingHandler;
@@ -342,25 +339,26 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
             networkConnector.doRequest(JsonObject.class, subscriptionUri, null, tokenInstallUpdate, "", HttpMethod.GET);
 
             SmartthingsApi api = bridgeHandler.getSmartthingsApi();
-            SmartthingsDevice[] devices = api.getAllDevices();
-
-            for (SmartthingsDevice dev : devices) {
-                try {
-                    if (!dev.locationId.equals(locationId)) {
-                        continue;
-                    }
-
-                    SMEvent evt = new SMEvent();
-                    evt.sourceType = "DEVICE";
-                    evt.device = new device(dev.deviceId, "main", true, null);
-
-                    String body = gson.toJson(evt);
-                    networkConnector.doRequest(JsonObject.class, subscriptionUri, null, tokenInstallUpdate, body,
-                            HttpMethod.POST);
-                } catch (SmartthingsException ex) {
-                    logger.error("Unable to register subscriptions: {} {} ", ex.getMessage(), dev.deviceId);
-                }
-            }
+            /*
+             * SmartthingsDevice[] devices = api.getAllDevices();
+             * for (SmartthingsDevice dev : devices) {
+             * try {
+             * if (!dev.locationId.equals(locationId)) {
+             * continue;
+             * }
+             *
+             * SMEvent evt = new SMEvent();
+             * evt.sourceType = "DEVICE";
+             * evt.device = new device(dev.deviceId, "main", true, null);
+             *
+             * String body = gson.toJson(evt);
+             * networkConnector.doRequest(JsonObject.class, subscriptionUri, null, tokenInstallUpdate, body,
+             * HttpMethod.POST);
+             * } catch (SmartthingsException ex) {
+             * logger.error("Unable to register subscriptions: {} {} ", ex.getMessage(), dev.deviceId);
+             * }
+             * }
+             */
         } catch (SmartthingsException ex) {
             logger.error("Unable to register subscriptions: {}", ex.getMessage());
         }
