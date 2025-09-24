@@ -75,17 +75,18 @@ public class SmartthingsCloudBridgeHandler extends SmartthingsBridgeHandler {
 
     public void initRegistry() throws SmartthingsException {
         initCapabilites();
+        registerSubcriptions();
         discoService.doScan(false);
-        testSubscription();
     }
 
-    public void testSubscription() {
+    public void registerSubcriptions() {
+        logger.info("registerSubcriptions()");
         SmartthingsApi api = this.getSmartthingsApi();
-        api.registerSubscriptions("", "cb73e411-15b4-40e8-b6cd-f9a34f6ced4b");
+        api.registerSubscriptions();
     }
 
     public void initCapabilites() throws SmartthingsException {
-        logger.info("Start init capa");
+        logger.info("initCapabilites()");
         SmartthingsApi api = this.getSmartthingsApi();
         typeRegistry.setCloudBridgeHandler(this);
 
