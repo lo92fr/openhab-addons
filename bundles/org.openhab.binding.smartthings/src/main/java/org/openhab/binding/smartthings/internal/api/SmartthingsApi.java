@@ -12,18 +12,17 @@
  */
 package org.openhab.binding.smartthings.internal.api;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Optional;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.ClientRequestContext;
+import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.sse.SseEventSource;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -43,6 +42,7 @@ import org.openhab.core.auth.client.oauth2.OAuthClientService;
 import org.openhab.core.auth.client.oauth2.OAuthException;
 import org.openhab.core.auth.client.oauth2.OAuthResponseException;
 import org.openhab.core.io.net.http.HttpClientFactory;
+import org.osgi.service.jaxrs.client.SseEventSourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,9 +62,10 @@ public class SmartthingsApi {
     private final SmartthingsNetworkConnector networkConnector;
     private final OAuthClientService oAuthClientService;
     private final ClientBuilder clientBuilder;
-    private final String token;
+    private final SseEventSourceFactory eventSourceFactory;
+    private String token;
 
-    private static final String APP_NAME = "openhabnew0150";
+    private static final String APP_NAME = "openhabnew0160";
     private Gson gson = new Gson();
     private String baseUrl = "https://api.smartthings.com/v1";
     private String deviceEndPoint = "/devices";
@@ -81,11 +82,13 @@ public class SmartthingsApi {
      * @param token The token to access the API
      */
     public SmartthingsApi(HttpClientFactory httpClientFactory, SmartthingsNetworkConnector networkConnector,
-            OAuthClientService oAuthClientService, ClientBuilder clientBuilder, String token) {
+            OAuthClientService oAuthClientService, ClientBuilder clientBuilder,
+            SseEventSourceFactory eventSourceFactory, String token) {
         this.token = token;
         this.networkConnector = networkConnector;
         this.oAuthClientService = oAuthClientService;
         this.clientBuilder = clientBuilder;
+        this.eventSourceFactory = eventSourceFactory;
     }
 
     public SmartthingsDevice[] getAllDevices() throws SmartthingsException {
@@ -248,7 +251,7 @@ public class SmartthingsApi {
         }
     }
 
-    public String getToken2() throws SmartthingsException {
+    public String getToken() throws SmartthingsException {
         try {
             final AccessTokenResponse accessTokenResponse = oAuthClientService.getAccessTokenResponse();
             final String accessToken = accessTokenResponse == null ? null : accessTokenResponse.getAccessToken();
@@ -270,7 +273,7 @@ public class SmartthingsApi {
         return "";
     }
 
-    public String getToken() throws SmartthingsException {
+    public String getToken2() throws SmartthingsException {
         String accessToken = token;
         if (accessToken.isEmpty()) {
             throw new SmartthingsException(
@@ -325,7 +328,7 @@ public class SmartthingsApi {
     public void registerSubscriptions(String tokenInstallUpdate, String locationId) {
         try {
 
-            String installedAppId = "a44863f8-659a-4247-90d4-631e22de04c4";
+            String installedAppId = "createAppOAuth";
             // String installedAppId = "ecc7b4e4-b895-4d03-b13d-003ce45aaee1";
             // String subscriptionUri = "https://api.smartthings.com/v1/installedapps/" + installedAppId
             // + "/subscriptions";
@@ -371,35 +374,27 @@ public class SmartthingsApi {
 
             // uri = "https://stream.wikimedia.org/v2/stream/recentchange";
 
-            Client client = clientBuilder.build();
+            token = getToken();
+            // Client client = clientBuilder.build();
+
+            Client client = clientBuilder.build().register(new ClientRequestFilter() {
+                @Override
+                public void filter(@Nullable ClientRequestContext requestContext) throws IOException {
+                    requestContext.getHeaders().add("Authorization", "Bearer " + token);
+                }
+            });
 
             String targetUrl = UriBuilder.fromUri(uri).build().toString();
 
             WebTarget target = client.target(targetUrl);
-            Invocation.Builder builder = target.request("text/event-stream").header("Authorization",
-                    "Bearer " + getToken());
 
-            try (Response response = builder.get()) {
-                if (response.getStatus() != 200) {
-                    throw new RuntimeException("Failed : HTTP error code : " + response.getStatus());
-                }
+            try (SseEventSource source = eventSourceFactory.newBuilder(target).build()) {
+                source.register(event -> System.out.println("Received: " + event.readData()),
+                        ex -> ex.printStackTrace(), () -> System.out.println("Stream closed."));
+                source.open();
 
-                BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(response.readEntity(java.io.InputStream.class)));
-                String line;
-                StringBuilder eventData = new StringBuilder();
-
-                while ((line = reader.readLine()) != null) {
-                    if (line.startsWith("data:")) {
-                        eventData.append(line.substring(5).trim());
-                    } else if (line.isEmpty()) {
-                        // Fin d'un event
-                        System.out.println("Received event: " + eventData);
-                        eventData.setLength(0);
-                    }
-                }
+                Thread.sleep(60000);
             }
-            // String resp = networkConnector.doBasicRequest(uri, null, getToken(), null, HttpMethod.GET);
 
             logger.debug("result");
         } catch (Exception ex) {

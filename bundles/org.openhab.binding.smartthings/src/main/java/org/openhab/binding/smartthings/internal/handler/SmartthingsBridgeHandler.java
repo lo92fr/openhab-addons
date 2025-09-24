@@ -48,6 +48,7 @@ import org.openhab.core.types.Command;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.http.HttpService;
+import org.osgi.service.jaxrs.client.SseEventSourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,6 +74,7 @@ public abstract class SmartthingsBridgeHandler extends BaseBridgeHandler
     protected @NonNullByDefault({}) SmartthingsTypeRegistry typeRegistry;
     protected @NonNullByDefault({}) SmartthingsDiscoveryService discoService;
     protected @NonNullByDefault({}) ClientBuilder clientBuilder;
+    protected @NonNullByDefault({}) SseEventSourceFactory eventSourceFactory;
 
     private @Nullable SmartthingsServlet servlet;
     private @Nullable OAuthClientService oAuthService;
@@ -83,7 +85,7 @@ public abstract class SmartthingsBridgeHandler extends BaseBridgeHandler
     public SmartthingsBridgeHandler(Bridge bridge, SmartthingsHandlerFactory smartthingsHandlerFactory,
             SmartthingsAuthService authService, BundleContext bundleContext, HttpService httpService,
             OAuthFactory oAuthFactory, HttpClientFactory httpClientFactory, SmartthingsTypeRegistry typeRegistry,
-            ClientBuilder clientBuilder) {
+            ClientBuilder clientBuilder, SseEventSourceFactory eventSourceFactory) {
         super(bridge);
 
         this.smartthingsHandlerFactory = smartthingsHandlerFactory;
@@ -94,6 +96,7 @@ public abstract class SmartthingsBridgeHandler extends BaseBridgeHandler
         this.httpClientFactory = httpClientFactory;
         this.typeRegistry = typeRegistry;
         this.clientBuilder = clientBuilder;
+        this.eventSourceFactory = eventSourceFactory;
 
         config = getThing().getConfiguration().as(SmartthingsBridgeConfig.class);
     }
@@ -128,7 +131,7 @@ public abstract class SmartthingsBridgeHandler extends BaseBridgeHandler
         authService.registerServlet();
 
         smartthingsApi = new SmartthingsApi(httpClientFactory, networkConnector, oAuthService, clientBuilder,
-                config.token);
+                eventSourceFactory, config.token);
 
         if (servlet == null) {
             servlet = new SmartthingsServlet(this, httpService, networkConnector, config.token);
