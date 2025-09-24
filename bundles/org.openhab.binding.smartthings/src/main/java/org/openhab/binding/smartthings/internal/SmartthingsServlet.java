@@ -78,8 +78,8 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
     public Boolean setupInProgress = false;
 
     public SmartthingsServlet(SmartthingsBridgeHandler bridgeHandler, HttpService httpService,
-            SmartthingsNetworkConnector networkConnector, String token) {
-        super(bridgeHandler, httpService, networkConnector, token);
+            SmartthingsNetworkConnector networkConnector) {
+        super(bridgeHandler, httpService, networkConnector);
     }
 
     @Activate
@@ -230,7 +230,7 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
 
                     try {
                         Thread.sleep(2000);
-                        this.networkConnector.doBasicRequest(confirmUrl, null, "", "", HttpMethod.GET);
+                        this.networkConnector.doBasicRequest(String.class, confirmUrl, null, "", "", HttpMethod.GET);
                     } catch (Exception ex) {
                         logger.error("error during confirmation {}", confirmUrl);
                     }

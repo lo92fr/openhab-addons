@@ -45,18 +45,16 @@ public class SmartthingsBaseServlet extends HttpServlet {
     protected final SmartthingsBridgeHandler bridgeHandler;
     protected final HttpService httpService;
     protected final SmartthingsNetworkConnector networkConnector;
-    protected final String token;
 
     private static final Pattern MESSAGE_KEY_PATTERN = Pattern.compile("\\$\\{([^\\}]+)\\}");
 
     private static final String TEMPLATE_PATH = "templates/";
 
     public SmartthingsBaseServlet(SmartthingsBridgeHandler bridgeHandler, HttpService httpService,
-            SmartthingsNetworkConnector networkConnector, String token) {
+            SmartthingsNetworkConnector networkConnector) {
         this.bridgeHandler = bridgeHandler;
         this.httpService = httpService;
         this.networkConnector = networkConnector;
-        this.token = token;
     }
 
     /**

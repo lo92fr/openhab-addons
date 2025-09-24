@@ -27,8 +27,9 @@ public interface SmartthingsNetworkConnector {
     public <T> T doRequest(Class<T> resultClass, String req, @Nullable SmartthingsNetworkCallback callback,
             String accessToken, @Nullable String data, HttpMethod method) throws SmartthingsException;
 
-    public @Nullable String doBasicRequest(String uri, @Nullable SmartthingsNetworkCallback callback,
-            String accessToken, @Nullable String data, HttpMethod method) throws SmartthingsException;
+    public <T> @Nullable String doBasicRequest(Class<T> resultClass, String uri,
+            @Nullable SmartthingsNetworkCallback callback, String accessToken, @Nullable String data, HttpMethod method)
+            throws SmartthingsException;
 
     public void waitAllPendingRequest();
 

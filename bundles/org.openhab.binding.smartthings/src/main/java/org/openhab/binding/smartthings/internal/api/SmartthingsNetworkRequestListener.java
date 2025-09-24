@@ -12,6 +12,9 @@
  */
 package org.openhab.binding.smartthings.internal.api;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.api.Request;
@@ -28,32 +31,31 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 
 /**
  * @author Laurent Arnal - Initial contribution
  */
 @NonNullByDefault
-public class SmartthingsNetworkRequestListener extends BufferingResponseListener
+public class SmartthingsNetworkRequestListener<T> extends BufferingResponseListener
         implements SuccessListener, FailureListener, ContentListener, CompleteListener, QueuedListener, BeginListener {
 
     private final Logger logger = LoggerFactory.getLogger(SmartthingsNetworkRequestListener.class);
-    private SmartthingsNetworkConnector hvacConnector;
+    private SmartthingsNetworkConnector networkConnector;
 
     /**
      * Callback to execute on complete response
      */
-    private final SmartthingsNetworkCallback callback;
+    private final SmartthingsNetworkCallback<T> callback;
 
     /**
      * Constructor
      *
      * @param callback Callback which execute method has to be called.
      */
-    public SmartthingsNetworkRequestListener(SmartthingsNetworkCallback callback,
+    public SmartthingsNetworkRequestListener(SmartthingsNetworkCallback<T> callback,
             SmartthingsNetworkConnector hvacConnector) {
         this.callback = callback;
-        this.hvacConnector = hvacConnector;
+        this.networkConnector = hvacConnector;
     }
 
     @Override
@@ -91,62 +93,44 @@ public class SmartthingsNetworkRequestListener extends BufferingResponseListener
 
             if (result.getResponse().getStatus() != 200) {
                 logger.debug("bad gateway !!!");
-                hvacConnector.onError(result.getRequest(), callback);
+                networkConnector.onError(result.getRequest(), callback);
                 return;
             }
 
             if (content != null) {
                 if (content.indexOf("<!DOCTYPE html>") >= 0) {
-                    callback.execute(result.getRequest().getURI(), result.getResponse().getStatus(), content);
+                    callback.execute(result.getRequest().getURI(), result.getResponse().getStatus(), (T) content);
                 } else {
-                    JsonObject resultObj = null;
+                    Object resultObj = null;
                     try {
                         Gson gson = SmartthingsNetworkConnectorImpl.getGson();
-                        resultObj = gson.fromJson(content, JsonObject.class);
+
+                        Type type = callback.getClass().getGenericInterfaces()[0];
+                        if (type instanceof ParameterizedType) {
+                            Type actualType = ((ParameterizedType) type).getActualTypeArguments()[0];
+                            resultObj = gson.fromJson(content, actualType);
+                        }
+
                     } catch (Exception ex) {
                         logger.debug("error: {}", ex.toString());
                     }
 
-                    if (resultObj != null && resultObj.has("Result")) {
-                        JsonObject subResultObj = resultObj.getAsJsonObject("Result");
+                    if (resultObj != null) {
+                        networkConnector.onComplete(result.getRequest());
+                        callback.execute(result.getRequest().getURI(), result.getResponse().getStatus(), (T) resultObj);
 
-                        if (subResultObj.has("Success")) {
-                            boolean resultVal = subResultObj.get("Success").getAsBoolean();
-                            JsonObject error = subResultObj.getAsJsonObject("Error");
-                            String errorMsg = "";
-                            if (error != null) {
-                                errorMsg = error.get("Txt").getAsString();
-                            }
-
-                            if (resultVal) {
-                                hvacConnector.onComplete(result.getRequest());
-                                callback.execute(result.getRequest().getURI(), result.getResponse().getStatus(),
-                                        resultObj);
-
-                                return;
-                            } else if (("datatype not supported").equals(errorMsg)) {
-                                hvacConnector.onComplete(result.getRequest());
-                                callback.execute(result.getRequest().getURI(), result.getResponse().getStatus(),
-                                        resultObj);
-                            } else {
-                                logger.debug("error : {}", subResultObj);
-                                hvacConnector.onError(result.getRequest(), callback);
-                            }
-                        } else {
-                            logger.debug("error");
-                            hvacConnector.onError(result.getRequest(), callback);
-                        }
+                        return;
                     } else {
                         logger.debug("error");
-                        hvacConnector.onError(result.getRequest(), callback);
+                        networkConnector.onError(result.getRequest(), callback);
                     }
 
                     return;
                 }
             }
 
-            callback.execute(result.getRequest().getURI(), result.getResponse().getStatus(), content);
-            hvacConnector.onComplete(result.getRequest());
+            callback.execute(result.getRequest().getURI(), result.getResponse().getStatus(), (T) content);
+            networkConnector.onComplete(result.getRequest());
         } catch (Exception ex) {
             logger.debug("error");
         }

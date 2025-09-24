@@ -118,20 +118,22 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
         }
 
         try {
-            final Request retryRequest = httpClient.newRequest(request.getURI());
-            request.method(HttpMethod.GET);
-
-            if (retryRequest != null) {
-                executeRequest(retryRequest, cb);
-            }
+            /*
+             * final Request retryRequest = httpClient.newRequest(request.getURI());
+             * request.method(HttpMethod.GET);
+             *
+             * if (retryRequest != null) {
+             * executeRequest(retryRequest, cb);
+             * }
+             */
         } catch (Exception ex) {
             logger.error("exception");
             throw ex;
         }
     }
 
-    private @Nullable ContentResponse executeRequest(final Request request,
-            @Nullable SmartthingsNetworkCallback callback) throws SmartthingsException {
+    private <T> @Nullable ContentResponse executeRequest(Class<T> resultClass, final Request request,
+            @Nullable SmartthingsNetworkCallback<T> callback) throws SmartthingsException {
         request.timeout(240, TimeUnit.SECONDS);
 
         ContentResponse response = null;
@@ -165,19 +167,21 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
         return response;
     }
 
-    public @Nullable String doBasicRequest(String uri, String accessToken, @Nullable String data, HttpMethod method)
-            throws Exception {
-        return doBasicRequest(uri, null, accessToken, data, method);
+    public <T> @Nullable String doBasicRequest(Class<T> resultClass, String uri, String accessToken,
+            @Nullable String data, HttpMethod method) throws Exception {
+        return doBasicRequest(resultClass, uri, null, accessToken, data, method);
     }
 
-    public @Nullable String doBasicRequestAsync(String uri, @Nullable SmartthingsNetworkCallback callback,
-            String accessToken, @Nullable String data, HttpMethod method) throws Exception {
-        return doBasicRequest(uri, callback, accessToken, data, method);
+    public <T> @Nullable String doBasicRequestAsync(Class<T> resultClass, String uri,
+            @Nullable SmartthingsNetworkCallback callback, String accessToken, @Nullable String data, HttpMethod method)
+            throws Exception {
+        return doBasicRequest(resultClass, uri, callback, accessToken, data, method);
     }
 
     @Override
-    public @Nullable String doBasicRequest(String uri, @Nullable SmartthingsNetworkCallback callback,
-            String accessToken, @Nullable String data, HttpMethod method) throws SmartthingsException {
+    public <T> @Nullable String doBasicRequest(Class<T> resultClass, String uri,
+            @Nullable SmartthingsNetworkCallback callback, String accessToken, @Nullable String data, HttpMethod method)
+            throws SmartthingsException {
         logger.debug("Execute request: {}", uri);
         Request request = httpClient.newRequest(uri).method(method);
         if (!"".equals(accessToken)) {
@@ -192,7 +196,7 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
             request = request.header("Cache-Control", "no-cache");
         }
 
-        ContentResponse response = executeRequest(request, callback);
+        ContentResponse response = executeRequest(resultClass, request, callback);
         if (callback == null && response != null) {
             int statusCode = response.getStatus();
 
@@ -219,7 +223,7 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
     @Override
     public <T> T doRequest(Class<T> resultClass, String req, @Nullable SmartthingsNetworkCallback callback,
             String accessToken, @Nullable String data, HttpMethod method) throws SmartthingsException {
-        String response = doBasicRequest(req, callback, accessToken, data, method);
+        String response = doBasicRequest(resultClass, req, callback, accessToken, data, method);
 
         if (response != null) {
             if (resultClass.isArray()) {
@@ -257,7 +261,7 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
                     if (startedRequest != completedRequest) {
                         allRequestDone = false;
                     }
-                    Thread.sleep(1000);
+                    Thread.sleep(200);
                     idx++;
                 }
             }

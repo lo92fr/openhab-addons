@@ -89,7 +89,7 @@ public class SmartthingsAuthService {
         }
 
         SmartthingsNetworkConnector networkConnector = bridgeHandler.getNetworkConnector();
-        return new SmartthingsAuthServlet(bridgeHandler, this, httpService, networkConnector, "");
+        return new SmartthingsAuthServlet(bridgeHandler, this, httpService, networkConnector);
     }
 
     /**

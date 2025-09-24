@@ -110,18 +110,22 @@ public class SmartthingsThingHandler extends BaseThingHandler {
     }
 
     public void refreshDevice(String deviceType, String componentId, String capa, String attr, Object value) {
-        String channelName = (StringUtils.join(StringUtils.splitByCharacterTypeCamelCase(attr), '-')).toLowerCase();
+        try {
+            String channelName = (StringUtils.join(StringUtils.splitByCharacterTypeCamelCase(attr), '-')).toLowerCase();
+            String groupId = deviceType + "_" + componentId;
+            ChannelUID channelUID = new ChannelUID(this.getThing().getUID(), groupId, channelName);
 
-        String groupId = deviceType + "_" + componentId;
-        ChannelUID channelUID = new ChannelUID(this.getThing().getUID(), groupId, channelName);
+            if (converters.containsKey(channelUID)) {
+                SmartthingsConverter converter = converters.get(channelUID);
 
-        if (converters.containsKey(channelUID)) {
-            SmartthingsConverter converter = converters.get(channelUID);
-
-            if (converter != null) {
-                State state = converter.convertToOpenHab(thing, channelUID, value);
-                updateState(channelUID, state);
+                if (converter != null) {
+                    State state = converter.convertToOpenHab(thing, channelUID, value);
+                    updateState(channelUID, state);
+                }
             }
+        } catch (Exception ex) {
+            // @todo : handle this
+            logger.info("Unable to refresh device:" + ex.toString());
         }
     }
 

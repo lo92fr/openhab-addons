@@ -22,29 +22,14 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 @NonNullByDefault
 public class SmartthingsBridgeConfig {
 
-    public String token = "";
-
-    public String clientId = "";
-
-    public String clientSecret = "";
-
-    /**
-     * IP address of smartthings hub
-     */
-    public String smartthingsIp = "";
-
-    /**
-     * Port number of smartthings hub
-     */
-    public int smartthingsPort = -1;
+    public String clientId = "f9fd90b7-c4bb-49c1-974f-e80b89a7327f";
+    public String clientSecret = "ec3d221b-72f6-4612-bb92-58ae5ebfe562";
 
     @Override
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("clientId = ").append(clientId);
         sb.append("clientSecret = ").append(clientSecret);
-        sb.append(",smartthingsIp = ").append(smartthingsIp);
-        sb.append(", smartthingsPort = ").append(smartthingsPort);
         return sb.toString();
     }
 }
