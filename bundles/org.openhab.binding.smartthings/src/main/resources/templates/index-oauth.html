@@ -3,7 +3,6 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-${pageRefresh}
 <title>Authorize openHAB binding for Smartthings</title>
 <link rel="icon" href="img/favicon.ico" type="image/vnd.microsoft.icon">
 <link>
@@ -68,13 +67,14 @@ html {
   </g>
 </svg>
 	<h3>Authorize openHAB binding for Smartthings</h3>
-	<p>On this page you can authorize the openHAB Smartthings biding to access your Smartthings account.</p>
+	<br/>
 	<p>
+		On this page you can authorize the openHAB Smartthings biding to access your Smartthings account.
+		<br/>
 		The redirect URI to use with Smartthings for this openHAB installation is
 		<a href="${redirectUri}">${redirectUri}</a>
 	</p>
-	${error} ${authorizedUser}
-	
+	<br/><br/>
 	<div class="block${bridge.authorized}">
         Connect to SmartThings:  
         <p>

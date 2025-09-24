@@ -8,14 +8,74 @@ This binding supports most of the Smartthings devices that are defined in the [S
 
 If you find a device that doesn't work [follow these instructions](doc/Troubleshooting.md) to collect the required data so it can be added in a future release.
 
-## Discovery
-
-Discovery allows openHAB to examine a binding and automatically find the Things available on that binding.
-Discovery is supported by the Smartthings binding and is run automatically on startup.
 
 ## Smartthings Configuration
 
 **The binding will not work until this part has been completed, do not skip this part of the setup.**
+
+In this version, the binding need to have a redirect URL using openhabcloud to do the first oAuth authorization. This URL will be only use during registration, and not during day to day use of the addons.
+
+URL will be of this form : https://home.myopenhab.org/connectsmartthings
+
+To do the registration, follow this steps:
+
+1. Browse to the URL : https://home.myopenhab.org/connectsmartthings
+   You should see a page like this one:
+
+![alt text](doc/Authorize01.png)
+
+2. Click on the Authorize Bridge button.
+   You will be redirect to the following page on smartthings.
+   If you are already login, go directly to Step 4.
+   If not, fill your email, and click on Next.
+
+![alt text](doc/Authorize02.png)
+
+3. Fill your password, and click Connexion.
+
+![alt text](doc/Authorize03.png)
+
+4. On this step, Smartthings should display a page with a combobox to select your location.
+  First select your location.
+  After this, Smartthings would display the authorization selection.
+  Keep all checkbox on, and click "Authorize"
+
+![alt text](doc/Authorize04.png)
+
+5. On this last step, your browser should be redirected to openhab.
+   The page will display a confirmation with the selected location, and the number of device foudn in the location.
+
+   You can now close the window, and go to Openhab Inbox to trigger a device scan.
+
+![alt text](doc/Authorize05.png)
+
+
+## Discovery
+
+Discovery will allow to automically fill Inbox with your smartthings device.
+
+1. Go to the Things pages, click on "+" Button.
+
+![alt text](doc/Scan01.png)
+
+2. Select your binding.
+
+![alt text](doc/Scan02.png)
+
+3. Select your binding.
+
+![alt text](doc/Scan03.png)
+
+4. Click on the "Scan" button
+   Your device should display after a few seconds.
+
+![alt text](doc/Scan04.png)
+
+
+allows openHAB to examine a binding and automatically find the Things available on that binding.
+Discovery is supported by the Smartthings binding and is run automatically on startup.
+
+
 
 You will need an external callback public uri to access your openhab.
 This is because Smartthings will push device events directly to openhab.

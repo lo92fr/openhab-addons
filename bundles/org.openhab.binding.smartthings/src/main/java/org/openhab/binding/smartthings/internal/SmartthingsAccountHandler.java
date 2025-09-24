@@ -44,5 +44,5 @@ public interface SmartthingsAccountHandler extends ThingHandler {
      * @param redirectUri The uri Smartthings will redirect back to
      * @return the formatted url that should be used to call Smartthings Web Api with
      */
-    String formatAuthorizationUrl(String redirectUri);
+    String formatAuthorizationUrl(String redirectUri, String state);
 }

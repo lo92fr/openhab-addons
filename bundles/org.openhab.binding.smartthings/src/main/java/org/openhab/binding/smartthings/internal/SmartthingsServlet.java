@@ -15,10 +15,8 @@ package org.openhab.binding.smartthings.internal;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Dictionary;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -113,8 +111,6 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
     @Override
     protected void service(@Nullable HttpServletRequest req, @Nullable HttpServletResponse resp)
             throws ServletException, IOException {
-        final Map<String, String> replaceMap = new HashMap<>();
-        StringBuffer optionBuffer = new StringBuffer();
         SmartthingsApi api = bridgeHandler.getSmartthingsApi();
 
         if (req == null) {
