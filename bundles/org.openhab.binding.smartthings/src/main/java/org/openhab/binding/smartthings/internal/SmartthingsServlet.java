@@ -72,22 +72,10 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
 
     private Gson gson = new Gson();
 
-    // Keys present in the index.html
-    private static final String KEY_SETUP_URI = "setup.uri";
-    private static final String KEY_REDIRECT_URI = "redirectUri";
-    private static final String KEY_LOCATIONID_OPTION = "locationId.Option";
-    private static final String KEY_POOL_STATUS = "poolStatus";
-    private static final String KEY_LOCATION = "location";
-    private static final String KEY_APP_ID = "appId";
-
     // Page templates
-    private @Nullable String indexTemplate;
-    private @Nullable String selectLocationTemplate;
-    private @Nullable String poolTemplate;
-    private @Nullable String confirmationTemplate;
 
-    private String installedLocation = "";
     private String installedAppId = "";
+    private String installedLocation = "";
 
     public Boolean setupInProgress = false;
 
@@ -104,12 +92,7 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
             httpService.registerServlet(PATH, this, servletParams, httpService.createDefaultHttpContext());
             httpService.registerResources(PATH + "/img", "img", null);
             httpService.registerResources(PATH + "/web", "web", null);
-
-            this.indexTemplate = readTemplate("index.html");
-            this.selectLocationTemplate = readTemplate("selectlocation.html");
-            this.poolTemplate = readTemplate("pool.ajax");
-            this.confirmationTemplate = readTemplate("confirmation.html");
-        } catch (ServletException | IOException | NamespaceException e) {
+        } catch (ServletException | NamespaceException e) {
             logger.warn("Could not start Smartthings servlet service: {}", e.getMessage());
         }
     }
@@ -145,66 +128,7 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
         logger.info("SmartthingsServlet:service");
         String path = req.getRequestURI();
 
-        if (path != null && !path.contains("/smartthings/cb")) {
-            String template = "";
-            if (path.contains("index")) {
-                template = indexTemplate;
-            } else if (path.contains("selectlocation")) {
-                template = selectLocationTemplate;
-            } else if (path.contains("pool")) {
-                template = poolTemplate;
-            } else if (path.contains("confirmation")) {
-                template = confirmationTemplate;
-            } else {
-                template = indexTemplate;
-            }
-
-            StringBuffer requestUrl = req.getRequestURL();
-            String servletBaseUrl = requestUrl != null ? requestUrl.toString() : "";
-            String servletBaseURLSecure = servletBaseUrl.replace("http://", "https://").replace("8080", "8443");
-            int p1 = servletBaseURLSecure.indexOf(SmartthingsServlet.PATH);
-            if (p1 >= 0) {
-                servletBaseURLSecure = servletBaseURLSecure.substring(0, p1 + SmartthingsServlet.PATH.length());
-            }
-
-            if (selectLocationTemplate != null && selectLocationTemplate.equals(template)) {
-                setupApp(servletBaseURLSecure);
-
-                try {
-                    SmartthingsLocation[] locationList = api.getAllLocations();
-                    for (SmartthingsLocation loc : locationList) {
-                        optionBuffer.append("<option value=\"" + loc.locationId + "\">" + loc.name + "</option>");
-                    }
-                } catch (SmartthingsException ex) {
-                    optionBuffer.append("Unable to retrieve locations !!");
-                }
-                setupInProgress = true;
-            } else if (poolTemplate != null && poolTemplate.equals(template)) {
-                if (setupInProgress) {
-                    replaceMap.put(KEY_POOL_STATUS, "false");
-                } else {
-                    replaceMap.put(KEY_POOL_STATUS, "true");
-                }
-            } else if (confirmationTemplate != null && confirmationTemplate.equals(template)) {
-                replaceMap.put(KEY_LOCATION, installedLocation);
-                replaceMap.put(KEY_APP_ID, installedAppId);
-            }
-
-            String uri = "https://account.smartthings.com/login?redirect=https%3A%2F%2Fstrongman-regional.api.smartthings.com%2F%3FappId%3D";
-            uri = uri + bridgeHandler.getAppId();
-            uri = uri + "%26appType%3DENDPOINTAPP";
-            uri = uri + "%26language%3Den";
-            uri = uri + "%26clientOS%3Dweb";
-
-            replaceMap.put(KEY_SETUP_URI, uri);
-            replaceMap.put(KEY_REDIRECT_URI, servletBaseURLSecure);
-            replaceMap.put(KEY_LOCATIONID_OPTION, optionBuffer.toString());
-
-            if (template != null) {
-                resp.getWriter().append(replaceKeysFromMap(template, replaceMap));
-                resp.getWriter().close();
-            }
-        } else {
+        if (path != null && path.contains("/smartthings/cb")) {
             BufferedReader rdr = new BufferedReader(req.getReader());
             String s = rdr.lines().collect(Collectors.joining());
 
