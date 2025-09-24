@@ -14,6 +14,9 @@ package org.openhab.binding.smartthings.internal.api;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.List;
 import java.util.Optional;
 
 import javax.ws.rs.client.Client;
@@ -22,6 +25,7 @@ import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.sse.InboundSseEvent;
 import javax.ws.rs.sse.SseEventSource;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -29,6 +33,8 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.http.HttpMethod;
 import org.openhab.binding.smartthings.internal.dto.AppRequest;
 import org.openhab.binding.smartthings.internal.dto.AppResponse;
+import org.openhab.binding.smartthings.internal.dto.Event;
+import org.openhab.binding.smartthings.internal.dto.EventRegistration;
 import org.openhab.binding.smartthings.internal.dto.OAuthConfigRequest;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsApp;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsCapabilitie;
@@ -36,12 +42,17 @@ import org.openhab.binding.smartthings.internal.dto.SmartthingsDevice;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsLocation;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsRoom;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsStatus;
+import org.openhab.binding.smartthings.internal.handler.SmartthingsBridgeHandler;
+import org.openhab.binding.smartthings.internal.handler.SmartthingsThingHandler;
 import org.openhab.binding.smartthings.internal.type.SmartthingsException;
 import org.openhab.core.auth.client.oauth2.AccessTokenResponse;
 import org.openhab.core.auth.client.oauth2.OAuthClientService;
 import org.openhab.core.auth.client.oauth2.OAuthException;
 import org.openhab.core.auth.client.oauth2.OAuthResponseException;
 import org.openhab.core.io.net.http.HttpClientFactory;
+import org.openhab.core.thing.Bridge;
+import org.openhab.core.thing.Thing;
+import org.openhab.core.thing.binding.ThingHandler;
 import org.osgi.service.jaxrs.client.SseEventSourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +71,7 @@ public class SmartthingsApi {
     private final Logger logger = LoggerFactory.getLogger(SmartthingsApi.class);
 
     private final SmartthingsNetworkConnector networkConnector;
+    private final SmartthingsBridgeHandler bridgeHandler;
     private final OAuthClientService oAuthClientService;
     private final ClientBuilder clientBuilder;
     private final SseEventSourceFactory eventSourceFactory;
@@ -73,6 +85,7 @@ public class SmartthingsApi {
     private String locationEndPoint = "/locations";
     private String roomsEndPoint = "/rooms";
     private String capabilitiesEndPoint = "/capabilities";
+    private Dictionary<String, SseEventSource> sseEvents;
 
     /**
      * Constructor.
@@ -81,14 +94,16 @@ public class SmartthingsApi {
      * @param OAuthClientService The oAuthClientService
      * @param token The token to access the API
      */
-    public SmartthingsApi(HttpClientFactory httpClientFactory, SmartthingsNetworkConnector networkConnector,
-            OAuthClientService oAuthClientService, ClientBuilder clientBuilder,
-            SseEventSourceFactory eventSourceFactory, String token) {
+    public SmartthingsApi(HttpClientFactory httpClientFactory, SmartthingsBridgeHandler bridgeHandler,
+            SmartthingsNetworkConnector networkConnector, OAuthClientService oAuthClientService,
+            ClientBuilder clientBuilder, SseEventSourceFactory eventSourceFactory, String token) {
         this.token = token;
         this.networkConnector = networkConnector;
+        this.bridgeHandler = bridgeHandler;
         this.oAuthClientService = oAuthClientService;
         this.clientBuilder = clientBuilder;
         this.eventSourceFactory = eventSourceFactory;
+        this.sseEvents = new Hashtable<String, SseEventSource>();
     }
 
     public SmartthingsDevice[] getAllDevices() throws SmartthingsException {
@@ -325,58 +340,34 @@ public class SmartthingsApi {
         }
     }
 
-    public void registerSubscriptions(String tokenInstallUpdate, String locationId) {
+    public void registerSubscriptions() {
+        registerSubscription("cb73e411-15b4-40e8-b6cd-f9a34f6ced4b");
+    }
+
+    public void registerSubscription(String locationId) {
         try {
-
-            String installedAppId = "createAppOAuth";
-            // String installedAppId = "ecc7b4e4-b895-4d03-b13d-003ce45aaee1";
-            // String subscriptionUri = "https://api.smartthings.com/v1/installedapps/" + installedAppId
-            // + "/subscriptions";
-
+            String installedAppId = "22d02ddc-5794-4347-99f1-75bae79bcefe";
             String subscriptionUri = "https://api.smartthings.com/subscriptions";
 
-            // Remove old subscriptions before recreating them
-            // networkConnector.doRequest(JsonObject.class, subscriptionUri, null, tokenInstallUpdate, "",
-            // HttpMethod.DELETE);
+            String[] eventTypes = { "DEVICE_EVENT", "DEVICE_LIFECYCLE_EVENT", "DEVICE_HEALTH_EVENT" };
+            String[] locations = { "cb73e411-15b4-40e8-b6cd-f9a34f6ced4b" };
+            EventRegistration evtReg = new EventRegistration();
+            evtReg.name = "Openhab sub";
+            evtReg.version = 20250122;
+            evtReg.clientDeviceId = "iapp_" + installedAppId;
+            evtReg.subscriptionFilters = new EventRegistration.SubscriptionFilters[1];
 
-            // networkConnector.doRequest(JsonObject.class, subscriptionUri, null, tokenInstallUpdate, "",
-            // HttpMethod.GET);
+            evtReg.subscriptionFilters[0] = new EventRegistration.SubscriptionFilters("LOCATIONIDS", locations,
+                    eventTypes);
 
-            // SMEvent evt = new SMEvent();
-            // evt.sourceType = "DEVICE";
-            // evt.device = new device("dev.deviceId", "main", true, null);
+            String body = body = gson.toJson(evtReg);
+            logger.info("body:" + body);
 
-            // String body = gson.toJson(evt);
-            String body = "";
-
-            body += "{";
-            body += "   \"name\": \"My Home Assistant sub\",";
-            body += "   \"version\": 20250122,";
-            body += "   \"clientDeviceId\": \"iapp_" + installedAppId + "\",";
-            body += "   \"subscriptionFilters\":";
-            body += "      [";
-            body += "         {";
-            body += "             \"type\": \"LOCATIONIDS\",";
-            body += "             \"value\": [\"cb73e411-15b4-40e8-b6cd-f9a34f6ced4b\"],";
-            body += "             \"eventType\": [";
-            body += "                       \"DEVICE_EVENT\",";
-            body += "                       \"DEVICE_LIFECYCLE_EVENT\",";
-            body += "                       \"DEVICE_HEALTH_EVENT\"";
-            body += "             ]";
-            body += "         }";
-            body += "      ]";
-            body += "}";
-
-            logger.debug("body:" + body);
             JsonObject result = networkConnector.doRequest(JsonObject.class, subscriptionUri, null, getToken(), body,
                     HttpMethod.POST);
             String uri = result.get("registrationUrl").getAsString();
 
-            // uri = "https://stream.wikimedia.org/v2/stream/recentchange";
-
             token = getToken();
-            // Client client = clientBuilder.build();
-
             Client client = clientBuilder.build().register(new ClientRequestFilter() {
                 @Override
                 public void filter(@Nullable ClientRequestContext requestContext) throws IOException {
@@ -387,21 +378,59 @@ public class SmartthingsApi {
             });
 
             String targetUrl = UriBuilder.fromUri(uri).build().toString();
-
             WebTarget target = client.target(targetUrl);
 
-            try (SseEventSource source = eventSourceFactory.newBuilder(target).build()) {
-                source.register(event -> System.out.println("Received: " + event.readData()),
-                        ex -> ex.printStackTrace(), () -> System.out.println("Stream closed."));
-                source.open();
+            SseEventSource source = eventSourceFactory.newBuilder(target).build();
+            source.register(event -> onEvent(event), error -> onError(error), () -> onComplete());
 
-                Thread.sleep(60000);
-            }
+            source.open();
 
             logger.debug("result");
         } catch (Exception ex) {
             logger.debug("ex:" + ex.toString());
         }
 
+    }
+
+    public void onEvent(InboundSseEvent event) {
+        String data = event.readData();
+
+        if (!data.contains("DEVICE_EVENT")) {
+            return;
+        }
+
+        logger.info("Received: " + event.readData());
+
+        Event evt = gson.fromJson(data, Event.class);
+
+        String deviceId = evt.deviceEvent.deviceId;
+        String componentId = evt.deviceEvent.componentId;
+        String capa = evt.deviceEvent.capability;
+        String attr = evt.deviceEvent.attribute;
+        String value = evt.deviceEvent.value;
+
+        Bridge bridge = bridgeHandler.getThing();
+        List<Thing> things = bridge.getThings();
+
+        Optional<Thing> theThingOpt = things.stream().filter(x -> x.getProperties().containsValue(deviceId))
+                .findFirst();
+        if (theThingOpt.isPresent()) {
+            Thing theThing = theThingOpt.get();
+
+            ThingHandler handler = theThing.getHandler();
+            SmartthingsThingHandler smarthingsHandler = (SmartthingsThingHandler) handler;
+            if (smarthingsHandler != null) {
+                smarthingsHandler.refreshDevice(theThing.getThingTypeUID().getId(), componentId, capa, attr, value);
+            }
+        }
+
+    }
+
+    public void onError(Throwable onError) {
+        logger.info("Exception:" + onError.toString());
+    }
+
+    public void onComplete() {
+        logger.info("Stream closed.");
     }
 }
