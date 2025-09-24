@@ -92,6 +92,9 @@ public class SmartthingsColorConverter extends SmartthingsConverter {
         // The color value from Smartthings will look like "#123456" which is the RGB color
         // This needs to be converted into HSB type
         String value = (String) dataFromSmartthings;
+        if (value.isBlank()) {
+            return UnDefType.UNDEF;
+        }
         // First verify the format the string is valid
         Matcher matcher = rgbInputPattern.matcher(value);
         if (!matcher.matches()) {
