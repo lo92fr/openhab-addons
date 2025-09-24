@@ -30,6 +30,7 @@ import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.types.Command;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.http.HttpService;
+import org.osgi.service.jaxrs.client.SseEventSourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,9 +47,9 @@ public class SmartthingsCloudBridgeHandler extends SmartthingsBridgeHandler {
     public SmartthingsCloudBridgeHandler(Bridge bridge, SmartthingsHandlerFactory smartthingsHandlerFactory,
             SmartthingsAuthService authService, BundleContext bundleContext, HttpService httpService,
             OAuthFactory oAuthFactory, HttpClientFactory httpClientFactory, SmartthingsTypeRegistry typeRegistry,
-            ClientBuilder clientBuilder) {
+            ClientBuilder clientBuilder, SseEventSourceFactory eventSourceFactory) {
         super(bridge, smartthingsHandlerFactory, authService, bundleContext, httpService, oAuthFactory,
-                httpClientFactory, typeRegistry, clientBuilder);
+                httpClientFactory, typeRegistry, clientBuilder, eventSourceFactory);
     }
 
     @Override

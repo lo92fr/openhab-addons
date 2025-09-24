@@ -246,7 +246,7 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
                         installedLocation = "Unable to retrieve location!!";
                     }
 
-                    registerSubscriptions(tokenInstallUpdate, locationId);
+                    // registerSubscriptions(tokenInstallUpdate, locationId);
 
                     setupInProgress = false;
                     logger.info("INSTALL");
@@ -258,7 +258,7 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
                     String subscriptionUri = "https://api.smartthings.com/v1/installedapps/" + installedAppId
                             + "/subscriptions";
 
-                    registerSubscriptions(tokenInstallUpdate, locationId);
+                    // registerSubscriptions(tokenInstallUpdate, locationId);
 
                     logger.info("UPDATE");
                 } else if (resultObj.lifecycle.equals("EXECUTE")) {
