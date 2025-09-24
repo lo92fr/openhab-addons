@@ -1,13 +1,36 @@
 # Samsung Smartthings Binding
 
-This binding integrates the Samsung Smartthings Hub into openHAB.
+This binding integrates the Samsung Smartthings Cloud into openhab.
+
+The central part would be the "Smarthins Cloud Hub" bridge, that will enable communication between Openhab and Smartthings Cloud.
+There will be also an number of differents things for each of your home device.
+
+The Smarthings hub (the one you could have in your home to enable gateway to zigbee / mater & zware device) would be displayed as a thing (smartthings:hub).
+
+Note that having a Smartthings hub is not mandatory to use this binding.
+Some appliance devices like hoven, cooktop, dishwasher and others connect directly to Smartthings Cloud using your Wifi, and without using the local Smartthing hub.
+
+## A little background on Smartthings version change
+
+First version of bindings was bases on groovy script to be installed on the local hub.
+This version stop working somewhere in 2023 (to be verified) because of deprecation of groovy by samsung.
+
+Second version in early 2024 was never released.  
+This version needs a web hook expose to the internet to handle device events.  
+It also needs a complicated registration process, creating some smartapps behind the scene.
+
+The new actual version use SSE subscription to handle device events.  
+It's more convenient to setup : no need for end user to setup an external web hook.  
+Registration process is also far more easy :  
+- We use OAuth authentification in place of registration tokens.
+- All setup occurs directly inside Openhab.
+- The smartapp stuff are totally hide behind the scene, not needing complex setup.
 
 ## Supported things
 
 This binding supports most of the Smartthings devices that are defined in the [Smartthings Capabilities list](https://developer-preview.smartthings.com/docs/devices/capabilities/capabilities-reference/). 
 
 If you find a device that doesn't work [follow these instructions](doc/Troubleshooting.md) to collect the required data so it can be added in a future release.
-
 
 ## Smartthings Configuration
 
@@ -16,6 +39,8 @@ If you find a device that doesn't work [follow these instructions](doc/Troublesh
 In this version, the binding need to have a redirect URL using openhabcloud to do the first oAuth authorization. This URL will be only use during registration, and not during day to day use of the addons.
 
 URL will be of this form : https://home.myopenhab.org/connectsmartthings
+
+Warning: note that using your personal URL, even if expose on internet, will not work bacause only opencloud URL is registered to Smartthings.
 
 To do the registration, follow this steps:
 
@@ -77,200 +102,13 @@ Discovery is supported by the Smartthings binding and is run automatically on st
 
 
 
-You will need an external callback public uri to access your openhab.
-This is because Smartthings will push device events directly to openhab.
-
-You will need to get a token before setup the binding.
-
-- For this, go to the following ULR : https://account.smartthings.com/tokens/new
-
-
-- Then login with you smartthings account / password.
-
-
-- On the next page, give a token name (arbitrary), select all the Oauth scope.
-
-  ![](doc/TokenCreate.png)
-
-
-- On the last page, the token will be displayed. 
-
-  ![](doc/TokenConfirmation.png)
-
-- Make a copy of this token, and fill it on the openhab Smarthings Cloud Hub device.
-
-- Then, go back to openhab things.
-  Modify the openhab "Smartthings Cloud Hub" things to add the token to the configuration.
-  
-- After this, go to the following URL :
-    http[s]://myopenhab.domain.com/smartthings/ 
-
-    Verify that the callback uri is ok, and then click Next.
-
-  ![](doc/Link_01_Connection.png)    
-
-- On the next page, select your location, and then click on Setup Smartthings.
-  A new window will popup.
-  ![](doc/Link_02_Location.png)    
-
-- In this popup, the name of the application will be display.
-  Just confirm by clicking the "Done" button.
-
-  ![](doc/Link_03_AppName.png)    
-
-- Next page is about giving authorization to openhab to access your device.
-  Just click the "Authorize" button.
-
-  ![](doc/Link_04_Authorize.png)    
-
-- After a few second, the popup will be closed, and you should see this confirmation page.
-
-  ![](doc/Link_05_Confirmation.png)    
-    
-- You can now go back to openhab, to the things page. 
-  Click the "+" to add new things.
-  Select the Smartthings Binding.
-  And then click the "Scan" buttons
-  After a few seconds, you should see your device on the page.
-  You can add them as usual clicking the "Add All", or adding device individually.
-  ![](doc/AddDevice.png)    
-
-
-
-## initialization Lifecycle 
-
-- User go to /smartthings page
-
-
-- User click Next to go to /location page
-
-    - Openhab ask Smarthings to create the app
-    - Smartapp is installed, status pending
-    - Smartthings call cb URL with lifecycle CONFIRMATION
-    - Openhab confirm back to Smartthings that it's ok
-    - Smartapp go to status CONFIRMED
-    
-    
-- User select location, and click Setup Smartthings
-    - Smartthings create an installedapps, status = PENDING
-    - Smartthings call cb URL with lifecycle CONFIGURATION / INITIALIZE
-    - Smartthings call cb URL with lifecycle CONFIGURATION / PAGE
-    
-    
-- User confirm application name, and click DONE
-
-
-- User confirm authorization by clicking Authorize Button
-    - Smartthings set the installedapps to status = AUTHORIZED
-    - Smartthings call cb URL with lifecycle INSTALL
-    - Openhab register subscriptions to smartthings
-    - Confirmation message is displayed to user with the new appId
-    
-    
-- User go to openhab to scan things
-
-
-- Smartthings start to send event to openhab : lifecycle EVENT
-
-
-## check status of smartapp
-
-Smartapp and Smartapp installation can be handled using the smartthings cli.
-You can also do some operations from the smartthings portal : https://my.smartthings.com/advanced
-
-
-- smartthings apps command
-
-  Display the current existing apps.
-   
-   ```
-   ────────────────────────────────────────────────────────────────────────────
-   [root@xxxx] # smartthings apps 
-   ────────────────────────────────────────────────────────────────────────────
-   #  Display Name    App Type           App Id
-   ────────────────────────────────────────────────────────────────────────────
-   4  openhabnew0129  WEBHOOK_SMART_APP  xxxxxx-8d4c-41c4-b976-xxxxxxxxx
-   ```
-
-- smartthings apps xxxxxx-8d4c-41c4-b976-xxxxxxxxx command
-
-  Display the detailled of an existing apps.
-  Note the "Target Status" field : can take value PENDING during configuration, and have to be CONFIRMED after       
-  installation.
-  
-   
-   ```
-   ────────────────────────────────────────────────────────────────────────────
-   [root@xxxx] # smartthings apps xxxxxx-8d4c-41c4-b976-xxxxxxxxx
-   ────────────────────────────────────────────────────────
-   Display Name     openhabnew0129
-   App Id           xxxxxx-8d4c-41c4-b976-xxxxxxxxx
-   App Name         openhabnew0129
-   Description      Desc openhabnew0129
-   Single Instance  false
-   Classifications  AUTOMATION
-   App Type         WEBHOOK_SMART_APP
-   Signature Type   ST_PADLOCK
-   Target URL       https://ohdev.xxx.com/smartthings/cb
-   Target Status    PENDING
-   ────────────────────────────────────────────────────────
-   ```
-
-- smartthings apps:delete xxxxxx-8d4c-41c4-b976-xxxxxxxxx command 
-
-  Enable to delete an existing apps.
-
-- smartthings installedapps command
-
-  Display the current existing installedapps.
-   
-   ```
-   ────────────────────────────────────────────────────────────────────────────
-   [root@xxxx] # smartthings installedapps 
-   ────────────────────────────────────────────────────────────────────────────
-   #  Display Name    Installed App Type  Installed App Status  Installed App Id
-   ──────────────────────────────────────────────────────────────────────────────────────
-   2  openhabnew0131  WEBHOOK_SMART_APP   AUTHORIZED            xxxx-6c45-41d3-9bd8-xxxxx
-   ```
-
-- smartthings installedapps xxxx-6c45-41d3-9bd8-xxxxx command
-
-  Display the detailled of an existing installedapps.
-  Note the "Installed App Status" field : can take value PENDING during configuration, and have to be CONFIRMED after       
-  installation.
-  
-   
-   ```
-   ────────────────────────────────────────────────────────────────────────────
-   [root@xxxx] # smartthings installedapps xxxx-6c45-41d3-9bd8-xxxxx
-   ────────────────────────────────────────────────────────────
-   Display Name          openhabnew0131
-   Installed App Id      xxxx-6c45-41d3-9bd8-xxxxx
-   Installed App Type    WEBHOOK_SMART_APP
-   Installed App Status  AUTHORIZED
-   Single Instance       false
-   App Id                xxxxxx-8d4c-41c4-b976-xxxxxxxxx
-   Location Id           yyyyy411-15b4-40e8-b6cd-f9zzzzzz
-   Single Instance       false
-   Classifications       AUTOMATION
-  ────────────────────────────────────────────────────────────
-   ```
-
-- smartthings installedapps:delete xxxx-6c45-41d3-9bd8-xxxxx
-
-  Enable to delete an existing installedapps.
-  
-  
-- smartthings devices
-
-
-- smartthings locations
-
-## openHAB Configuration
-
-This binding is an openHAB binding and uses the Bridge / Thing design with the Smartthings Hub being the Bridge and the controlled modules being the Things. The following definitions are specified in the .things file.
-
 ### Bridge Configuration
+
+```
+!!! ======================================================================================!!!  
+!!! @Todo : bellow this part, documentation needs to be rewrite                           !!!  
+!!! ======================================================================================!!!  
+```
 
 The bridge requires the IP address and port used to connect the openHAB server to the Smartthings Hub.
 
@@ -350,7 +188,7 @@ Switch  OfficeLight          "Office light"    <light>                    { chan
 String  SimulatedValve       "Simulated valve"                            { channel="smartthings:valve:Home:SimulatedValve:valve" }
 ```
 
-**Special note about Valves**
+**Special note about Valves** 
 Smarttings includes a **valve** which can be Open or Closed but openHAB does not include a Valve item type. Therefore, the valve is defined as a having an item type of String. And, therefore the item needs to be defined with an item type of string. It can be controlled in the sitemap by specifying the Element type of Switch and providing a mapping of: mappings=[open="Open", closed="Close"]. Such as:
 
 ```java
