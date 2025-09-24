@@ -26,7 +26,10 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.util.MultiMap;
 import org.eclipse.jetty.util.StringUtil;
 import org.eclipse.jetty.util.UrlEncoded;
+import org.openhab.binding.smartthings.internal.api.SmartthingsApi;
 import org.openhab.binding.smartthings.internal.api.SmartthingsNetworkConnector;
+import org.openhab.binding.smartthings.internal.dto.SmartthingsDevice;
+import org.openhab.binding.smartthings.internal.dto.SmartthingsLocation;
 import org.openhab.binding.smartthings.internal.handler.SmartthingsBridgeHandler;
 import org.openhab.binding.smartthings.internal.type.SmartthingsException;
 import org.osgi.service.http.HttpService;
@@ -49,16 +52,16 @@ public class SmartthingsAuthServlet extends SmartthingsBaseServlet {
     private final SmartthingsAuthService smartthingsAuthService;
 
     private final String indexTemplate;
+    private final String confirmTemplate;
     private static final String HTML_USER_AUTHORIZED = "<p class='block authorized'>Bridge authorized for user %s.</p>";
     private static final String HTML_ERROR = "<p class='block error'>Call to Smartthings failed with error: %s</p>";
 
     // Keys present in the index.html
-    private static final String KEY_PAGE_REFRESH = "pageRefresh";
-    private static final String HTML_META_REFRESH_CONTENT = "<meta http-equiv='refresh' content='10; url=%s'>";
-    private static final String KEY_AUTHORIZED_USER = "authorizedUser";
     private static final String KEY_ERROR = "error";
     private static final String KEY_BRIDGE_URI = "bridge.uri";
     private static final String KEY_REDIRECT_URI = "redirectUri";
+    private static final String KEY_LOCATION = "location";
+    private static final String KEY_DEVICES_COUNT = "devicesCount";
 
     public SmartthingsAuthServlet(SmartthingsBridgeHandler bridgeHandler, SmartthingsAuthService smartthingsAuthService,
             HttpService httpService, SmartthingsNetworkConnector networkConnector, String token)
@@ -68,7 +71,8 @@ public class SmartthingsAuthServlet extends SmartthingsBaseServlet {
         this.smartthingsAuthService = smartthingsAuthService;
 
         try {
-            this.indexTemplate = readTemplate("index-oauth.html");
+            indexTemplate = readTemplate("index-oauth.html");
+            confirmTemplate = readTemplate("confirmation.html");
         } catch (IOException e) {
             throw new SmartthingsException("unable to initialize auth servlet", e);
         }
@@ -85,42 +89,30 @@ public class SmartthingsAuthServlet extends SmartthingsBaseServlet {
         }
 
         logger.debug("Smartthings auth callback servlet received GET request {}.", req.getRequestURI());
-        final Map<String, String> replaceMap = new HashMap<>();
 
-        StringBuffer requestUrl = req.getRequestURL();
-        String servletBaseUrl = requestUrl != null ? requestUrl.toString() : "";
-        String template = indexTemplate;
-
-        String servletBaseURLSecure = servletBaseUrl.replace("http://", "https://").replace("8080", "8443");
-
-        handleSmartthingsRedirect(replaceMap, servletBaseURLSecure, req.getQueryString());
+        String template = handleTemplate(req);
         resp.setContentType(CONTENT_TYPE);
-        SmartthingsAccountHandler accountHandler = smartthingsAuthService.getSmartthingsAccountHandler();
-
-        replaceMap.put(KEY_REDIRECT_URI, servletBaseURLSecure);
-        if (accountHandler != null) {
-            replaceMap.put(KEY_BRIDGE_URI, accountHandler.formatAuthorizationUrl(servletBaseURLSecure));
-        }
-
-        resp.getWriter().append(replaceKeysFromMap(template, replaceMap));
+        resp.getWriter().append(template);
         resp.getWriter().close();
     }
 
-    /**
-     * Handles a possible call from Spotify to the redirect_uri. If that is the case Spotify will pass the authorization
-     * codes via the url and these are processed. In case of an error this is shown to the user. If the user was
-     * authorized this is passed on to the handler. Based on all these different outcomes the HTML is generated to
-     * inform the user.
-     *
-     * @param replaceMap a map with key String values that will be mapped in the HTML templates.
-     * @param servletBaseURL the servlet base, which should be used as the Spotify redirect_uri value
-     * @param queryString the query part of the GET request this servlet is processing
-     */
-    private void handleSmartthingsRedirect(Map<String, String> replaceMap, String servletBaseURL,
-            @Nullable String queryString) {
-        replaceMap.put(KEY_AUTHORIZED_USER, "");
+    private String handleTemplate(@Nullable HttpServletRequest req) {
+        if (req == null) {
+            return "";
+        }
+
+        StringBuffer requestUrl = req.getRequestURL();
+        String queryString = req.getQueryString();
+        String servletBaseURL = requestUrl != null ? requestUrl.toString() : "";
+        String servletBaseURLSecure = servletBaseURL.replace("http://", "https://").replace("8080", "8443");
+        SmartthingsAccountHandler accountHandler = smartthingsAuthService.getSmartthingsAccountHandler();
+
+        Map<String, String> replaceMap = new HashMap<>();
+
+        String template = "";
+        replaceMap.put(KEY_LOCATION, "");
+        replaceMap.put(KEY_DEVICES_COUNT, "");
         replaceMap.put(KEY_ERROR, "");
-        replaceMap.put(KEY_PAGE_REFRESH, "");
 
         if (queryString != null) {
             final MultiMap<String> params = new MultiMap<>();
@@ -129,20 +121,37 @@ public class SmartthingsAuthServlet extends SmartthingsBaseServlet {
             final String reqState = params.getString("state");
             final String reqError = params.getString("error");
 
-            replaceMap.put(KEY_PAGE_REFRESH,
-                    params.isEmpty() ? "" : String.format(HTML_META_REFRESH_CONTENT, servletBaseURL));
+            template = indexTemplate;
+
             if (!StringUtil.isBlank(reqError)) {
+                template = confirmTemplate;
                 logger.debug("Smartthings redirected with an error: {}", reqError);
                 replaceMap.put(KEY_ERROR, String.format(HTML_ERROR, reqError));
             } else if (!StringUtil.isBlank(reqState)) {
                 try {
-                    replaceMap.put(KEY_AUTHORIZED_USER, String.format(HTML_USER_AUTHORIZED,
-                            smartthingsAuthService.authorize(servletBaseURL, reqState, reqCode)));
+                    if (!reqCode.isBlank()) {
+                        template = confirmTemplate;
+
+                        String authorizeRes = smartthingsAuthService.authorize(servletBaseURLSecure, reqState, reqCode);
+
+                        SmartthingsApi api = bridgeHandler.getSmartthingsApi();
+                        SmartthingsDevice[] devices = api.getAllDevices();
+                        SmartthingsLocation[] locations = api.getAllLocations();
+
+                        replaceMap.put(KEY_LOCATION, locations[0].name + " / " + locations[0].locationId);
+                        replaceMap.put(KEY_DEVICES_COUNT, "" + devices.length);
+                    }
                 } catch (SmartthingsException e) {
                     logger.debug("Exception during authorizaton: ", e);
                     replaceMap.put(KEY_ERROR, String.format(HTML_ERROR, e.getMessage()));
                 }
             }
+
+            replaceMap.put(KEY_REDIRECT_URI, servletBaseURLSecure);
+            if (accountHandler != null) {
+                replaceMap.put(KEY_BRIDGE_URI, accountHandler.formatAuthorizationUrl(servletBaseURLSecure, "myState"));
+            }
         }
+        return replaceKeysFromMap(template, replaceMap);
     }
 }
