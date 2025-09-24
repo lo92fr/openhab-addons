@@ -57,28 +57,6 @@ public class LifeCycle {
             public String[] previousPermissions;
         }
 
-        public class Event {
-            public String eventTime;
-            public String evnetType;
-
-            public class DeviceEvent {
-                public String eventId;
-                public String locationId;
-                public String ownerId;
-                public String ownerType;
-                public String deviceId;
-                public String componentId;
-                public String capability;
-                public String attribute;
-                public String value;
-                public String valueType;
-                public Boolean stateChange;
-                public String subscriptionName;
-            }
-
-            public DeviceEvent deviceEvent;
-        }
-
         public InstalledApp installedApp;
         public Event[] events;
     }
