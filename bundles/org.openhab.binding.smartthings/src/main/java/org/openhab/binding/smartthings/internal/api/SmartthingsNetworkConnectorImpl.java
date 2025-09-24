@@ -51,7 +51,7 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
 
     private final Logger logger = LoggerFactory.getLogger(SmartthingsNetworkConnectorImpl.class);
 
-    private static final @NotNull Gson Gson;
+    private static final @NotNull Gson gson;
 
     protected final HttpClientFactory httpClientFactory;
 
@@ -63,7 +63,7 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
 
     static {
         GsonBuilder builder = new GsonBuilder();
-        Gson = builder.setPrettyPrinting().create();
+        gson = builder.setPrettyPrinting().create();
     }
 
     @Activate
@@ -118,14 +118,12 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
         }
 
         try {
-            /*
-             * final Request retryRequest = httpClient.newRequest(request.getURI());
-             * request.method(HttpMethod.GET);
-             *
-             * if (retryRequest != null) {
-             * executeRequest(retryRequest, cb);
-             * }
-             */
+            final Request retryRequest = httpClient.newRequest(request.getURI());
+            request.method(HttpMethod.GET);
+
+            if (retryRequest != null) {
+                // executeRequest(retryRequest, cb);
+            }
         } catch (Exception ex) {
             logger.error("exception");
             throw ex;
@@ -206,12 +204,12 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
             } else if (statusCode == HttpStatus.UNPROCESSABLE_ENTITY_422) {
                 String result = response.getContentAsString();
 
-                ErrorObject err = Gson.fromJson(result, ErrorObject.class);
+                ErrorObject err = gson.fromJson(result, ErrorObject.class);
                 throw new SmartthingsException("Error occured during request:", Objects.requireNonNull(err));
             } else if (statusCode == HttpStatus.TOO_MANY_REQUESTS_429) {
                 String result = response.getContentAsString();
 
-                ErrorObject err = Gson.fromJson(result, ErrorObject.class);
+                ErrorObject err = gson.fromJson(result, ErrorObject.class);
                 throw new SmartthingsException("Two many request", Objects.requireNonNull(err));
             } else {
                 throw new SmartthingsException("Unexepected return code : " + statusCode);
@@ -291,7 +289,7 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
     }
 
     public static Gson getGson() {
-        return Gson;
+        return gson;
     }
 
     /*

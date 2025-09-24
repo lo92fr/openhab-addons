@@ -22,6 +22,7 @@ It also needs a complicated registration process, creating some smartapps behind
 The new actual version use SSE subscription to handle device events.  
 It's more convenient to setup : no need for end user to setup an external web hook.  
 Registration process is also far more easy :  
+
 - We use OAuth authentification in place of registration tokens.
 - All setup occurs directly inside Openhab.
 - The smartapp stuff are totally hide behind the scene, not needing complex setup.

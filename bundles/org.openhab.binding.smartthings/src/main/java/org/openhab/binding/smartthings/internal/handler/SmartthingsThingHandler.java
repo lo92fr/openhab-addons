@@ -105,7 +105,6 @@ public class SmartthingsThingHandler extends BaseThingHandler {
                     logger.error("Unable to send command: {}", ex.getMessage());
                 }
             }
-
         }
     }
 
@@ -125,7 +124,7 @@ public class SmartthingsThingHandler extends BaseThingHandler {
             }
         } catch (Exception ex) {
             // @todo : handle this
-            logger.info("Unable to refresh device:" + ex.toString());
+            logger.info("Unable to refresh device: {}", ex.toString());
         }
     }
 
@@ -149,7 +148,6 @@ public class SmartthingsThingHandler extends BaseThingHandler {
                 SmartthingsStatus status = api.getStatus(deviceId);
 
                 if (status != null) {
-
                     for (String componentKey : status.components.keySet()) {
                         SmartthingsStatusComponent component = status.components.get(componentKey);
 

@@ -112,7 +112,6 @@ public abstract class SmartthingsConverter {
     }
 
     private String getJSonCommands() {
-
         String result = gson.toJson(smartthingsActions);
         smartthingsActions.commands.clear();
         return result;

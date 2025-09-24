@@ -275,13 +275,12 @@ public class SmartthingsApi {
             }
 
             return accessToken;
-
         } catch (OAuthException ex) {
-            logger.info("Exception:" + ex.toString());
+            logger.info("Exception: {}", ex.toString());
         } catch (OAuthResponseException ex) {
-            logger.info("Exception:" + ex.toString());
+            logger.info("Exception: {}", ex.toString());
         } catch (IOException ex) {
-            logger.info("Exception:" + ex.toString());
+            logger.info("Exception: {}", ex.toString());
         }
 
         return "";
@@ -359,8 +358,8 @@ public class SmartthingsApi {
             evtReg.subscriptionFilters[0] = new EventRegistration.SubscriptionFilters("LOCATIONIDS", locations,
                     eventTypes);
 
-            String body = body = gson.toJson(evtReg);
-            logger.info("body:" + body);
+            String body = gson.toJson(evtReg);
+            logger.info("body: {}", body);
 
             JsonObject result = networkConnector.doRequest(JsonObject.class, subscriptionUri, null, getToken(), body,
                     HttpMethod.POST);
@@ -386,7 +385,7 @@ public class SmartthingsApi {
 
             logger.debug("result");
         } catch (Exception ex) {
-            logger.debug("ex:" + ex.toString());
+            logger.debug("ex: {}", ex.toString());
         }
     }
 
@@ -397,12 +396,12 @@ public class SmartthingsApi {
             return;
         }
 
-        logger.info("Received: " + event.readData());
+        logger.info("Received: {}", event.readData());
         Event evt = null;
         try {
             evt = gson.fromJson(data, Event.class);
         } catch (Exception ex) {
-            logger.info("Unable to decode json:" + ex.toString());
+            logger.info("Unable to decode json: {}", ex.toString());
             return;
         }
 
@@ -427,13 +426,13 @@ public class SmartthingsApi {
                     smarthingsHandler.refreshDevice(theThing.getThingTypeUID().getId(), componentId, capa, attr, value);
                 }
             } catch (Exception ex) {
-                logger.info("ex:" + ex.toString());
+                logger.info("ex: {}", ex.toString());
             }
         }
     }
 
     public void onError(Throwable onError) {
-        logger.info("Exception:" + onError.toString());
+        logger.info("Exception: {}", onError.toString());
     }
 
     public void onComplete() {

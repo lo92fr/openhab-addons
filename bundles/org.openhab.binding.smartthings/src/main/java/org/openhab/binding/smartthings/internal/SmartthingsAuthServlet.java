@@ -131,7 +131,7 @@ public class SmartthingsAuthServlet extends SmartthingsBaseServlet {
                     if (!reqCode.isBlank()) {
                         template = confirmTemplate;
 
-                        String authorizeRes = smartthingsAuthService.authorize(servletBaseURLSecure, reqState, reqCode);
+                        smartthingsAuthService.authorize(servletBaseURLSecure, reqState, reqCode);
 
                         SmartthingsApi api = bridgeHandler.getSmartthingsApi();
                         SmartthingsDevice[] devices = api.getAllDevices();

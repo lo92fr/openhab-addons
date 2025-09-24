@@ -110,7 +110,6 @@ public class SmartthingsNetworkRequestListener<T> extends BufferingResponseListe
                             Type actualType = ((ParameterizedType) type).getActualTypeArguments()[0];
                             resultObj = gson.fromJson(content, actualType);
                         }
-
                     } catch (Exception ex) {
                         logger.debug("error: {}", ex.toString());
                     }
