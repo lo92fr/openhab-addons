@@ -160,8 +160,10 @@ public class SmartthingsThingHandler extends BaseThingHandler {
                                         if (props != null) {
                                             Object value = props.value;
 
-                                            refreshDevice(this.thing.getThingTypeUID().getId(), componentKey, capaKey,
-                                                    propertyKey, value);
+                                            if (value != null) {
+                                                refreshDevice(this.thing.getThingTypeUID().getId(), componentKey,
+                                                        capaKey, propertyKey, value);
+                                            }
                                         }
                                     }
                                 }
