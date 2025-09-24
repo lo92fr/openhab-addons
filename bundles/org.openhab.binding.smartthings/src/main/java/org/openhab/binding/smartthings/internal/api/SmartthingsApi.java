@@ -75,7 +75,6 @@ public class SmartthingsApi {
     private final OAuthClientService oAuthClientService;
     private final ClientBuilder clientBuilder;
     private final SseEventSourceFactory eventSourceFactory;
-    private String token;
 
     private static final String APP_NAME = "openhabnew0160";
     private Gson gson = new Gson();
@@ -96,8 +95,7 @@ public class SmartthingsApi {
      */
     public SmartthingsApi(HttpClientFactory httpClientFactory, SmartthingsBridgeHandler bridgeHandler,
             SmartthingsNetworkConnector networkConnector, OAuthClientService oAuthClientService,
-            ClientBuilder clientBuilder, SseEventSourceFactory eventSourceFactory, String token) {
-        this.token = token;
+            ClientBuilder clientBuilder, SseEventSourceFactory eventSourceFactory) {
         this.networkConnector = networkConnector;
         this.bridgeHandler = bridgeHandler;
         this.oAuthClientService = oAuthClientService;
@@ -143,10 +141,11 @@ public class SmartthingsApi {
         }
     }
 
-    public SmartthingsCapabilitie getCapabilitie(String capabilityId, String version) throws SmartthingsException {
+    public SmartthingsCapabilitie getCapabilitie(String capabilityId, String version,
+            @Nullable SmartthingsNetworkCallback<SmartthingsCapabilitie> cb) throws SmartthingsException {
         try {
             String uri = baseUrl + capabilitiesEndPoint + "/" + capabilityId + "/" + version;
-            SmartthingsCapabilitie capabilitie = doRequest(SmartthingsCapabilitie.class, uri);
+            SmartthingsCapabilitie capabilitie = doRequest(SmartthingsCapabilitie.class, uri, cb);
             return capabilitie;
         } catch (final Exception e) {
             throw new SmartthingsException("SmartthingsApi : Unable to retrieve capability", e);
@@ -276,26 +275,15 @@ public class SmartthingsApi {
             }
 
             return accessToken;
-
         } catch (OAuthException ex) {
-            logger.info("Exception:" + ex.toString());
+            logger.info("Exception: {}", ex.toString());
         } catch (OAuthResponseException ex) {
-            logger.info("Exception:" + ex.toString());
+            logger.info("Exception: {}", ex.toString());
         } catch (IOException ex) {
-            logger.info("Exception:" + ex.toString());
+            logger.info("Exception: {}", ex.toString());
         }
 
         return "";
-    }
-
-    public String getToken2() throws SmartthingsException {
-        String accessToken = token;
-        if (accessToken.isEmpty()) {
-            throw new SmartthingsException(
-                    "No Smartthings accesstoken. Did you authorize Smartthings via /connectsmartthings ?");
-        }
-
-        return accessToken;
     }
 
     public void sendCommand(String deviceId, String jsonMsg) throws SmartthingsException {
@@ -319,11 +307,21 @@ public class SmartthingsApi {
     }
 
     public <T> T doRequest(Class<T> resultClass, String uri) throws SmartthingsException {
-        return doRequest(resultClass, uri, null, false);
+        return doRequest(resultClass, uri, null, null, false);
+    }
+
+    public <T> T doRequest(Class<T> resultClass, String uri, @Nullable SmartthingsNetworkCallback<T> callback)
+            throws SmartthingsException {
+        return doRequest(resultClass, uri, null, callback, false);
     }
 
     public <T> T doRequest(Class<T> resultClass, String uri, @Nullable String body, Boolean update)
             throws SmartthingsException {
+        return doRequest(resultClass, uri, body, null, update);
+    }
+
+    public <T> T doRequest(Class<T> resultClass, String uri, @Nullable String body,
+            @Nullable SmartthingsNetworkCallback<T> callback, Boolean update) throws SmartthingsException {
         try {
             HttpMethod httpMethod = HttpMethod.GET;
             if (body != null) {
@@ -333,7 +331,7 @@ public class SmartthingsApi {
                     httpMethod = HttpMethod.POST;
                 }
             }
-            T res = networkConnector.doRequest(resultClass, uri, null, getToken(), body, httpMethod);
+            T res = networkConnector.doRequest(resultClass, uri, callback, getToken(), body, httpMethod);
             return res;
         } catch (final Exception e) {
             throw new SmartthingsException("SmartthingsApi : Unable to do request", e);
@@ -360,14 +358,14 @@ public class SmartthingsApi {
             evtReg.subscriptionFilters[0] = new EventRegistration.SubscriptionFilters("LOCATIONIDS", locations,
                     eventTypes);
 
-            String body = body = gson.toJson(evtReg);
-            logger.info("body:" + body);
+            String body = gson.toJson(evtReg);
+            logger.info("body: {}", body);
 
             JsonObject result = networkConnector.doRequest(JsonObject.class, subscriptionUri, null, getToken(), body,
                     HttpMethod.POST);
             String uri = result.get("registrationUrl").getAsString();
 
-            token = getToken();
+            String token = getToken();
             Client client = clientBuilder.build().register(new ClientRequestFilter() {
                 @Override
                 public void filter(@Nullable ClientRequestContext requestContext) throws IOException {
@@ -382,14 +380,13 @@ public class SmartthingsApi {
 
             SseEventSource source = eventSourceFactory.newBuilder(target).build();
             source.register(event -> onEvent(event), error -> onError(error), () -> onComplete());
-
+            sseEvents.put(locations[0], source);
             source.open();
 
             logger.debug("result");
         } catch (Exception ex) {
-            logger.debug("ex:" + ex.toString());
+            logger.debug("ex: {}", ex.toString());
         }
-
     }
 
     public void onEvent(InboundSseEvent event) {
@@ -399,38 +396,49 @@ public class SmartthingsApi {
             return;
         }
 
-        logger.info("Received: " + event.readData());
+        logger.info("Received: {}", event.readData());
+        try {
+            Event evt = gson.fromJson(data, Event.class);
 
-        Event evt = gson.fromJson(data, Event.class);
-
-        String deviceId = evt.deviceEvent.deviceId;
-        String componentId = evt.deviceEvent.componentId;
-        String capa = evt.deviceEvent.capability;
-        String attr = evt.deviceEvent.attribute;
-        String value = evt.deviceEvent.value;
-
-        Bridge bridge = bridgeHandler.getThing();
-        List<Thing> things = bridge.getThings();
-
-        Optional<Thing> theThingOpt = things.stream().filter(x -> x.getProperties().containsValue(deviceId))
-                .findFirst();
-        if (theThingOpt.isPresent()) {
-            Thing theThing = theThingOpt.get();
-
-            ThingHandler handler = theThing.getHandler();
-            SmartthingsThingHandler smarthingsHandler = (SmartthingsThingHandler) handler;
-            if (smarthingsHandler != null) {
-                smarthingsHandler.refreshDevice(theThing.getThingTypeUID().getId(), componentId, capa, attr, value);
+            if (evt == null) {
+                logger.info("Event decoding is null:");
+                return;
             }
-        }
+            String deviceId = evt.deviceEvent.deviceId;
+            String componentId = evt.deviceEvent.componentId;
+            String capa = evt.deviceEvent.capability;
+            String attr = evt.deviceEvent.attribute;
+            String value = evt.deviceEvent.value;
 
+            Bridge bridge = bridgeHandler.getThing();
+            List<Thing> things = bridge.getThings();
+
+            Optional<Thing> theThingOpt = things.stream().filter(x -> x.getProperties().containsValue(deviceId))
+                    .findFirst();
+            if (theThingOpt.isPresent()) {
+                Thing theThing = theThingOpt.get();
+
+                ThingHandler handler = theThing.getHandler();
+                SmartthingsThingHandler smarthingsHandler = (SmartthingsThingHandler) handler;
+                if (smarthingsHandler != null) {
+                    smarthingsHandler.refreshDevice(theThing.getThingTypeUID().getId(), componentId, capa, attr, value);
+                }
+            }
+        } catch (Exception ex) {
+            logger.info("Unable to decode json: {}", ex.toString());
+            return;
+        }
     }
 
     public void onError(Throwable onError) {
-        logger.info("Exception:" + onError.toString());
+        logger.info("Exception: {}", onError.toString());
     }
 
     public void onComplete() {
         logger.info("Stream closed.");
+    }
+
+    public SmartthingsNetworkConnector getNetworkConnector() {
+        return networkConnector;
     }
 }

@@ -53,7 +53,6 @@ public class SmartthingsAuthServlet extends SmartthingsBaseServlet {
 
     private final String indexTemplate;
     private final String confirmTemplate;
-    private static final String HTML_USER_AUTHORIZED = "<p class='block authorized'>Bridge authorized for user %s.</p>";
     private static final String HTML_ERROR = "<p class='block error'>Call to Smartthings failed with error: %s</p>";
 
     // Keys present in the index.html
@@ -64,9 +63,8 @@ public class SmartthingsAuthServlet extends SmartthingsBaseServlet {
     private static final String KEY_DEVICES_COUNT = "devicesCount";
 
     public SmartthingsAuthServlet(SmartthingsBridgeHandler bridgeHandler, SmartthingsAuthService smartthingsAuthService,
-            HttpService httpService, SmartthingsNetworkConnector networkConnector, String token)
-            throws SmartthingsException {
-        super(bridgeHandler, httpService, networkConnector, token);
+            HttpService httpService, SmartthingsNetworkConnector networkConnector) throws SmartthingsException {
+        super(bridgeHandler, httpService, networkConnector);
 
         this.smartthingsAuthService = smartthingsAuthService;
 
@@ -132,7 +130,7 @@ public class SmartthingsAuthServlet extends SmartthingsBaseServlet {
                     if (!reqCode.isBlank()) {
                         template = confirmTemplate;
 
-                        String authorizeRes = smartthingsAuthService.authorize(servletBaseURLSecure, reqState, reqCode);
+                        smartthingsAuthService.authorize(servletBaseURLSecure, reqState, reqCode);
 
                         SmartthingsApi api = bridgeHandler.getSmartthingsApi();
                         SmartthingsDevice[] devices = api.getAllDevices();

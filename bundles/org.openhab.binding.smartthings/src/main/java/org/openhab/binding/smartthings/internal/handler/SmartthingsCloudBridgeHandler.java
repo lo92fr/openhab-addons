@@ -12,12 +12,16 @@
  */
 package org.openhab.binding.smartthings.internal.handler;
 
+import java.net.URI;
+
 import javax.ws.rs.client.ClientBuilder;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.smartthings.internal.SmartthingsAuthService;
 import org.openhab.binding.smartthings.internal.SmartthingsHandlerFactory;
 import org.openhab.binding.smartthings.internal.api.SmartthingsApi;
+import org.openhab.binding.smartthings.internal.api.SmartthingsNetworkCallback;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsCapabilitie;
 import org.openhab.binding.smartthings.internal.type.SmartthingsException;
 import org.openhab.binding.smartthings.internal.type.SmartthingsTypeRegistry;
@@ -95,10 +99,20 @@ public class SmartthingsCloudBridgeHandler extends SmartthingsBridgeHandler {
         for (SmartthingsCapabilitie cap : capabilitiesList) {
             String capId = cap.id;
             String capVersion = cap.version;
-            SmartthingsCapabilitie capa = api.getCapabilitie(capId, capVersion);
-            typeRegistry.registerCapabilities(capa);
+            // logger.info("Cap:" + idx + " / " + cap.id + " / " + cap.name);
+
+            api.getCapabilitie(capId, capVersion, new SmartthingsNetworkCallback<SmartthingsCapabilitie>() {
+
+                @Override
+                public void execute(URI uri, int status, @Nullable SmartthingsCapabilitie capa) {
+                    if (capa != null) {
+                        typeRegistry.registerCapabilities(capa);
+                    }
+                }
+            });
         }
 
+        api.getNetworkConnector().waitAllPendingRequest();
         logger.info("End init capa");
     }
 
@@ -120,10 +134,6 @@ public class SmartthingsCloudBridgeHandler extends SmartthingsBridgeHandler {
     @Override
     public SmartthingsHandlerFactory getSmartthingsHandlerFactory() {
         return smartthingsHandlerFactory;
-    }
-
-    public String getToken() {
-        return config.token;
     }
 
     public String getClientId() {

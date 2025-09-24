@@ -131,10 +131,10 @@ public abstract class SmartthingsBridgeHandler extends BaseBridgeHandler
         authService.registerServlet();
 
         smartthingsApi = new SmartthingsApi(httpClientFactory, this, networkConnector, oAuthService, clientBuilder,
-                eventSourceFactory, config.token);
+                eventSourceFactory);
 
         if (servlet == null) {
-            servlet = new SmartthingsServlet(this, httpService, networkConnector, config.token);
+            servlet = new SmartthingsServlet(this, httpService, networkConnector);
             servlet.activate();
         }
 
@@ -197,8 +197,7 @@ public abstract class SmartthingsBridgeHandler extends BaseBridgeHandler
                 throw new OAuthException("OAuth service is not initialized");
             }
             logger.debug("Make call to Smartthings to get access token.");
-            final AccessTokenResponse credentials = oAuthService.getAccessTokenResponseByAuthorizationCode(reqCode,
-                    redirectUri);
+            oAuthService.getAccessTokenResponseByAuthorizationCode(reqCode, redirectUri);
             return reqCode;
         } catch (RuntimeException | OAuthException | IOException e) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, e.getMessage());

@@ -130,7 +130,7 @@ public class SmartthingsDefaultConverter extends SmartthingsConverter {
         }
 
         if (capa == null) {
-            logger.info("capa not found:" + capaKey);
+            logger.info("capa not found: {}", capaKey);
             return;
         }
         if (attrKey != null) {
@@ -141,8 +141,7 @@ public class SmartthingsDefaultConverter extends SmartthingsConverter {
         Object[] arguments = null;
 
         if (attr != null) {
-
-            if (attrKey != null && attrKey.equals("color")) {
+            if ("color".equals(attrKey)) {
                 attr.setter = "setColor";
             }
 

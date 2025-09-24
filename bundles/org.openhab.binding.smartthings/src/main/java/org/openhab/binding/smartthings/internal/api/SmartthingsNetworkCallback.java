@@ -21,9 +21,9 @@ import org.eclipse.jdt.annotation.Nullable;
  * @author Laurent Arnal - Initial contribution
  */
 @NonNullByDefault
-public interface SmartthingsNetworkCallback {
+public interface SmartthingsNetworkCallback<T> {
     /**
      * Runs callback code after response completion.
      */
-    void execute(URI uri, int status, @Nullable Object response);
+    void execute(URI uri, int status, @Nullable T response);
 }

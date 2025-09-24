@@ -251,7 +251,6 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
 
     @Override
     public void initialize() {
-        // TODO Auto-generated method stub
     }
 
     @Reference
@@ -335,7 +334,7 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
                             if (bridgeHandler != null) {
                                 SmartthingsApi api = bridgeHandler.getSmartthingsApi();
                                 try {
-                                    capa = api.getCapabilitie(cap.id, "1");
+                                    capa = api.getCapabilitie(cap.id, "1", null);
                                     registerCapabilities(capa);
                                 } catch (SmartthingsException ex) {
                                     // @todo: handle this exception
