@@ -64,9 +64,8 @@ public class SmartthingsAuthServlet extends SmartthingsBaseServlet {
     private static final String KEY_DEVICES_COUNT = "devicesCount";
 
     public SmartthingsAuthServlet(SmartthingsBridgeHandler bridgeHandler, SmartthingsAuthService smartthingsAuthService,
-            HttpService httpService, SmartthingsNetworkConnector networkConnector, String token)
-            throws SmartthingsException {
-        super(bridgeHandler, httpService, networkConnector, token);
+            HttpService httpService, SmartthingsNetworkConnector networkConnector) throws SmartthingsException {
+        super(bridgeHandler, httpService, networkConnector);
 
         this.smartthingsAuthService = smartthingsAuthService;
 

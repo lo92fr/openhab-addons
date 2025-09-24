@@ -131,10 +131,10 @@ public abstract class SmartthingsBridgeHandler extends BaseBridgeHandler
         authService.registerServlet();
 
         smartthingsApi = new SmartthingsApi(httpClientFactory, this, networkConnector, oAuthService, clientBuilder,
-                eventSourceFactory, config.token);
+                eventSourceFactory);
 
         if (servlet == null) {
-            servlet = new SmartthingsServlet(this, httpService, networkConnector, config.token);
+            servlet = new SmartthingsServlet(this, httpService, networkConnector);
             servlet.activate();
         }
 
