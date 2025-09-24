@@ -93,15 +93,17 @@ public class SmartthingsAuthService {
     }
 
     /**
-     * Call with Spotify redirect uri returned State and Code values to get the refresh and access tokens and persist
+     * Call with Smartthings redirect uri returned State and Code values to get the refresh and access tokens and
+     * persist
      * these values
      *
-     * @param servletBaseURL the servlet base, which will be the Spotify redirect url
-     * @param state The Spotify returned state value
-     * @param code The Spotify returned code value
-     * @return returns the name of the Spotify user that is authorized
+     * @param redirectUri the redirectUri use in oauth call
+     * @param state The state use in oauth call
+     * @param code The smartthings return authorization code
+     *
+     * @return returns""
      */
-    public String authorize(String servletBaseURL, String state, String code) throws SmartthingsException {
+    public String authorize(String redirectUri, String state, String code) throws SmartthingsException {
         SmartthingsAccountHandler accountHandler = getSmartthingsAccountHandler();
         if (accountHandler == null) {
             logger.debug(
@@ -109,7 +111,7 @@ public class SmartthingsAuthService {
                     state);
             throw new SmartthingsException(ERROR_UKNOWN_BRIDGE);
         } else {
-            return accountHandler.authorize(servletBaseURL, code);
+            return accountHandler.authorize(redirectUri, code);
         }
     }
 

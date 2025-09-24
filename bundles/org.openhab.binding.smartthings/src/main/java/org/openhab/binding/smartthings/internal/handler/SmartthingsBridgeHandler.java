@@ -199,9 +199,7 @@ public abstract class SmartthingsBridgeHandler extends BaseBridgeHandler
             logger.debug("Make call to Smartthings to get access token.");
             final AccessTokenResponse credentials = oAuthService.getAccessTokenResponseByAuthorizationCode(reqCode,
                     redirectUri);
-            final String user = updateProperties(credentials);
-            logger.debug("Authorized for user: {}", user);
-            return user;
+            return reqCode;
         } catch (RuntimeException | OAuthException | IOException e) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, e.getMessage());
             throw new SmartthingsException("unable to authorize request", e);
@@ -210,31 +208,15 @@ public abstract class SmartthingsBridgeHandler extends BaseBridgeHandler
         }
     }
 
-    private String updateProperties(AccessTokenResponse credentials) {
-        /*
-         * if (spotifyApi != null) {
-         *
-         * final Me me = spotifyApi.getMe();
-         * final String user = me.getDisplayName() == null ? me.getId() : me.getDisplayName();
-         * final Map<String, String> props = editProperties();
-         *
-         * props.put(PROPERTY_SPOTIFY_USER, user);
-         * updateProperties(props);
-         * return user;
-         * }
-         */
-        return "";
-    }
-
     @Override
-    public String formatAuthorizationUrl(String redirectUri) {
+    public String formatAuthorizationUrl(String redirectUri, String state) {
         try {
             OAuthClientService oAuthService = this.oAuthService;
             if (oAuthService == null) {
                 throw new OAuthException("OAuth service is not initialized");
             }
 
-            return oAuthService.getAuthorizationUrl(redirectUri, null, thing.getUID().getAsString());
+            return oAuthService.getAuthorizationUrl(redirectUri, null, state);
         } catch (final OAuthException e) {
             logger.debug("Error constructing AuthorizationUrl: ", e);
             return "";
