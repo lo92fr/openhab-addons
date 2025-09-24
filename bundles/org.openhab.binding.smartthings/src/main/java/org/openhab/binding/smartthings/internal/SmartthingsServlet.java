@@ -38,6 +38,9 @@ import org.openhab.binding.smartthings.internal.dto.ConfigurationResponse.Config
 import org.openhab.binding.smartthings.internal.dto.ConfigurationResponse.ConfigurationData.Page;
 import org.openhab.binding.smartthings.internal.dto.LifeCycle;
 import org.openhab.binding.smartthings.internal.dto.LifeCycle.Data;
+import org.openhab.binding.smartthings.internal.dto.SMEvent;
+import org.openhab.binding.smartthings.internal.dto.SMEvent.device;
+import org.openhab.binding.smartthings.internal.dto.SmartthingsDevice;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsLocation;
 import org.openhab.binding.smartthings.internal.handler.SmartthingsBridgeHandler;
 import org.openhab.binding.smartthings.internal.handler.SmartthingsThingHandler;
@@ -207,6 +210,9 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
 
             LifeCycle resultObj = gson.fromJson(s, LifeCycle.class);
 
+            // ========================================
+            // Event from webhook CB
+            // ========================================
             if (resultObj != null) {
                 if (resultObj.lifecycle.equals("EVENT")) {
                     Data data = resultObj.eventData;
@@ -226,16 +232,14 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
 
                         ThingHandler handler = theThing.getHandler();
                         SmartthingsThingHandler smarthingsHandler = (SmartthingsThingHandler) handler;
-                        smarthingsHandler.refreshDevice(theThing.getThingTypeUID().getId(), componentId, capa, attr,
-                                value);
-
-                        logger.info("aa");
+                        if (smarthingsHandler != null) {
+                            smarthingsHandler.refreshDevice(theThing.getThingTypeUID().getId(), componentId, capa, attr,
+                                    value);
+                        }
                     }
 
                     logger.info("EVENT: {} {} {} {} {}", deviceId, componentId, capa, attr, value);
                 } else if (resultObj.lifecycle.equals("INSTALL")) {
-                    logger.info("");
-                    String tokenInstallUpdate = resultObj.installData.authToken;
                     installedAppId = resultObj.installData.installedApp.installedAppId;
                     String locationId = resultObj.installData.installedApp.locationId;
 
@@ -251,13 +255,10 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
                     setupInProgress = false;
                     logger.info("INSTALL");
                 } else if (resultObj.lifecycle.equals("UPDATE")) {
-                    String tokenInstallUpdate = resultObj.updateData.authToken;
                     installedAppId = resultObj.updateData.installedApp.installedAppId;
-                    String locationId = resultObj.installData.installedApp.locationId;
 
-                    String subscriptionUri = "https://api.smartthings.com/v1/installedapps/" + installedAppId
-                            + "/subscriptions";
-
+                    // String subscriptionUri = "https://api.smartthings.com/v1/installedapps/" + installedAppId
+                    // + "/subscriptions";
                     // registerSubscriptions(tokenInstallUpdate, locationId);
 
                     logger.info("UPDATE");
@@ -339,26 +340,26 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
             networkConnector.doRequest(JsonObject.class, subscriptionUri, null, tokenInstallUpdate, "", HttpMethod.GET);
 
             SmartthingsApi api = bridgeHandler.getSmartthingsApi();
-            /*
-             * SmartthingsDevice[] devices = api.getAllDevices();
-             * for (SmartthingsDevice dev : devices) {
-             * try {
-             * if (!dev.locationId.equals(locationId)) {
-             * continue;
-             * }
-             *
-             * SMEvent evt = new SMEvent();
-             * evt.sourceType = "DEVICE";
-             * evt.device = new device(dev.deviceId, "main", true, null);
-             *
-             * String body = gson.toJson(evt);
-             * networkConnector.doRequest(JsonObject.class, subscriptionUri, null, tokenInstallUpdate, body,
-             * HttpMethod.POST);
-             * } catch (SmartthingsException ex) {
-             * logger.error("Unable to register subscriptions: {} {} ", ex.getMessage(), dev.deviceId);
-             * }
-             * }
-             */
+
+            SmartthingsDevice[] devices = api.getAllDevices();
+            for (SmartthingsDevice dev : devices) {
+                try {
+                    if (!dev.locationId.equals(locationId)) {
+                        continue;
+                    }
+
+                    SMEvent evt = new SMEvent();
+                    evt.sourceType = "DEVICE";
+                    evt.device = new device(dev.deviceId, "main", true, null);
+
+                    String body = gson.toJson(evt);
+                    networkConnector.doRequest(JsonObject.class, subscriptionUri, null, tokenInstallUpdate, body,
+                            HttpMethod.POST);
+                } catch (SmartthingsException ex) {
+                    logger.error("Unable to register subscriptions: {} {} ", ex.getMessage(), dev.deviceId);
+                }
+            }
+
         } catch (SmartthingsException ex) {
             logger.error("Unable to register subscriptions: {}", ex.getMessage());
         }

@@ -318,8 +318,6 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
                 }
 
                 for (SmartthingsComponent component : device.components) {
-                    String compId = component.id;
-
                     if (component.capabilities == null || component.capabilities.length == 0) {
                         continue;
                     }
@@ -334,22 +332,27 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
                         if (capabilitiesDict.containsKey(capId)) {
                             capa = capabilitiesDict.get(capId);
                         } else {
-                            SmartthingsApi api = this.bridgeHandler.getSmartthingsApi();
-                            try {
-                                capa = api.getCapabilitie(cap.id, "1");
-                                registerCapabilities(capa);
-                            } catch (SmartthingsException ex) {
+                            if (bridgeHandler != null) {
+                                SmartthingsApi api = bridgeHandler.getSmartthingsApi();
+                                try {
+                                    capa = api.getCapabilitie(cap.id, "1");
+                                    registerCapabilities(capa);
+                                } catch (SmartthingsException ex) {
+                                    // @todo: handle this exception
 
+                                }
                             }
                         }
 
                         logger.trace("capa: {}", cap.id);
-                        for (String key : capa.attributes.keySet()) {
-                            if (key.indexOf("Range") >= 0) {
-                                continue;
+                        if (capa != null) {
+                            for (String key : capa.attributes.keySet()) {
+                                if (key.indexOf("Range") >= 0) {
+                                    continue;
+                                }
+                                SmartthingsAttribute attr = capa.attributes.get(key);
+                                addChannel(deviceType, groupTypes, channelDefinitions, component, capa, key, attr);
                             }
-                            SmartthingsAttribute attr = capa.attributes.get(key);
-                            addChannel(deviceType, groupTypes, channelDefinitions, component, capa, key, attr);
                         }
                     }
                 }

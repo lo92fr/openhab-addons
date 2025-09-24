@@ -113,9 +113,11 @@ public class SmartthingsDefaultConverter extends SmartthingsConverter {
             value = command.toString().toLowerCase();
         }
 
-        String jsonMsg = "";
-
         Channel channel = thing.getChannel(channelUid);
+        if (channel == null) {
+            logger.info("Channel not found:");
+            return;
+        }
         Map<String, String> properties = channel.getProperties();
         String componentKey = properties.get("component");
         String capaKey = properties.get("capability");
@@ -126,6 +128,11 @@ public class SmartthingsDefaultConverter extends SmartthingsConverter {
         if (capaKey != null) {
             capa = typeRegistry.getCapabilities(capaKey);
         }
+
+        if (capa == null) {
+            logger.info("capa not found:" + capaKey);
+            return;
+        }
         if (attrKey != null) {
             attr = capa.attributes.get(attrKey);
         }
@@ -133,23 +140,26 @@ public class SmartthingsDefaultConverter extends SmartthingsConverter {
         String cmdName = "";
         Object[] arguments = null;
 
-        if (capa != null && attr != null) {
-            if (attrKey.equals("color")) {
+        if (attr != null) {
+
+            if (attrKey != null && attrKey.equals("color")) {
                 attr.setter = "setColor";
             }
 
             if (attr.setter != null) {
                 SmartthingsCommand cmd = capa.commands.get(attr.setter);
-                cmdName = cmd.name;
+                if (cmd != null) {
+                    cmdName = cmd.name;
 
-                Stack<Object> stack = new Stack<Object>();
-                for (SmartthingsArgument arg : cmd.arguments) {
-                    if (arg.optional) {
-                        continue;
+                    Stack<Object> stack = new Stack<Object>();
+                    for (SmartthingsArgument arg : cmd.arguments) {
+                        if (arg.optional) {
+                            continue;
+                        }
+                        stack.push(value);
                     }
-                    stack.push(value);
+                    arguments = stack.toArray();
                 }
-                arguments = stack.toArray();
             } else {
                 cmdName = value.toString();
             }

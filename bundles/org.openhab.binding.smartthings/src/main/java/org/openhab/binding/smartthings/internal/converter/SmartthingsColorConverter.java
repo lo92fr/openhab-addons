@@ -46,8 +46,6 @@ public class SmartthingsColorConverter extends SmartthingsConverter {
 
     @Override
     public void convertToSmartthingsInternal(Thing thing, ChannelUID channelUid, Command command) {
-        String jsonMsg;
-
         if (command instanceof HSBType hsbCommand) {
             double hue = hsbCommand.getHue().doubleValue() / 3.60;
             double sat = hsbCommand.getSaturation().doubleValue();
@@ -76,6 +74,11 @@ public class SmartthingsColorConverter extends SmartthingsConverter {
     private class ColorObject {
         public Double hue = 0.0;
         public Double saturation = 0.0;
+
+        @Override
+        public String toString() {
+            return "hue:" + hue + " saturation:" + saturation;
+        }
     }
 
     /*
@@ -88,11 +91,6 @@ public class SmartthingsColorConverter extends SmartthingsConverter {
     public State convertToOpenHabInternal(Thing thing, ChannelUID channelUid, Object dataFromSmartthings) {
         // The color value from Smartthings will look like "#123456" which is the RGB color
         // This needs to be converted into HSB type
-        if (dataFromSmartthings == null) {
-            logger.warn("Failed to convert color because Smartthings returned a null value.");
-            return UnDefType.UNDEF;
-        }
-
         String value = (String) dataFromSmartthings;
         // First verify the format the string is valid
         Matcher matcher = rgbInputPattern.matcher(value);
