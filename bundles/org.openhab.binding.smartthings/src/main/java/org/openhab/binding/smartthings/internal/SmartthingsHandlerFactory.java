@@ -39,6 +39,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.http.HttpService;
+import org.osgi.service.jaxrs.client.SseEventSourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +64,7 @@ public class SmartthingsHandlerFactory extends BaseThingHandlerFactory implement
     private final OAuthFactory oAuthFactory;
     private final SmartthingsTypeRegistry typeRegistry;
     private final ClientBuilder clientBuilder;
+    private final SseEventSourceFactory eventSourceFactory;
 
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
@@ -73,13 +75,15 @@ public class SmartthingsHandlerFactory extends BaseThingHandlerFactory implement
     public SmartthingsHandlerFactory(final @Reference HttpService httpService,
             final @Reference SmartthingsAuthService authService, final @Reference OAuthFactory oAuthFactory,
             final @Reference HttpClientFactory httpClientFactory,
-            final @Reference SmartthingsTypeRegistry typeRegistery, final @Reference ClientBuilder clientBuilder) {
+            final @Reference SmartthingsTypeRegistry typeRegistery, final @Reference ClientBuilder clientBuilder,
+            @Reference SseEventSourceFactory eventSourceFactory) {
         this.httpService = httpService;
         this.authService = authService;
         this.httpClientFactory = httpClientFactory;
         this.oAuthFactory = oAuthFactory;
         this.typeRegistry = typeRegistery;
         this.clientBuilder = clientBuilder;
+        this.eventSourceFactory = eventSourceFactory;
     }
 
     @Override
@@ -97,7 +101,7 @@ public class SmartthingsHandlerFactory extends BaseThingHandlerFactory implement
             }
 
             bridgeHandler = new SmartthingsCloudBridgeHandler((Bridge) thing, this, authService, bundleContext,
-                    httpService, oAuthFactory, httpClientFactory, typeRegistry, clientBuilder);
+                    httpService, oAuthFactory, httpClientFactory, typeRegistry, clientBuilder, eventSourceFactory);
 
             SmartthingsAccountHandler accountHandler = bridgeHandler;
             authService.setSmartthingsAccountHandler(accountHandler);
