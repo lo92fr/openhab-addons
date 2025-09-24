@@ -197,8 +197,7 @@ public abstract class SmartthingsBridgeHandler extends BaseBridgeHandler
                 throw new OAuthException("OAuth service is not initialized");
             }
             logger.debug("Make call to Smartthings to get access token.");
-            final AccessTokenResponse credentials = oAuthService.getAccessTokenResponseByAuthorizationCode(reqCode,
-                    redirectUri);
+            oAuthService.getAccessTokenResponseByAuthorizationCode(reqCode, redirectUri);
             return reqCode;
         } catch (RuntimeException | OAuthException | IOException e) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, e.getMessage());

@@ -251,7 +251,6 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
 
     @Override
     public void initialize() {
-        // TODO Auto-generated method stub
     }
 
     @Reference

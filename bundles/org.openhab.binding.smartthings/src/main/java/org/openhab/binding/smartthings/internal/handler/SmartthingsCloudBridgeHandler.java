@@ -13,7 +13,6 @@
 package org.openhab.binding.smartthings.internal.handler;
 
 import java.net.URI;
-import java.time.Instant;
 
 import javax.ws.rs.client.ClientBuilder;
 
@@ -95,7 +94,6 @@ public class SmartthingsCloudBridgeHandler extends SmartthingsBridgeHandler {
         SmartthingsApi api = this.getSmartthingsApi();
         typeRegistry.setCloudBridgeHandler(this);
 
-        Instant start = Instant.now();
         SmartthingsCapabilitie[] capabilitiesList = api.getAllCapabilities();
 
         for (SmartthingsCapabilitie cap : capabilitiesList) {
@@ -103,24 +101,18 @@ public class SmartthingsCloudBridgeHandler extends SmartthingsBridgeHandler {
             String capVersion = cap.version;
             // logger.info("Cap:" + idx + " / " + cap.id + " / " + cap.name);
 
-            SmartthingsCapabilitie capa = api.getCapabilitie(capId, capVersion,
-                    new SmartthingsNetworkCallback<SmartthingsCapabilitie>() {
+            api.getCapabilitie(capId, capVersion, new SmartthingsNetworkCallback<SmartthingsCapabilitie>() {
 
-                        @Override
-                        public void execute(URI uri, int status, @Nullable SmartthingsCapabilitie capa) {
-                            // TODO Auto-generated method stub
-                            if (capa != null) {
-                                typeRegistry.registerCapabilities(capa);
-                            }
-                        }
-                    });
+                @Override
+                public void execute(URI uri, int status, @Nullable SmartthingsCapabilitie capa) {
+                    if (capa != null) {
+                        typeRegistry.registerCapabilities(capa);
+                    }
+                }
+            });
         }
 
-        Instant end1 = Instant.now();
         api.getNetworkConnector().waitAllPendingRequest();
-
-        Instant end2 = Instant.now();
-
         logger.info("End init capa");
     }
 
