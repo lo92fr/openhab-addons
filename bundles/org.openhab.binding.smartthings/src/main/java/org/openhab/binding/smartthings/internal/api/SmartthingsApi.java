@@ -388,7 +388,6 @@ public class SmartthingsApi {
         } catch (Exception ex) {
             logger.debug("ex:" + ex.toString());
         }
-
     }
 
     public void onEvent(InboundSseEvent event) {
@@ -431,7 +430,6 @@ public class SmartthingsApi {
                 logger.info("ex:" + ex.toString());
             }
         }
-
     }
 
     public void onError(Throwable onError) {
