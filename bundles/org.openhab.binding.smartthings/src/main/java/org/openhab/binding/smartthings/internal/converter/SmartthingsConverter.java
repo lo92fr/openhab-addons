@@ -98,6 +98,12 @@ public abstract class SmartthingsConverter {
             this.command = command;
             this.arguments = arguments;
         }
+
+        @Override
+        public String toString() {
+            return "compoent:" + component + " capability:" + capability + " command:" + command + " arguments:"
+                    + arguments;
+        }
     }
 
     public void pushCommand(@Nullable String component, @Nullable String capability, @Nullable String command,
@@ -117,14 +123,12 @@ public abstract class SmartthingsConverter {
     }
 
     protected State defaultConvertToOpenHab(Thing thing, ChannelUID channelUid, Object dataFromSmartthings) {
-        // If there is no stateMap the just return null State
-
-        // deviceValue can be null, handle that up front
-        if (dataFromSmartthings == null) {
-            return UnDefType.NULL;
-        }
-
         Channel channel = thing.getChannel(channelUid);
+        if (channel == null) {
+            // @todo : review, need handling this case
+            logger.info("Channel not found");
+            return UnDefType.UNDEF;
+        }
         String acceptedChannelType = channel.getAcceptedItemType();
         if (acceptedChannelType == null) {
             return UnDefType.NULL;

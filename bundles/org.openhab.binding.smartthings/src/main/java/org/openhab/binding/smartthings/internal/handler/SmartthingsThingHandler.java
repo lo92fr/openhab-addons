@@ -13,7 +13,6 @@
 package org.openhab.binding.smartthings.internal.handler;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -115,22 +114,28 @@ public class SmartthingsThingHandler extends BaseThingHandler {
 
         String groupId = deviceType + "_" + componentId;
         ChannelUID channelUID = new ChannelUID(this.getThing().getUID(), groupId, channelName);
-        Channel chan = thing.getChannel(channelUID);
 
         if (converters.containsKey(channelUID)) {
             SmartthingsConverter converter = converters.get(channelUID);
 
-            State state = converter.convertToOpenHab(thing, channelUID, value);
-            updateState(channelUID, state);
+            if (converter != null) {
+                State state = converter.convertToOpenHab(thing, channelUID, value);
+                updateState(channelUID, state);
+            }
         }
     }
 
     public void refreshDevice() {
         Bridge bridge = getBridge();
+        if (bridge == null) {
+            return;
+        }
 
         SmartthingsCloudBridgeHandler cloudBridge = (SmartthingsCloudBridgeHandler) bridge.getHandler();
+        if (cloudBridge == null) {
+            return;
+        }
         SmartthingsApi api = cloudBridge.getSmartthingsApi();
-        SmartthingsTypeRegistry typeRegistry = cloudBridge.getSmartthingsTypeRegistry();
         Map<String, String> properties = this.getThing().getProperties();
 
         String deviceId = properties.get("deviceId");
@@ -139,25 +144,28 @@ public class SmartthingsThingHandler extends BaseThingHandler {
             try {
                 SmartthingsStatus status = api.getStatus(deviceId);
 
-                List<Channel> channels = thing.getChannels();
-
                 if (status != null) {
 
                     for (String componentKey : status.components.keySet()) {
                         SmartthingsStatusComponent component = status.components.get(componentKey);
 
-                        for (String capaKey : component.keySet()) {
-                            SmartthingsStatusCapabilities capa = component.get(capaKey);
+                        if (component != null) {
+                            for (String capaKey : component.keySet()) {
+                                SmartthingsStatusCapabilities capa = component.get(capaKey);
 
-                            for (String propertyKey : capa.keySet()) {
-                                SmartthingsStatusProperties props = capa.get(propertyKey);
-                                Object value = props.value;
-                                String timestamp = props.timestamp;
+                                if (capa != null) {
+                                    for (String propertyKey : capa.keySet()) {
+                                        SmartthingsStatusProperties props = capa.get(propertyKey);
 
-                                refreshDevice(this.thing.getThingTypeUID().getId(), componentKey, capaKey, propertyKey,
-                                        value);
+                                        if (props != null) {
+                                            Object value = props.value;
+
+                                            refreshDevice(this.thing.getThingTypeUID().getId(), componentKey, capaKey,
+                                                    propertyKey, value);
+                                        }
+                                    }
+                                }
                             }
-
                         }
                     }
                 }
@@ -172,7 +180,15 @@ public class SmartthingsThingHandler extends BaseThingHandler {
         // Create converters for each channel
 
         Bridge bridge = getBridge();
+        if (bridge == null) {
+            return;
+        }
+
         SmartthingsCloudBridgeHandler cloudBridge = (SmartthingsCloudBridgeHandler) bridge.getHandler();
+        if (cloudBridge == null) {
+            return;
+        }
+
         SmartthingsTypeRegistry typeRegistry = cloudBridge.getSmartthingsTypeRegistry();
 
         SmartthingsConverterFactory.registerConverters(typeRegistry);

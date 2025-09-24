@@ -210,7 +210,7 @@ public class SmartthingsApi {
     public AppResponse createApp(String redirectUrl) throws SmartthingsException {
         try {
             String uri = baseUrl + appEndPoint + "?signatureType=ST_PADLOCK&requireConfirmation=true";
-            redirectUrl = redirectUrl + "/cb";
+            String realRedirectUrl = redirectUrl + "/cb";
 
             String appName = APP_NAME;
             AppRequest appRequest = new AppRequest();
@@ -218,7 +218,7 @@ public class SmartthingsApi {
             appRequest.displayName = appName;
             appRequest.description = "Desc " + appName;
             appRequest.appType = "WEBHOOK_SMART_APP";
-            appRequest.webhookSmartApp = new AppRequest.webhookSmartApp(redirectUrl);
+            appRequest.webhookSmartApp = new AppRequest.webhookSmartApp(realRedirectUrl);
             appRequest.classifications = new String[1];
             appRequest.classifications[0] = "AUTOMATION";
 
@@ -255,7 +255,7 @@ public class SmartthingsApi {
         try {
             final AccessTokenResponse accessTokenResponse = oAuthClientService.getAccessTokenResponse();
             final String accessToken = accessTokenResponse == null ? null : accessTokenResponse.getAccessToken();
-            if (accessToken.isEmpty()) {
+            if (accessToken == null || accessToken.isEmpty()) {
                 throw new SmartthingsException(
                         "No Smartthings accesstoken. Did you authorize Smartthings via /connectsmartthings ?");
             }
@@ -380,7 +380,9 @@ public class SmartthingsApi {
             Client client = clientBuilder.build().register(new ClientRequestFilter() {
                 @Override
                 public void filter(@Nullable ClientRequestContext requestContext) throws IOException {
-                    requestContext.getHeaders().add("Authorization", "Bearer " + token);
+                    if (requestContext != null) {
+                        requestContext.getHeaders().add("Authorization", "Bearer " + token);
+                    }
                 }
             });
 

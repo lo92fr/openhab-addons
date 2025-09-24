@@ -39,8 +39,8 @@ public class SmartthingsOpenCloseControlConverter extends SmartthingsConverter {
         String smartthingsValue = ("open".equals(command.toString().toLowerCase())) ? "open" : "close";
         smartthingsValue = surroundWithQuotes(smartthingsValue);
 
-        String msg = String.format("{\"capabilityKey\": \"%s\", \"deviceDisplayName\": \"%s\", \"value\": %s}",
-                thing.getThingTypeUID(), "smartthingsName", smartthingsValue);
+        // String msg = String.format("{\"capabilityKey\": \"%s\", \"deviceDisplayName\": \"%s\", \"value\": %s}",
+        // thing.getThingTypeUID(), "smartthingsName", smartthingsValue);
     }
 
     @Override
