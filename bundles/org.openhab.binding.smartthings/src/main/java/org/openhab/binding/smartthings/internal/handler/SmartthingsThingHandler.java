@@ -12,9 +12,6 @@
  */
 package org.openhab.binding.smartthings.internal.handler;
 
-import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -29,13 +26,11 @@ import org.openhab.binding.smartthings.internal.dto.SmartthingsStatus;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsStatusCapabilities;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsStatusComponent;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsStatusProperties;
+import org.openhab.binding.smartthings.internal.stateHandler.SmartthingsStateHandler;
+import org.openhab.binding.smartthings.internal.stateHandler.SmartthingsStateHandlerFactory;
 import org.openhab.binding.smartthings.internal.type.SmartthingsException;
 import org.openhab.binding.smartthings.internal.type.SmartthingsTypeRegistry;
-import org.openhab.core.library.types.DecimalType;
-import org.openhab.core.library.types.HSBType;
-import org.openhab.core.library.types.PercentType;
 import org.openhab.core.thing.Bridge;
-import org.openhab.core.thing.Channel;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
@@ -56,7 +51,6 @@ public class SmartthingsThingHandler extends BaseThingHandler {
     private final Logger logger = LoggerFactory.getLogger(SmartthingsThingHandler.class);
 
     private String smartthingsName;
-    private Map<ChannelUID, SmartthingsConverter> converters = new HashMap<>();
 
     private final String smartthingsConverterName = "smartthings-converter";
     private @Nullable ScheduledFuture<?> pollingJob = null;
@@ -87,13 +81,13 @@ public class SmartthingsThingHandler extends BaseThingHandler {
         SmartthingsCloudBridgeHandler cloudBridge = (SmartthingsCloudBridgeHandler) bridge.getHandler();
 
         if (cloudBridge != null && cloudBridge.getThing().getStatus().equals(ThingStatus.ONLINE)) {
-            SmartthingsConverter converter = converters.get(channelUID);
+            // channelUID
+            SmartthingsConverter converter = SmartthingsConverterFactory.getConverter(channelUID.getIdWithoutGroup());
 
             String jsonMsg = "";
             if (command instanceof RefreshType) {
                 refreshDevice();
             } else {
-                // @todo : review this
                 if (converter != null) {
                     jsonMsg = converter.convertToSmartthings(thing, channelUID, command);
                 }
@@ -113,56 +107,22 @@ public class SmartthingsThingHandler extends BaseThingHandler {
         }
     }
 
-    private Map<String, State> stateCache = new Hashtable<String, State>();
-
     public void refreshDevice(String deviceType, String componentId, String capa, String attr, Object value) {
         try {
             String channelName = (StringUtils.join(StringUtils.splitByCharacterTypeCamelCase(attr), '-')).toLowerCase();
             String groupId = deviceType + "_" + componentId;
             ChannelUID channelUID = new ChannelUID(this.getThing().getUID(), groupId, channelName);
 
-            if (converters.containsKey(channelUID)) {
-                SmartthingsConverter converter = converters.get(channelUID);
+            // channelUID
+            SmartthingsConverter converter = SmartthingsConverterFactory.getConverter(channelUID.getIdWithoutGroup());
+            SmartthingsStateHandler stateHandler = SmartthingsStateHandlerFactory.getStateHandler(deviceType);
 
-                State oldHueState = stateCache.get("hue");
-                State oldSaturationState = stateCache.get("saturation");
-                State oldLevelState = stateCache.get("level");
+            if (converter != null) {
+                State state = converter.convertToOpenHab(thing, channelUID, value);
+                updateState(channelUID, state);
 
-                if (oldHueState == null) {
-                    oldHueState = new DecimalType(0);
-                }
-
-                if (oldSaturationState == null) {
-                    oldSaturationState = new PercentType(0);
-                }
-
-                if (oldLevelState == null) {
-                    oldLevelState = new PercentType(0);
-                }
-
-                if (converter != null) {
-                    State state = converter.convertToOpenHab(thing, channelUID, value);
-                    updateState(channelUID, state);
-
-                    ChannelUID channelUIDColor = new ChannelUID(this.getThing().getUID(), groupId, "color");
-                    if (channelUID.getIdWithoutGroup().equals("hue")) {
-                        stateCache.put("hue", state);
-                        HSBType newColorState = new HSBType((DecimalType) state,
-                                convToPercentTypeIfNeed(oldSaturationState), (PercentType) oldLevelState);
-                        updateState(channelUIDColor, newColorState);
-                    }
-                    if (channelUID.getIdWithoutGroup().equals("saturation")) {
-                        stateCache.put("saturation", state);
-                        HSBType newColorState = new HSBType((DecimalType) oldHueState, convToPercentTypeIfNeed(state),
-                                (PercentType) oldLevelState);
-                        updateState(channelUIDColor, newColorState);
-                    }
-                    if (channelUID.getIdWithoutGroup().equals("level")) {
-                        stateCache.put("level", state);
-                        HSBType newColorState = new HSBType((DecimalType) oldHueState,
-                                convToPercentTypeIfNeed(oldSaturationState), (PercentType) state);
-                        updateState(channelUIDColor, newColorState);
-                    }
+                if (stateHandler != null) {
+                    stateHandler.handleStateChange(channelUID, state, this);
                 }
             }
         } catch (Exception ex) {
@@ -171,15 +131,8 @@ public class SmartthingsThingHandler extends BaseThingHandler {
         }
     }
 
-    public PercentType convToPercentTypeIfNeed(State state) {
-        if (state instanceof PercentType pc) {
-            return pc;
-        } else if (state instanceof DecimalType dec) {
-            return new PercentType(new BigDecimal(dec.doubleValue()));
-        } else {
-            logger.info("");
-            return new PercentType(0);
-        }
+    public void sendUpdateState(ChannelUID channelUid, State state) {
+        updateState(channelUid, state);
     }
 
     public void refreshDevice() {
@@ -250,31 +203,7 @@ public class SmartthingsThingHandler extends BaseThingHandler {
         SmartthingsTypeRegistry typeRegistry = cloudBridge.getSmartthingsTypeRegistry();
 
         SmartthingsConverterFactory.registerConverters(typeRegistry);
-
-        for (Channel ch : thing.getChannels()) {
-            @Nullable
-            String converterName = ch.getProperties().get(smartthingsConverterName);
-            // Will be null if no explicit converter was specified
-            if (converterName == null || converterName.isEmpty()) {
-                // A converter was Not specified so usef the channel id
-                converterName = ch.getProperties().get("attribute");
-            }
-
-            SmartthingsConverter cvtr = null;
-            if (converterName != null) {
-                // Try to get the converter
-                cvtr = getConverter(converterName);
-            }
-            if (cvtr == null) {
-                // If there is no channel specific converter the get the "default" converter
-                cvtr = getConverter("default");
-            }
-
-            if (cvtr != null) {
-                // cvtr should never be null because there should always be a "default" converter
-                converters.put(ch.getUID(), cvtr);
-            }
-        }
+        SmartthingsStateHandlerFactory.registerStateHandler();
 
         refreshDevice();
 
