@@ -51,7 +51,7 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
 
     private final Logger logger = LoggerFactory.getLogger(SmartthingsNetworkConnectorImpl.class);
 
-    private static final @NotNull Gson gson;
+    private static final @NotNull Gson gSon;
 
     protected final HttpClientFactory httpClientFactory;
 
@@ -63,7 +63,7 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
 
     static {
         GsonBuilder builder = new GsonBuilder();
-        gson = builder.setPrettyPrinting().create();
+        gSon = builder.setPrettyPrinting().create();
     }
 
     @Activate
@@ -204,12 +204,12 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
             } else if (statusCode == HttpStatus.UNPROCESSABLE_ENTITY_422) {
                 String result = response.getContentAsString();
 
-                ErrorObject err = gson.fromJson(result, ErrorObject.class);
+                ErrorObject err = gSon.fromJson(result, ErrorObject.class);
                 throw new SmartthingsException("Error occured during request:", Objects.requireNonNull(err));
             } else if (statusCode == HttpStatus.TOO_MANY_REQUESTS_429) {
                 String result = response.getContentAsString();
 
-                ErrorObject err = gson.fromJson(result, ErrorObject.class);
+                ErrorObject err = gSon.fromJson(result, ErrorObject.class);
                 throw new SmartthingsException("Two many request", Objects.requireNonNull(err));
             } else {
                 throw new SmartthingsException("Unexepected return code : " + statusCode);
@@ -289,7 +289,7 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
     }
 
     public static Gson getGson() {
-        return gson;
+        return gSon;
     }
 
     /*

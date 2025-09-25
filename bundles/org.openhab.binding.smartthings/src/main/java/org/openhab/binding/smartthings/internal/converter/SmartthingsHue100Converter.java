@@ -42,8 +42,6 @@ public class SmartthingsHue100Converter extends SmartthingsConverter {
 
     @Override
     public void convertToSmartthingsInternal(Thing thing, ChannelUID channelUid, Command command) {
-        String jsonMsg;
-
         if (command instanceof HSBType hsbCommand) {
             double hue = hsbCommand.getHue().doubleValue() / 3.60;
 

@@ -355,7 +355,7 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
         }
 
         if (channelType == null) {
-            logger.warn("Can't find channelType for :" + channelTypeUID);
+            logger.warn("Can't find channelType for {}", channelTypeUID);
         }
 
         props.put("component", component.id);

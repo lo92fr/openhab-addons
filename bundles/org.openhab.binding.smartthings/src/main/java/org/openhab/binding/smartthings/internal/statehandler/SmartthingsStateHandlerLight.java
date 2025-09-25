@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.smartthings.internal.stateHandler;
+package org.openhab.binding.smartthings.internal.statehandler;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.binding.smartthings.internal.handler.SmartthingsThingHandler;
@@ -19,10 +19,6 @@ import org.openhab.core.library.types.HSBType;
 import org.openhab.core.library.types.PercentType;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.types.State;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.gson.Gson;
 
 /**
  * Base converter class.
@@ -33,11 +29,6 @@ import com.google.gson.Gson;
  */
 @NonNullByDefault
 public class SmartthingsStateHandlerLight extends SmartthingsStateHandler {
-
-    private final Logger logger = LoggerFactory.getLogger(SmartthingsStateHandlerLight.class);
-
-    private Gson gson = new Gson();
-
     SmartthingsStateHandlerLight() {
     }
 

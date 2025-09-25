@@ -26,8 +26,8 @@ import org.openhab.binding.smartthings.internal.dto.SmartthingsStatus;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsStatusCapabilities;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsStatusComponent;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsStatusProperties;
-import org.openhab.binding.smartthings.internal.stateHandler.SmartthingsStateHandler;
-import org.openhab.binding.smartthings.internal.stateHandler.SmartthingsStateHandlerFactory;
+import org.openhab.binding.smartthings.internal.statehandler.SmartthingsStateHandler;
+import org.openhab.binding.smartthings.internal.statehandler.SmartthingsStateHandlerFactory;
 import org.openhab.binding.smartthings.internal.type.SmartthingsException;
 import org.openhab.binding.smartthings.internal.type.SmartthingsTypeRegistry;
 import org.openhab.core.thing.Bridge;
@@ -52,7 +52,6 @@ public class SmartthingsThingHandler extends BaseThingHandler {
 
     private String smartthingsName;
 
-    private final String smartthingsConverterName = "smartthings-converter";
     private @Nullable ScheduledFuture<?> pollingJob = null;
 
     public SmartthingsThingHandler(Thing thing) {
@@ -243,10 +242,6 @@ public class SmartthingsThingHandler extends BaseThingHandler {
         }
 
         // refreshDevice();
-    }
-
-    private @Nullable SmartthingsConverter getConverter(String converterName) {
-        return SmartthingsConverterFactory.getConverter(converterName);
     }
 
     @Override
