@@ -428,7 +428,6 @@ public class SmartthingsApi {
             logger.info("Unable to decode json: {}", ex.toString());
             return;
         }
-
     }
 
     public void onError(Throwable onError) {
