@@ -298,4 +298,8 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
             logger.info("Unable to setup Smartthings app !!");
         }
     }
+
+    public String getInstalledLocation() {
+        return installedLocation;
+    }
 }

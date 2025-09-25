@@ -24,12 +24,12 @@ import org.openhab.binding.smartthings.internal.type.SmartthingsException;
 @NonNullByDefault
 public interface SmartthingsNetworkConnector {
 
-    public <T> T doRequest(Class<T> resultClass, String req, @Nullable SmartthingsNetworkCallback callback,
+    public <T> T doRequest(Class<T> resultClass, String req, @Nullable SmartthingsNetworkCallback<T> callback,
             String accessToken, @Nullable String data, HttpMethod method) throws SmartthingsException;
 
     public <T> @Nullable String doBasicRequest(Class<T> resultClass, String uri,
-            @Nullable SmartthingsNetworkCallback callback, String accessToken, @Nullable String data, HttpMethod method)
-            throws SmartthingsException;
+            @Nullable SmartthingsNetworkCallback<T> callback, String accessToken, @Nullable String data,
+            HttpMethod method) throws SmartthingsException;
 
     public void waitAllPendingRequest();
 
@@ -37,5 +37,5 @@ public interface SmartthingsNetworkConnector {
 
     public void onComplete(Request request);
 
-    public void onError(Request request, SmartthingsNetworkCallback cb) throws Exception;
+    public <T> void onError(Request request, SmartthingsNetworkCallback<T> cb) throws Exception;
 }

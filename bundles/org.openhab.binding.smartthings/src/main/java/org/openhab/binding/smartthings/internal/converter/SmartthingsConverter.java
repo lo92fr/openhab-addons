@@ -192,8 +192,7 @@ public abstract class SmartthingsConverter {
                 // which GSON returns as a
                 if (dataFromSmartthings instanceof String stringCommandVector) {
                     return new StringType(stringCommandVector);
-                } else if (dataFromSmartthings instanceof Map<?, ?>) {
-                    Map<String, String> map = (Map<String, String>) dataFromSmartthings;
+                } else if (dataFromSmartthings instanceof Map<?, ?> map) {
                     String s = String.format("%.0f,%.0f,%.0f", map.get("x"), map.get("y"), map.get("z"));
                     return new StringType(s);
                 } else {

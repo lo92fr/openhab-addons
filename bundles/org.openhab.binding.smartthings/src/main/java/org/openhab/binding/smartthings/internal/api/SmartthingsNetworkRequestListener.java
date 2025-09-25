@@ -47,15 +47,18 @@ public class SmartthingsNetworkRequestListener<T> extends BufferingResponseListe
      */
     private final SmartthingsNetworkCallback<T> callback;
 
+    private Class<T> resultClass;
+
     /**
      * Constructor
      *
      * @param callback Callback which execute method has to be called.
      */
-    public SmartthingsNetworkRequestListener(SmartthingsNetworkCallback<T> callback,
+    public SmartthingsNetworkRequestListener(Class<T> resultClass, SmartthingsNetworkCallback<T> callback,
             SmartthingsNetworkConnector hvacConnector) {
         this.callback = callback;
         this.networkConnector = hvacConnector;
+        this.resultClass = resultClass;
     }
 
     @Override
@@ -99,7 +102,8 @@ public class SmartthingsNetworkRequestListener<T> extends BufferingResponseListe
 
             if (content != null) {
                 if (content.indexOf("<!DOCTYPE html>") >= 0) {
-                    callback.execute(result.getRequest().getURI(), result.getResponse().getStatus(), (T) content);
+                    T typedResult = resultClass.cast(content);
+                    callback.execute(result.getRequest().getURI(), result.getResponse().getStatus(), typedResult);
                 } else {
                     Object resultObj = null;
                     try {
@@ -116,8 +120,8 @@ public class SmartthingsNetworkRequestListener<T> extends BufferingResponseListe
 
                     if (resultObj != null) {
                         networkConnector.onComplete(result.getRequest());
-                        callback.execute(result.getRequest().getURI(), result.getResponse().getStatus(), (T) resultObj);
-
+                        T typedResult = resultClass.cast(resultObj);
+                        callback.execute(result.getRequest().getURI(), result.getResponse().getStatus(), typedResult);
                         return;
                     } else {
                         logger.debug("error");
@@ -128,9 +132,12 @@ public class SmartthingsNetworkRequestListener<T> extends BufferingResponseListe
                 }
             }
 
-            callback.execute(result.getRequest().getURI(), result.getResponse().getStatus(), (T) content);
+            T typedResult = resultClass.cast(content);
+            callback.execute(result.getRequest().getURI(), result.getResponse().getStatus(), typedResult);
             networkConnector.onComplete(result.getRequest());
-        } catch (Exception ex) {
+        } catch (
+
+        Exception ex) {
             logger.debug("error");
         }
     }

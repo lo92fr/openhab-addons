@@ -104,7 +104,7 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
     }
 
     @Override
-    public void onError(@Nullable Request request, @Nullable SmartthingsNetworkCallback cb) throws Exception {
+    public <T> void onError(@Nullable Request request, @Nullable SmartthingsNetworkCallback<T> cb) throws Exception {
         lockObj.lock();
         try {
             logger.debug("OnError");
@@ -137,9 +137,9 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
         ContentResponse response = null;
 
         @Nullable
-        SmartthingsNetworkRequestListener requestListener = null;
+        SmartthingsNetworkRequestListener<T> requestListener = null;
         if (callback != null) {
-            requestListener = new SmartthingsNetworkRequestListener(callback, this);
+            requestListener = new SmartthingsNetworkRequestListener<T>(resultClass, callback, this);
             request.onResponseSuccess(requestListener);
             request.onResponseFailure(requestListener);
         }
@@ -171,15 +171,15 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
     }
 
     public <T> @Nullable String doBasicRequestAsync(Class<T> resultClass, String uri,
-            @Nullable SmartthingsNetworkCallback callback, String accessToken, @Nullable String data, HttpMethod method)
-            throws Exception {
+            @Nullable SmartthingsNetworkCallback<T> callback, String accessToken, @Nullable String data,
+            HttpMethod method) throws Exception {
         return doBasicRequest(resultClass, uri, callback, accessToken, data, method);
     }
 
     @Override
     public <T> @Nullable String doBasicRequest(Class<T> resultClass, String uri,
-            @Nullable SmartthingsNetworkCallback callback, String accessToken, @Nullable String data, HttpMethod method)
-            throws SmartthingsException {
+            @Nullable SmartthingsNetworkCallback<T> callback, String accessToken, @Nullable String data,
+            HttpMethod method) throws SmartthingsException {
         logger.debug("Execute request: {}", uri);
         Request request = httpClient.newRequest(uri).method(method);
         if (!"".equals(accessToken)) {
@@ -219,7 +219,7 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
     }
 
     @Override
-    public <T> T doRequest(Class<T> resultClass, String req, @Nullable SmartthingsNetworkCallback callback,
+    public <T> T doRequest(Class<T> resultClass, String req, @Nullable SmartthingsNetworkCallback<T> callback,
             String accessToken, @Nullable String data, HttpMethod method) throws SmartthingsException {
         String response = doBasicRequest(resultClass, req, callback, accessToken, data, method);
 
