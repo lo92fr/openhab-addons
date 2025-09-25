@@ -18,7 +18,7 @@ import java.util.Stack;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsArgument;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsAttribute;
-import org.openhab.binding.smartthings.internal.dto.SmartthingsCapabilitie;
+import org.openhab.binding.smartthings.internal.dto.SmartthingsCapability;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsCommand;
 import org.openhab.binding.smartthings.internal.type.SmartthingsTypeRegistry;
 import org.openhab.core.library.types.DateTimeType;
@@ -123,10 +123,10 @@ public class SmartthingsDefaultConverter extends SmartthingsConverter {
         String capaKey = properties.get("capability");
         String attrKey = properties.get("attribute");
 
-        SmartthingsCapabilitie capa = null;
+        SmartthingsCapability capa = null;
         SmartthingsAttribute attr = null;
         if (capaKey != null) {
-            capa = typeRegistry.getCapabilities(capaKey);
+            capa = typeRegistry.getCapability(capaKey);
         }
 
         if (capa == null) {

@@ -26,7 +26,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.smartthings.internal.SmartthingsBindingConstants;
 import org.openhab.binding.smartthings.internal.api.SmartthingsApi;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsAttribute;
-import org.openhab.binding.smartthings.internal.dto.SmartthingsCapabilitie;
+import org.openhab.binding.smartthings.internal.dto.SmartthingsCapability;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsComponent;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsDevice;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsProperty;
@@ -73,20 +73,20 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
     private @Nullable SmartthingsConfigDescriptionProvider configDescriptionProvider;
     private @Nullable SmartthingsCloudBridgeHandler bridgeHandler;
 
-    private Hashtable<String, SmartthingsCapabilitie> capabilitiesDict = new Hashtable<String, SmartthingsCapabilitie>();
+    private Hashtable<String, SmartthingsCapability> capabilitiesDict = new Hashtable<String, SmartthingsCapability>();
 
     public SmartthingsTypeRegistryImpl() {
     }
 
     @Override
-    public void registerCapabilities(SmartthingsCapabilitie capa) {
+    public void registerCapability(SmartthingsCapability capa) {
         capabilitiesDict.put(capa.id, capa);
         createChannelTypes(capa);
     }
 
     @Override
     @Nullable
-    public SmartthingsCapabilitie getCapabilities(String capaKey) {
+    public SmartthingsCapability getCapability(String capaKey) {
         if (capabilitiesDict.containsKey(capaKey)) {
             return capabilitiesDict.get(capaKey);
         }
@@ -99,7 +99,7 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
         this.bridgeHandler = bridgeHandler;
     }
 
-    public void createChannelTypes(SmartthingsCapabilitie capa) {
+    public void createChannelTypes(SmartthingsCapability capa) {
         SmartthingsChannelTypeProvider lcChannelTypeProvider = channelTypeProvider;
 
         for (String key : capa.attributes.keySet()) {
@@ -225,7 +225,7 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
         }
     }
 
-    private ChannelType createChannelType(SmartthingsCapabilitie capa, String channelName, String category,
+    private ChannelType createChannelType(SmartthingsCapability capa, String channelName, String category,
             String description, String channelTp, ChannelTypeUID channelTypeUID, List<StateOption> options) {
         ChannelType channelType;
 
@@ -321,12 +321,12 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
                         continue;
                     }
 
-                    for (SmartthingsCapabilitie cap : component.capabilities) {
+                    for (SmartthingsCapability cap : component.capabilities) {
                         String capId = cap.id;
 
                         capId = capId.replace('.', '_');
 
-                        SmartthingsCapabilitie capa = null;
+                        SmartthingsCapability capa = null;
 
                         if (capabilitiesDict.containsKey(capId)) {
                             capa = capabilitiesDict.get(capId);
@@ -334,8 +334,8 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
                             if (bridgeHandler != null) {
                                 SmartthingsApi api = bridgeHandler.getSmartthingsApi();
                                 try {
-                                    capa = api.getCapabilitie(cap.id, "1", null);
-                                    registerCapabilities(capa);
+                                    capa = api.getCapability(cap.id, "1", null);
+                                    registerCapability(capa);
                                 } catch (SmartthingsException ex) {
                                     // @todo: handle this exception
 
@@ -363,7 +363,7 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
     }
 
     private void addChannel(String deviceType, List<ChannelGroupType> groupTypes,
-            List<ChannelDefinition> channelDefinitions, SmartthingsComponent component, SmartthingsCapabilitie capa,
+            List<ChannelDefinition> channelDefinitions, SmartthingsComponent component, SmartthingsCapability capa,
             String attrKey, @Nullable SmartthingsAttribute attr) {
         Map<String, String> props = new Hashtable<String, String>();
         SmartthingsChannelTypeProvider lcChannelTypeProvider = channelTypeProvider;
