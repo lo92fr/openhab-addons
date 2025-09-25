@@ -44,6 +44,9 @@ public class SmartthingsConverterFactory {
      */
     public static @Nullable SmartthingsConverter getConverter(String itemType) {
         SmartthingsConverter converter = converterCache.get(itemType);
+        if (converter == null) {
+            converter = converterCache.get("default");
+        }
         return converter;
     }
 }
