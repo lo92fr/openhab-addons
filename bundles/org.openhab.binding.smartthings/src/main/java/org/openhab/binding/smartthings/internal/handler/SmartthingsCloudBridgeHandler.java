@@ -99,13 +99,13 @@ public class SmartthingsCloudBridgeHandler extends SmartthingsBridgeHandler {
         for (SmartthingsCapability cap : capabilitiesList) {
             String capId = cap.id;
             String capVersion = cap.version;
-            // logger.info("Cap:" + idx + " / " + cap.id + " / " + cap.name);
 
             api.getCapability(capId, capVersion, new SmartthingsNetworkCallback<SmartthingsCapability>() {
 
                 @Override
                 public void execute(URI uri, int status, @Nullable SmartthingsCapability capa) {
                     if (capa != null) {
+                        logger.info("Cap:" + capa.id + " / " + capa.name);
                         typeRegistry.registerCapability(capa);
                     }
                 }

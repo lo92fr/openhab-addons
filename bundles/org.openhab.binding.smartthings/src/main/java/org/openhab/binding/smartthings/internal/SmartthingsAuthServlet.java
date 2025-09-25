@@ -112,14 +112,14 @@ public class SmartthingsAuthServlet extends SmartthingsBaseServlet {
         replaceMap.put(KEY_DEVICES_COUNT, "");
         replaceMap.put(KEY_ERROR, "");
 
+        template = indexTemplate;
+
         if (queryString != null) {
             final MultiMap<String> params = new MultiMap<>();
             UrlEncoded.decodeTo(queryString, params, StandardCharsets.UTF_8.name());
             final String reqCode = params.getString("code");
             final String reqState = params.getString("state");
             final String reqError = params.getString("error");
-
-            template = indexTemplate;
 
             if (!StringUtil.isBlank(reqError)) {
                 template = confirmTemplate;
@@ -144,11 +144,11 @@ public class SmartthingsAuthServlet extends SmartthingsBaseServlet {
                     replaceMap.put(KEY_ERROR, String.format(HTML_ERROR, e.getMessage()));
                 }
             }
+        }
 
-            replaceMap.put(KEY_REDIRECT_URI, servletBaseURLSecure);
-            if (accountHandler != null) {
-                replaceMap.put(KEY_BRIDGE_URI, accountHandler.formatAuthorizationUrl(servletBaseURLSecure, "myState"));
-            }
+        replaceMap.put(KEY_REDIRECT_URI, servletBaseURLSecure);
+        if (accountHandler != null) {
+            replaceMap.put(KEY_BRIDGE_URI, accountHandler.formatAuthorizationUrl(servletBaseURLSecure, "myState"));
         }
         return replaceKeysFromMap(template, replaceMap);
     }

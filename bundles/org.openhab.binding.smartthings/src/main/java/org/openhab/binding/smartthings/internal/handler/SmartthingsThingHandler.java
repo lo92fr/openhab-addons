@@ -12,7 +12,9 @@
  */
 package org.openhab.binding.smartthings.internal.handler;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -29,6 +31,9 @@ import org.openhab.binding.smartthings.internal.dto.SmartthingsStatusComponent;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsStatusProperties;
 import org.openhab.binding.smartthings.internal.type.SmartthingsException;
 import org.openhab.binding.smartthings.internal.type.SmartthingsTypeRegistry;
+import org.openhab.core.library.types.DecimalType;
+import org.openhab.core.library.types.HSBType;
+import org.openhab.core.library.types.PercentType;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Channel;
 import org.openhab.core.thing.ChannelUID;
@@ -108,6 +113,8 @@ public class SmartthingsThingHandler extends BaseThingHandler {
         }
     }
 
+    private Map<String, State> stateCache = new Hashtable<String, State>();
+
     public void refreshDevice(String deviceType, String componentId, String capa, String attr, Object value) {
         try {
             String channelName = (StringUtils.join(StringUtils.splitByCharacterTypeCamelCase(attr), '-')).toLowerCase();
@@ -117,14 +124,61 @@ public class SmartthingsThingHandler extends BaseThingHandler {
             if (converters.containsKey(channelUID)) {
                 SmartthingsConverter converter = converters.get(channelUID);
 
+                State oldHueState = stateCache.get("hue");
+                State oldSaturationState = stateCache.get("saturation");
+                State oldLevelState = stateCache.get("level");
+
+                if (oldHueState == null) {
+                    oldHueState = new DecimalType(0);
+                }
+
+                if (oldSaturationState == null) {
+                    oldSaturationState = new PercentType(0);
+                }
+
+                if (oldLevelState == null) {
+                    oldLevelState = new PercentType(0);
+                }
+
                 if (converter != null) {
                     State state = converter.convertToOpenHab(thing, channelUID, value);
                     updateState(channelUID, state);
+
+                    ChannelUID channelUIDColor = new ChannelUID(this.getThing().getUID(), groupId, "color");
+                    if (channelUID.getIdWithoutGroup().equals("hue")) {
+                        stateCache.put("hue", state);
+                        HSBType newColorState = new HSBType((DecimalType) state,
+                                convToPercentTypeIfNeed(oldSaturationState), (PercentType) oldLevelState);
+                        updateState(channelUIDColor, newColorState);
+                    }
+                    if (channelUID.getIdWithoutGroup().equals("saturation")) {
+                        stateCache.put("saturation", state);
+                        HSBType newColorState = new HSBType((DecimalType) oldHueState, convToPercentTypeIfNeed(state),
+                                (PercentType) oldLevelState);
+                        updateState(channelUIDColor, newColorState);
+                    }
+                    if (channelUID.getIdWithoutGroup().equals("level")) {
+                        stateCache.put("level", state);
+                        HSBType newColorState = new HSBType((DecimalType) oldHueState,
+                                convToPercentTypeIfNeed(oldSaturationState), (PercentType) state);
+                        updateState(channelUIDColor, newColorState);
+                    }
                 }
             }
         } catch (Exception ex) {
             // @todo : handle this
             logger.info("Unable to refresh device: {}", ex.toString());
+        }
+    }
+
+    public PercentType convToPercentTypeIfNeed(State state) {
+        if (state instanceof PercentType pc) {
+            return pc;
+        } else if (state instanceof DecimalType dec) {
+            return new PercentType(new BigDecimal(dec.doubleValue()));
+        } else {
+            logger.info("");
+            return new PercentType(0);
         }
     }
 
