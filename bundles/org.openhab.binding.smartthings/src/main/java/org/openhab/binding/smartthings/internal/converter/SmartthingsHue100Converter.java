@@ -67,7 +67,6 @@ public class SmartthingsHue100Converter extends SmartthingsConverter {
         } else {
             logger.info("");
         }
-
     }
 
     // <!-- The Smartthings colorControl:hue has a range of 0-100% where OH2 uses the normal 0-360 degrees -->

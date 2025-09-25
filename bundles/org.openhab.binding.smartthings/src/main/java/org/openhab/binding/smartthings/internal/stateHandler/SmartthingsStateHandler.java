@@ -53,5 +53,4 @@ public abstract class SmartthingsStateHandler {
             return new PercentType(0);
         }
     }
-
 }
