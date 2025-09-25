@@ -19,7 +19,7 @@ import java.util.Hashtable;
  *
  * @author Laurent ARNAL - Initial contribution
  */
-public class SmartthingsCapabilitie {
+public class SmartthingsCapability {
 
     public String id;
     public String version;

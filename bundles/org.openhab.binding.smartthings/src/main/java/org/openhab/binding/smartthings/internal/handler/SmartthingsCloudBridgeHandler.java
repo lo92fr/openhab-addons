@@ -22,7 +22,7 @@ import org.openhab.binding.smartthings.internal.SmartthingsAuthService;
 import org.openhab.binding.smartthings.internal.SmartthingsHandlerFactory;
 import org.openhab.binding.smartthings.internal.api.SmartthingsApi;
 import org.openhab.binding.smartthings.internal.api.SmartthingsNetworkCallback;
-import org.openhab.binding.smartthings.internal.dto.SmartthingsCapabilitie;
+import org.openhab.binding.smartthings.internal.dto.SmartthingsCapability;
 import org.openhab.binding.smartthings.internal.type.SmartthingsException;
 import org.openhab.binding.smartthings.internal.type.SmartthingsTypeRegistry;
 import org.openhab.core.auth.client.oauth2.OAuthFactory;
@@ -94,19 +94,19 @@ public class SmartthingsCloudBridgeHandler extends SmartthingsBridgeHandler {
         SmartthingsApi api = this.getSmartthingsApi();
         typeRegistry.setCloudBridgeHandler(this);
 
-        SmartthingsCapabilitie[] capabilitiesList = api.getAllCapabilities();
+        SmartthingsCapability[] capabilitiesList = api.getAllCapabilities();
 
-        for (SmartthingsCapabilitie cap : capabilitiesList) {
+        for (SmartthingsCapability cap : capabilitiesList) {
             String capId = cap.id;
             String capVersion = cap.version;
             // logger.info("Cap:" + idx + " / " + cap.id + " / " + cap.name);
 
-            api.getCapabilitie(capId, capVersion, new SmartthingsNetworkCallback<SmartthingsCapabilitie>() {
+            api.getCapability(capId, capVersion, new SmartthingsNetworkCallback<SmartthingsCapability>() {
 
                 @Override
-                public void execute(URI uri, int status, @Nullable SmartthingsCapabilitie capa) {
+                public void execute(URI uri, int status, @Nullable SmartthingsCapability capa) {
                     if (capa != null) {
-                        typeRegistry.registerCapabilities(capa);
+                        typeRegistry.registerCapability(capa);
                     }
                 }
             });

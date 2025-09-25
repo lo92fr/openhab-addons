@@ -37,7 +37,7 @@ import org.openhab.binding.smartthings.internal.dto.Event;
 import org.openhab.binding.smartthings.internal.dto.EventRegistration;
 import org.openhab.binding.smartthings.internal.dto.OAuthConfigRequest;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsApp;
-import org.openhab.binding.smartthings.internal.dto.SmartthingsCapabilitie;
+import org.openhab.binding.smartthings.internal.dto.SmartthingsCapability;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsDevice;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsLocation;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsRoom;
@@ -131,21 +131,21 @@ public class SmartthingsApi {
         }
     }
 
-    public SmartthingsCapabilitie[] getAllCapabilities() throws SmartthingsException {
+    public SmartthingsCapability[] getAllCapabilities() throws SmartthingsException {
         try {
             String uri = baseUrl + capabilitiesEndPoint;
-            SmartthingsCapabilitie[] listCapabilities = doRequest(SmartthingsCapabilitie[].class, uri);
+            SmartthingsCapability[] listCapabilities = doRequest(SmartthingsCapability[].class, uri);
             return listCapabilities;
         } catch (final Exception e) {
             throw new SmartthingsException("SmartthingsApi : Unable to retrieve capabilities", e);
         }
     }
 
-    public SmartthingsCapabilitie getCapabilitie(String capabilityId, String version,
-            @Nullable SmartthingsNetworkCallback<SmartthingsCapabilitie> cb) throws SmartthingsException {
+    public SmartthingsCapability getCapability(String capabilityId, String version,
+            @Nullable SmartthingsNetworkCallback<SmartthingsCapability> cb) throws SmartthingsException {
         try {
             String uri = baseUrl + capabilitiesEndPoint + "/" + capabilityId + "/" + version;
-            SmartthingsCapabilitie capabilitie = doRequest(SmartthingsCapabilitie.class, uri, cb);
+            SmartthingsCapability capabilitie = doRequest(SmartthingsCapability.class, uri, cb);
             return capabilitie;
         } catch (final Exception e) {
             throw new SmartthingsException("SmartthingsApi : Unable to retrieve capability", e);

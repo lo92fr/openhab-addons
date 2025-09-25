@@ -22,6 +22,6 @@ public class SmartthingsComponent {
     public String id;
     public String label;
 
-    public SmartthingsCapabilitie[] capabilities;
+    public SmartthingsCapability[] capabilities;
     public SmartthingsCategory[] categories;
 }
