@@ -53,7 +53,6 @@ public class SmartthingsAuthServlet extends SmartthingsBaseServlet {
 
     private final String indexTemplate;
     private final String confirmTemplate;
-    private static final String HTML_USER_AUTHORIZED = "<p class='block authorized'>Bridge authorized for user %s.</p>";
     private static final String HTML_ERROR = "<p class='block error'>Call to Smartthings failed with error: %s</p>";
 
     // Keys present in the index.html

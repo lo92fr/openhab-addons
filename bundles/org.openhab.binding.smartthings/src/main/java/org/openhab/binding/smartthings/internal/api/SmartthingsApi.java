@@ -142,7 +142,7 @@ public class SmartthingsApi {
     }
 
     public SmartthingsCapabilitie getCapabilitie(String capabilityId, String version,
-            @Nullable SmartthingsNetworkCallback cb) throws SmartthingsException {
+            @Nullable SmartthingsNetworkCallback<SmartthingsCapabilitie> cb) throws SmartthingsException {
         try {
             String uri = baseUrl + capabilitiesEndPoint + "/" + capabilityId + "/" + version;
             SmartthingsCapabilitie capabilitie = doRequest(SmartthingsCapabilitie.class, uri, cb);
@@ -310,7 +310,7 @@ public class SmartthingsApi {
         return doRequest(resultClass, uri, null, null, false);
     }
 
-    public <T> T doRequest(Class<T> resultClass, String uri, @Nullable SmartthingsNetworkCallback callback)
+    public <T> T doRequest(Class<T> resultClass, String uri, @Nullable SmartthingsNetworkCallback<T> callback)
             throws SmartthingsException {
         return doRequest(resultClass, uri, null, callback, false);
     }
@@ -321,7 +321,7 @@ public class SmartthingsApi {
     }
 
     public <T> T doRequest(Class<T> resultClass, String uri, @Nullable String body,
-            @Nullable SmartthingsNetworkCallback callback, Boolean update) throws SmartthingsException {
+            @Nullable SmartthingsNetworkCallback<T> callback, Boolean update) throws SmartthingsException {
         try {
             HttpMethod httpMethod = HttpMethod.GET;
             if (body != null) {
@@ -380,7 +380,7 @@ public class SmartthingsApi {
 
             SseEventSource source = eventSourceFactory.newBuilder(target).build();
             source.register(event -> onEvent(event), error -> onError(error), () -> onComplete());
-
+            sseEvents.put(locations[0], source);
             source.open();
 
             logger.debug("result");
@@ -397,38 +397,38 @@ public class SmartthingsApi {
         }
 
         logger.info("Received: {}", event.readData());
-        Event evt = null;
         try {
-            evt = gson.fromJson(data, Event.class);
+            Event evt = gson.fromJson(data, Event.class);
+
+            if (evt == null) {
+                logger.info("Event decoding is null:");
+                return;
+            }
+            String deviceId = evt.deviceEvent.deviceId;
+            String componentId = evt.deviceEvent.componentId;
+            String capa = evt.deviceEvent.capability;
+            String attr = evt.deviceEvent.attribute;
+            String value = evt.deviceEvent.value;
+
+            Bridge bridge = bridgeHandler.getThing();
+            List<Thing> things = bridge.getThings();
+
+            Optional<Thing> theThingOpt = things.stream().filter(x -> x.getProperties().containsValue(deviceId))
+                    .findFirst();
+            if (theThingOpt.isPresent()) {
+                Thing theThing = theThingOpt.get();
+
+                ThingHandler handler = theThing.getHandler();
+                SmartthingsThingHandler smarthingsHandler = (SmartthingsThingHandler) handler;
+                if (smarthingsHandler != null) {
+                    smarthingsHandler.refreshDevice(theThing.getThingTypeUID().getId(), componentId, capa, attr, value);
+                }
+            }
         } catch (Exception ex) {
             logger.info("Unable to decode json: {}", ex.toString());
             return;
         }
 
-        String deviceId = evt.deviceEvent.deviceId;
-        String componentId = evt.deviceEvent.componentId;
-        String capa = evt.deviceEvent.capability;
-        String attr = evt.deviceEvent.attribute;
-        String value = evt.deviceEvent.value;
-
-        Bridge bridge = bridgeHandler.getThing();
-        List<Thing> things = bridge.getThings();
-
-        Optional<Thing> theThingOpt = things.stream().filter(x -> x.getProperties().containsValue(deviceId))
-                .findFirst();
-        if (theThingOpt.isPresent()) {
-            Thing theThing = theThingOpt.get();
-
-            ThingHandler handler = theThing.getHandler();
-            SmartthingsThingHandler smarthingsHandler = (SmartthingsThingHandler) handler;
-            try {
-                if (smarthingsHandler != null) {
-                    smarthingsHandler.refreshDevice(theThing.getThingTypeUID().getId(), componentId, capa, attr, value);
-                }
-            } catch (Exception ex) {
-                logger.info("ex: {}", ex.toString());
-            }
-        }
     }
 
     public void onError(Throwable onError) {
