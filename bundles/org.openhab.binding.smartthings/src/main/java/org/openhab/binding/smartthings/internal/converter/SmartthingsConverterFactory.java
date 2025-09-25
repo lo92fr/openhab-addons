@@ -31,6 +31,7 @@ public class SmartthingsConverterFactory {
 
     public static void registerConverters(SmartthingsTypeRegistry typeRegistry) {
         registerConverter("color", new SmartthingsColorConverter(typeRegistry));
+        registerConverter("hue", new SmartthingsHue100Converter(typeRegistry));
         registerConverter("default", new SmartthingsDefaultConverter(typeRegistry));
     }
 

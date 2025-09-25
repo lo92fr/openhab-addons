@@ -12,6 +12,7 @@
  */
 package org.openhab.binding.smartthings.internal.converter;
 
+import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
@@ -146,6 +147,9 @@ public abstract class SmartthingsConverter {
                 // The value coming in should be a number
                 if (dataFromSmartthings instanceof String stringCommandDimmer) {
                     return new PercentType(stringCommandDimmer);
+                }
+                if (dataFromSmartthings instanceof Double doubleCommandDimmer) {
+                    return new PercentType(new BigDecimal(doubleCommandDimmer));
                 } else {
                     logger.warn("Failed to convert with a value of {} from class {} to an appropriate type.",
                             dataFromSmartthings, dataFromSmartthings.getClass().getName());

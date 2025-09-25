@@ -169,8 +169,6 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
                 String channelName = (StringUtils.join(StringUtils.splitByCharacterTypeCamelCase(key), '-'))
                         .toLowerCase();
 
-                Boolean display = false;
-
                 List<StateOption> options = new ArrayList<StateOption>();
 
                 if (prop.enumeration != null && channelDef == null) {
@@ -182,28 +180,6 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
                         StateOption option = new StateOption(optValue, optName);
                         options.add(option);
                     }
-                }
-
-                if (display) {
-                    logger.info("<channel-type id=\"{}\">", channelName);
-                    logger.info("  <item-type>{}</item-type>", channelTp);
-                    logger.info("  <label>{}</label>", label);
-                    logger.info("  <category>{}</category>", category);
-
-                    if (prop.enumeration != null && channelDef == null) {
-                        logger.info("  <state>");
-                        logger.info("    <options>");
-                        for (String opt : prop.enumeration) {
-                            String optValue = opt;
-                            String optName = StringUtils.capitalize(StringUtils
-                                    .join(StringUtils.splitByCharacterTypeCamelCase(opt), StringUtils.SPACE));
-                            logger.info("      <option value=\"{}\">{}</option>", optValue, optName);
-                        }
-                        logger.info("    </options>");
-                        logger.info("  </state>");
-                    }
-                    logger.info("</channel-type>");
-                    logger.info("");
                 }
 
                 if ("".equals(channelTp)) {
@@ -376,6 +352,10 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
         ChannelType channelType = null;
         if (lcChannelTypeProvider != null) {
             channelType = lcChannelTypeProvider.getInternalChannelType(channelTypeUID);
+        }
+
+        if (channelType == null) {
+            logger.warn("Can't find channelType for :" + channelTypeUID);
         }
 
         props.put("component", component.id);

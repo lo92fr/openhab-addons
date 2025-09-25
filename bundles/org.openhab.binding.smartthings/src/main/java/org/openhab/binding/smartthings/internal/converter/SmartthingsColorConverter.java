@@ -67,7 +67,6 @@ public class SmartthingsColorConverter extends SmartthingsConverter {
             arguments = new Object[1];
             arguments[0] = level;
             this.pushCommand(componentKey, "switchLevel", "setLevel", arguments);
-
         }
     }
 

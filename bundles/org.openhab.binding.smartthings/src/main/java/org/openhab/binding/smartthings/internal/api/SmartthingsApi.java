@@ -13,6 +13,7 @@
 package org.openhab.binding.smartthings.internal.api;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -31,6 +32,7 @@ import javax.ws.rs.sse.SseEventSource;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.http.HttpMethod;
+import org.openhab.binding.smartthings.internal.SmartthingsBindingConstants;
 import org.openhab.binding.smartthings.internal.dto.AppRequest;
 import org.openhab.binding.smartthings.internal.dto.AppResponse;
 import org.openhab.binding.smartthings.internal.dto.Event;
@@ -265,25 +267,52 @@ public class SmartthingsApi {
         }
     }
 
-    public String getToken() throws SmartthingsException {
-        try {
-            final AccessTokenResponse accessTokenResponse = oAuthClientService.getAccessTokenResponse();
-            final String accessToken = accessTokenResponse == null ? null : accessTokenResponse.getAccessToken();
-            if (accessToken == null || accessToken.isEmpty()) {
-                throw new SmartthingsException(
-                        "No Smartthings accesstoken. Did you authorize Smartthings via /connectsmartthings ?");
-            }
+    public boolean isAuthorized() {
+        final AccessTokenResponse accessTokenResponse = getAccessTokenResponse();
 
-            return accessToken;
-        } catch (OAuthException ex) {
-            logger.info("Exception: {}", ex.toString());
-        } catch (OAuthResponseException ex) {
-            logger.info("Exception: {}", ex.toString());
-        } catch (IOException ex) {
-            logger.info("Exception: {}", ex.toString());
+        return accessTokenResponse != null && accessTokenResponse.getAccessToken() != null
+                && accessTokenResponse.getRefreshToken() != null;
+    }
+
+    protected @Nullable AccessTokenResponse getAccessTokenByClientCredentials() {
+        try {
+            OAuthClientService lcOAuthService = this.oAuthClientService;
+            return lcOAuthService.getAccessTokenByClientCredentials(SmartthingsBindingConstants.SMARTTHINGS_SCOPES);
+        } catch (OAuthException | IOException | OAuthResponseException | RuntimeException e) {
+            logger.debug("Exception checking authorization: ", e);
+            return null;
+        }
+    }
+
+    protected @Nullable AccessTokenResponse getAccessTokenResponse() {
+        try {
+            OAuthClientService lcOAuthService = this.oAuthClientService;
+            return lcOAuthService.getAccessTokenResponse();
+        } catch (OAuthException | IOException | OAuthResponseException | RuntimeException e) {
+            logger.debug("Exception checking authorization: ", e);
+            return null;
+        }
+    }
+
+    public String getToken() throws SmartthingsException {
+        AccessTokenResponse accessTokenResponse = getAccessTokenResponse();
+
+        // Store token is about to expire, ask for a new one.
+        if (accessTokenResponse != null && accessTokenResponse.isExpired(Instant.now(), 1200)) {
+            accessTokenResponse = null;
         }
 
-        return "";
+        if (accessTokenResponse == null) {
+            accessTokenResponse = getAccessTokenByClientCredentials();
+        }
+
+        final String accessToken = accessTokenResponse == null ? null : accessTokenResponse.getAccessToken();
+        if (accessToken == null || accessToken.isEmpty()) {
+            throw new SmartthingsException(
+                    "No Smartthings accesstoken. Did you authorize Smartthings via /connectsmartthings ?");
+        }
+
+        return accessToken;
     }
 
     public void sendCommand(String deviceId, String jsonMsg) throws SmartthingsException {
