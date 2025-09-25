@@ -87,5 +87,4 @@ public class SmartthingsStateHandlerLight extends SmartthingsStateHandler {
             thingHandler.sendUpdateState(channelUIDColor, newColorState);
         }
     }
-
 }
