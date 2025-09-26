@@ -18,7 +18,6 @@ package org.openhab.binding.smartthings.internal.dto;
  *
  * @author Laurent ARNAL - Initial contribution
  */
-
 import org.openhab.binding.smartthings.internal.SmartthingsBindingConstants;
 
 public class ColorObject {
