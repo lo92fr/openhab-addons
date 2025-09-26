@@ -22,6 +22,7 @@ import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.PercentType;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.types.State;
+import org.openhab.core.types.UnDefType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,5 +53,16 @@ public abstract class SmartthingsStateHandler {
             logger.info("");
             return new PercentType(0);
         }
+    }
+
+    public State getState(String key) {
+        if (stateCache.containsKey(key)) {
+            State result = stateCache.get(key);
+            if (result != null) {
+                return result;
+            }
+        }
+
+        return UnDefType.UNDEF;
     }
 }
