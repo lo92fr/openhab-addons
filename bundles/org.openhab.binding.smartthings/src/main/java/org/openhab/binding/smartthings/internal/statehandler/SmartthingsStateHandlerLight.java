@@ -58,14 +58,14 @@ public class SmartthingsStateHandlerLight extends SmartthingsStateHandler {
 
         ChannelUID channelUIDColor = new ChannelUID(thingHandler.getThing().getUID(), groupId,
                 SmartthingsBindingConstants.CHANNEL_NAME_COLOR);
-        if (SmartthingsBindingConstants.CHANNEL_NAME_HUE.equals(channelUIDColor.getIdWithoutGroup())) {
+        if (SmartthingsBindingConstants.CHANNEL_NAME_HUE.equals(channelUID.getIdWithoutGroup())) {
             stateCache.put(SmartthingsBindingConstants.CHANNEL_NAME_HUE, state);
             HSBType newColorState = new HSBType((DecimalType) state, convToPercentTypeIfNeed(oldSaturationState),
                     (PercentType) oldLevelState);
 
             thingHandler.sendUpdateState(channelUIDColor, newColorState);
         }
-        if (SmartthingsBindingConstants.CHANNEL_NAME_SATURATION.equals(channelUIDColor.getIdWithoutGroup())) {
+        if (SmartthingsBindingConstants.CHANNEL_NAME_SATURATION.equals(channelUID.getIdWithoutGroup())) {
             stateCache.put(SmartthingsBindingConstants.CHANNEL_NAME_SATURATION, state);
             HSBType newColorState = new HSBType((DecimalType) oldHueState, convToPercentTypeIfNeed(state),
                     (PercentType) oldLevelState);
