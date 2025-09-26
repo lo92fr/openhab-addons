@@ -13,13 +13,13 @@
 
 package org.openhab.binding.smartthings.internal.dto;
 
+import org.openhab.binding.smartthings.internal.SmartthingsBindingConstants;
+
 /**
  * Data object for a color
  *
  * @author Laurent ARNAL - Initial contribution
  */
-import org.openhab.binding.smartthings.internal.SmartthingsBindingConstants;
-
 public class ColorObject {
     public Double hue = 0.0;
     public Double saturation = 0.0;
