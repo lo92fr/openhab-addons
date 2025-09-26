@@ -16,6 +16,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.openhab.binding.smartthings.internal.dto.ColorObject;
 import org.openhab.binding.smartthings.internal.type.SmartthingsTypeRegistry;
 import org.openhab.core.library.types.HSBType;
 import org.openhab.core.thing.ChannelUID;
@@ -67,16 +68,6 @@ public class SmartthingsColorConverter extends SmartthingsConverter {
             arguments = new Object[1];
             arguments[0] = level;
             this.pushCommand(componentKey, "switchLevel", "setLevel", arguments);
-        }
-    }
-
-    private class ColorObject {
-        public Double hue = 0.0;
-        public Double saturation = 0.0;
-
-        @Override
-        public String toString() {
-            return "hue:" + hue + " saturation:" + saturation;
         }
     }
 

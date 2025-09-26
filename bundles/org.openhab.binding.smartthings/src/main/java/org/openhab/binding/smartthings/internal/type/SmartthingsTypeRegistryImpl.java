@@ -423,7 +423,7 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
         return ThingTypeBuilder.instance(thingTypeUID, name).withSupportedBridgeTypeUIDs(supportedBridgeTypeUids)
                 .withLabel(label).withDescription(description).withRepresentationProperty(Thing.PROPERTY_MODEL_ID)
                 .withConfigDescriptionURI(configDescriptionURI)
-                .withCategory(SmartthingsBindingConstants.CATEGORY_THING_HVAC)
+                .withCategory(SmartthingsBindingConstants.CATEGORY_THING_SMARTTHINGS)
                 .withChannelGroupDefinitions(groupDefinitions).withProperties(properties).build();
     }
 

@@ -19,6 +19,7 @@ import java.util.Queue;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.smartthings.internal.type.SmartthingsException;
 import org.openhab.binding.smartthings.internal.type.SmartthingsTypeRegistry;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.OnOffType;
@@ -56,20 +57,24 @@ public abstract class SmartthingsConverter {
         this.typeRegistry = typeRegistry;
     }
 
-    public String convertToSmartthings(Thing thing, ChannelUID channelUid, Command command) {
+    public String convertToSmartthings(Thing thing, ChannelUID channelUid, Command command)
+            throws SmartthingsException {
         convertToSmartthingsInternal(thing, channelUid, command);
         String jsonMsg = getJSonCommands();
         return jsonMsg;
     }
 
-    public State convertToOpenHab(Thing thing, ChannelUID channelUid, Object dataFromSmartthings) {
+    public State convertToOpenHab(Thing thing, ChannelUID channelUid, Object dataFromSmartthings)
+            throws SmartthingsException {
         State result = convertToOpenHabInternal(thing, channelUid, dataFromSmartthings);
         return result;
     }
 
-    public abstract void convertToSmartthingsInternal(Thing thing, ChannelUID channelUid, Command command);
+    public abstract void convertToSmartthingsInternal(Thing thing, ChannelUID channelUid, Command command)
+            throws SmartthingsException;
 
-    public abstract State convertToOpenHabInternal(Thing thing, ChannelUID channelUid, Object dataFromSmartthings);
+    public abstract State convertToOpenHabInternal(Thing thing, ChannelUID channelUid, Object dataFromSmartthings)
+            throws SmartthingsException;
 
     private SmartthingsActions smartthingsActions = new SmartthingsActions();
 

@@ -87,20 +87,21 @@ public class SmartthingsThingHandler extends BaseThingHandler {
             if (command instanceof RefreshType) {
                 refreshDevice();
             } else {
-                if (converter != null) {
-                    jsonMsg = converter.convertToSmartthings(thing, channelUID, command);
-                }
-
-                SmartthingsApi api = cloudBridge.getSmartthingsApi();
-                Map<String, String> properties = this.getThing().getProperties();
-                String deviceId = properties.get("deviceId");
-
                 try {
+                    if (converter != null) {
+                        jsonMsg = converter.convertToSmartthings(thing, channelUID, command);
+                    }
+
+                    SmartthingsApi api = cloudBridge.getSmartthingsApi();
+                    Map<String, String> properties = this.getThing().getProperties();
+                    String deviceId = properties.get("deviceId");
+
                     if (deviceId != null) {
                         api.sendCommand(deviceId, jsonMsg);
                     }
                 } catch (SmartthingsException ex) {
-                    logger.error("Unable to send command: {}", ex.getMessage());
+                    logger.error("Unable to send command: {}", ex.toString());
+                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, ex.getMessage());
                 }
             }
         }
@@ -125,8 +126,8 @@ public class SmartthingsThingHandler extends BaseThingHandler {
                 }
             }
         } catch (Exception ex) {
-            // @todo : handle this
-            logger.info("Unable to refresh device: {}", ex.toString());
+            logger.error("Unable to refresh device: {}", ex.toString());
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, ex.getMessage());
         }
     }
 
@@ -134,6 +135,7 @@ public class SmartthingsThingHandler extends BaseThingHandler {
         updateState(channelUid, state);
     }
 
+    // @todo: review this function, is this really the good thing we handle ?
     public void refreshDevice() {
         Bridge bridge = getBridge();
         if (bridge == null) {
@@ -145,7 +147,7 @@ public class SmartthingsThingHandler extends BaseThingHandler {
             return;
         }
         SmartthingsApi api = cloudBridge.getSmartthingsApi();
-        Map<String, String> properties = this.getThing().getProperties();
+        Map<String, String> properties = getThing().getProperties();
 
         String deviceId = properties.get("deviceId");
 
@@ -169,8 +171,8 @@ public class SmartthingsThingHandler extends BaseThingHandler {
                                             Object value = props.value;
 
                                             if (value != null) {
-                                                refreshDevice(this.thing.getThingTypeUID().getId(), componentKey,
-                                                        capaKey, propertyKey, value);
+                                                refreshDevice(thing.getThingTypeUID().getId(), componentKey, capaKey,
+                                                        propertyKey, value);
                                             }
                                         }
                                     }
@@ -181,6 +183,7 @@ public class SmartthingsThingHandler extends BaseThingHandler {
                 }
             } catch (SmartthingsException ex) {
                 logger.error("Unable to update device : {}", deviceId);
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, ex.getMessage());
             }
         }
     }
@@ -248,8 +251,8 @@ public class SmartthingsThingHandler extends BaseThingHandler {
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("smartthingsName :").append(smartthingsName);
-        sb.append(", thing UID: ").append(this.thing.getUID());
-        sb.append(", thing label: ").append(this.thing.getLabel());
+        sb.append(", thing UID: ").append(thing.getUID());
+        sb.append(", thing label: ").append(thing.getLabel());
         return sb.toString();
     }
 }
