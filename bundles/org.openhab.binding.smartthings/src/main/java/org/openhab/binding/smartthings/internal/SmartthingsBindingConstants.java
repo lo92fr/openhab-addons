@@ -62,6 +62,52 @@ public class SmartthingsBindingConstants {
 
     public static final String THING_LIGHT = "light";
 
+    public static final String DEVICE_ID = "deviceId";
+    public static final String DEVICE_NAME = "deviceName";
+    public static final String DEVICE_LABEL = "deviceLabel";
+
+    public static final String SM_TYPE_INTEGER = "integer";
+    public static final String SM_TYPE_NUMBER = "number";
+    public static final String SM_TYPE_BOOLEAN = "boolean";
+    public static final String SM_TYPE_ARRAY = "array";
+    public static final String SM_TYPE_STRING = "string";
+    public static final String SM_TYPE_OBJECT = "object";
+
+    public static final String EVT_TYPE_DEVICE = "DEVICE";
+
+    public static final String TYPE_SWITCH = "Switch";
+    public static final String TYPE_DIMMER = "Dimmer";
+    public static final String TYPE_COLOR = "Color";
+    public static final String TYPE_CONTACT = "Contact";
+    public static final String TYPE_NUMBER = "Number";
+    public static final String TYPE_STRING = "String";
+    public static final String TYPE_VECTOR3 = "Vector3";
+    public static final String TYPE_PLAYER = "Player";
+    public static final String TYPE_DATETIME = "Datettime";
+    public static final String TYPE_ROLLERSHUTTER = "Rollershutter";
+
+    public static final String OPEN_VALUE = "open";
+    public static final String CLOSE_VALUE = "close";
+
+    public static final String CHANNEL_NAME_COLOR = "color";
+    public static final String CHANNEL_NAME_COLOR_VALUE = "colorValue";
+    public static final String CHANNEL_NAME_CONTACT = "contact";
+    public static final String CHANNEL_NAME_HUE = "hue";
+    public static final String CHANNEL_NAME_SATURATION = "saturation";
+    public static final String CHANNEL_NAME_LEVEL = "level";
+    public static final String CHANNEL_NAME_SWITCH = "switch";
+
+    public static final String CHANNEL_NAME_DEFAULT = "default";
+
+    public static final String GROUPD_ID_MAIN = "main";
+
+    public static final String CAPA_COLOR_CONTROL = "colorControl";
+    public static final String CAPA_SWITH_LEVEL = "switchLevel";
+
+    public static final String CMD_SET_COLOR = "setColor";
+    public static final String CMD_SET_LEVEL = "setLevel";
+    public static final String CMD_SET_HUE = "setHue";
+
     public static final String CATEGORY_THING_SMARTTHINGS = "Smartthings";
 
     public static final String CONFIG_DESCRIPTION_URI_THING_PREFIX = "thing-type";
@@ -77,4 +123,17 @@ public class SmartthingsBindingConstants {
     // Thing config properties
     public static final String SMARTTHINGS_NAME = "smartthingsName";
     public static final String THING_TIMEOUT = "timeout";
+
+    public static final String COMPONENT = "component";
+    public static final String CAPABILITY = "capability";
+    public static final String ATTRIBUTE = "attribute";
+
+    public static final String LIFECYCLE_EVENT = "EVENT";
+    public static final String LIFECYCLE_INSTALL = "INSTALL";
+    public static final String LIFECYCLE_UPDATE = "UPDATE";
+    public static final String LIFECYCLE_CONFIGURATION = "CONFIGURATION";
+    public static final String LIFECYCLE_EXECUTE = "EXECUTE";
+    public static final String PHASE_PAGE = "PAGE";
+    public static final String PHASE_INITIALIZE = "INITIALIZE";
+
 }
