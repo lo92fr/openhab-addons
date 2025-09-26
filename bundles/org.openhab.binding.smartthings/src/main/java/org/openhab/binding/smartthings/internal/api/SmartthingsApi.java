@@ -369,17 +369,19 @@ public class SmartthingsApi {
         }
     }
 
-    public void registerSubscriptions() {
-        registerSubscription("cb73e411-15b4-40e8-b6cd-f9a34f6ced4b");
-    }
-
-    public void registerSubscription(String locationId) {
+    public void registerSubscription() {
         try {
             String installedAppId = "22d02ddc-5794-4347-99f1-75bae79bcefe";
             String subscriptionUri = "https://api.smartthings.com/subscriptions";
 
+            SmartthingsLocation[] locationsObj = this.getAllLocations();
+
+            String[] locations = new String[locationsObj.length];
+            for (int idx = 0; idx < locationsObj.length; idx++) {
+                locations[idx] = locationsObj[idx].locationId;
+            }
+
             String[] eventTypes = { "DEVICE_EVENT", "DEVICE_LIFECYCLE_EVENT", "DEVICE_HEALTH_EVENT" };
-            String[] locations = { "cb73e411-15b4-40e8-b6cd-f9a34f6ced4b" };
             EventRegistration evtReg = new EventRegistration();
             evtReg.name = "Openhab sub";
             evtReg.version = 20250122;
