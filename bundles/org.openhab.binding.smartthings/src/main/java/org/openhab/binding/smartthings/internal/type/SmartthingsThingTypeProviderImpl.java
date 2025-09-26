@@ -25,7 +25,7 @@ import org.openhab.core.thing.type.ThingType;
 import org.osgi.service.component.annotations.Component;
 
 /**
- * Provides all ThingTypes from SiemensHvac bridges.
+ * Provides all ThingTypes from Smartthings bridges.
  *
  * @author Laurent Arnal - Initial contribution
  */

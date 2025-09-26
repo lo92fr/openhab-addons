@@ -26,8 +26,6 @@ import org.openhab.core.thing.Thing;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.State;
 import org.openhab.core.types.UnDefType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Converter class for Smartthings capability "Color Control".
@@ -38,8 +36,7 @@ import org.slf4j.LoggerFactory;
  */
 @NonNullByDefault
 public class SmartthingsSaturationConverter extends SmartthingsConverter {
-
-    private final Logger logger = LoggerFactory.getLogger(SmartthingsSaturationConverter.class);
+    private final double conversionFactor = 3.60;
 
     public SmartthingsSaturationConverter(SmartthingsTypeRegistry typeRegistry) {
         super(typeRegistry);
@@ -49,12 +46,12 @@ public class SmartthingsSaturationConverter extends SmartthingsConverter {
     public void convertToSmartthingsInternal(Thing thing, ChannelUID channelUid, Command command)
             throws SmartthingsException {
         if (command instanceof HSBType hsbCommand) {
-            double hue = hsbCommand.getHue().doubleValue() / 3.60;
+            double hue = hsbCommand.getHue().doubleValue() / conversionFactor;
             double sat = hsbCommand.getSaturation().doubleValue();
 
-            String componentKey = "main";
-            String capaKey = "colorControl";
-            String cmdName = "setColor";
+            String componentKey = SmartthingsBindingConstants.GROUPD_ID_MAIN;
+            String capaKey = SmartthingsBindingConstants.CAPA_COLOR_CONTROL;
+            String cmdName = SmartthingsBindingConstants.CMD_SET_COLOR;
             Object[] arguments = new Object[1];
             ColorObject colorObj = new ColorObject();
             colorObj.hue = hue;
@@ -70,17 +67,17 @@ public class SmartthingsSaturationConverter extends SmartthingsConverter {
             SmartthingsStateHandler stateHandler = SmartthingsStateHandlerFactory
                     .getStateHandler(SmartthingsBindingConstants.THING_LIGHT);
             if (stateHandler != null) {
-                State stateHue = stateHandler.getState("hue");
+                State stateHue = stateHandler.getState(SmartthingsBindingConstants.CHANNEL_NAME_HUE);
 
                 if (stateHue instanceof DecimalType decHue) {
                     hue = decHue.doubleValue();
-                    hue /= 3.6;
+                    hue /= conversionFactor;
                 }
             }
 
-            String componentKey = "main";
-            String capaKey = "colorControl";
-            String cmdName = "setColor";
+            String componentKey = SmartthingsBindingConstants.GROUPD_ID_MAIN;
+            String capaKey = SmartthingsBindingConstants.CAPA_COLOR_CONTROL;
+            String cmdName = SmartthingsBindingConstants.CMD_SET_COLOR;
             Object[] arguments = new Object[1];
             ColorObject colorObj = new ColorObject();
             colorObj.hue = hue;
