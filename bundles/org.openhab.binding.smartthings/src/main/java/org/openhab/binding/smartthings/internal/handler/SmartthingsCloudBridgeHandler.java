@@ -86,7 +86,7 @@ public class SmartthingsCloudBridgeHandler extends SmartthingsBridgeHandler {
     public void registerSubcriptions() {
         logger.info("registerSubcriptions()");
         SmartthingsApi api = this.getSmartthingsApi();
-        api.registerSubscriptions();
+        api.registerSubscription();
     }
 
     public void initCapabilites() throws SmartthingsException {
