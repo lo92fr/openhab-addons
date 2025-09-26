@@ -16,6 +16,7 @@ import java.util.Hashtable;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.smartthings.internal.SmartthingsBindingConstants;
 
 /**
  * Configuration data for Smartthings hub
@@ -50,10 +51,15 @@ public class SmartthingsBridgeChannelDefinitions {
     }
 
     public SmartthingsBridgeChannelDefinitions() {
-        channelDefs.put("switch", new SmartthingsBridgeChannelDef("Switch"));
-        channelDefs.put("level", new SmartthingsBridgeChannelDef("Dimmer"));
-        channelDefs.put("color", new SmartthingsBridgeChannelDef("Color"));
-        channelDefs.put("colorValue", new SmartthingsBridgeChannelDef("Color"));
-        channelDefs.put("contact", new SmartthingsBridgeChannelDef("Contact"));
+        channelDefs.put(SmartthingsBindingConstants.CHANNEL_NAME_SWITCH,
+                new SmartthingsBridgeChannelDef(SmartthingsBindingConstants.TYPE_SWITCH));
+        channelDefs.put(SmartthingsBindingConstants.CHANNEL_NAME_LEVEL,
+                new SmartthingsBridgeChannelDef(SmartthingsBindingConstants.TYPE_DIMMER));
+        channelDefs.put(SmartthingsBindingConstants.CHANNEL_NAME_COLOR,
+                new SmartthingsBridgeChannelDef(SmartthingsBindingConstants.TYPE_COLOR));
+        channelDefs.put(SmartthingsBindingConstants.CHANNEL_NAME_COLOR_VALUE,
+                new SmartthingsBridgeChannelDef(SmartthingsBindingConstants.TYPE_COLOR));
+        channelDefs.put(SmartthingsBindingConstants.CHANNEL_NAME_CONTACT,
+                new SmartthingsBridgeChannelDef(SmartthingsBindingConstants.TYPE_CONTACT));
     }
 }

@@ -17,6 +17,7 @@ import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.smartthings.internal.SmartthingsBindingConstants;
 
 /**
  * A factory for creating converters based on the itemType.
@@ -29,7 +30,7 @@ public class SmartthingsStateHandlerFactory {
     private static Map<String, SmartthingsStateHandler> stateHandlerCache = new HashMap<>();
 
     public static void registerStateHandler() {
-        registerStateHandler("light", new SmartthingsStateHandlerLight());
+        registerStateHandler(SmartthingsBindingConstants.THING_LIGHT, new SmartthingsStateHandlerLight());
     }
 
     private static void registerStateHandler(String key, SmartthingsStateHandler tp) {

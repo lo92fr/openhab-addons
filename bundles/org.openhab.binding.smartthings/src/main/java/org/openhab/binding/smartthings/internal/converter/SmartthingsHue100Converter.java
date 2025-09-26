@@ -12,7 +12,10 @@
  */
 package org.openhab.binding.smartthings.internal.converter;
 
+import java.math.BigDecimal;
+
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.openhab.binding.smartthings.internal.SmartthingsBindingConstants;
 import org.openhab.binding.smartthings.internal.type.SmartthingsTypeRegistry;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.HSBType;
@@ -35,6 +38,7 @@ import org.slf4j.LoggerFactory;
 public class SmartthingsHue100Converter extends SmartthingsConverter {
 
     private final Logger logger = LoggerFactory.getLogger(SmartthingsHue100Converter.class);
+    private final double conversionFactor = 3.60;
 
     public SmartthingsHue100Converter(SmartthingsTypeRegistry typeRegistry) {
         super(typeRegistry);
@@ -43,21 +47,21 @@ public class SmartthingsHue100Converter extends SmartthingsConverter {
     @Override
     public void convertToSmartthingsInternal(Thing thing, ChannelUID channelUid, Command command) {
         if (command instanceof HSBType hsbCommand) {
-            double hue = hsbCommand.getHue().doubleValue() / 3.60;
+            double hue = hsbCommand.getHue().doubleValue() / conversionFactor;
 
-            String componentKey = "main";
-            String capaKey = "colorControl";
-            String cmdName = "setHue";
+            String componentKey = SmartthingsBindingConstants.GROUPD_ID_MAIN;
+            String capaKey = SmartthingsBindingConstants.CAPA_COLOR_CONTROL;
+            String cmdName = SmartthingsBindingConstants.CMD_SET_HUE;
             Object[] arguments = new Object[1];
             arguments[0] = hue;
 
             this.pushCommand(componentKey, capaKey, cmdName, arguments);
         } else if (command instanceof DecimalType dec) {
-            double hue = dec.doubleValue() / 3.60;
+            double hue = dec.doubleValue() / conversionFactor;
 
-            String componentKey = "main";
-            String capaKey = "colorControl";
-            String cmdName = "setHue";
+            String componentKey = SmartthingsBindingConstants.GROUPD_ID_MAIN;
+            String capaKey = SmartthingsBindingConstants.CAPA_COLOR_CONTROL;
+            String cmdName = SmartthingsBindingConstants.CMD_SET_HUE;
             Object[] arguments = new Object[1];
             arguments[0] = hue;
 
@@ -73,36 +77,31 @@ public class SmartthingsHue100Converter extends SmartthingsConverter {
         // Here we have to multiply the value from Smartthings by 3.6 to convert from 0-100 to 0-360
 
         if (dataFromSmartthings instanceof Double value) {
-            value *= 3.6;
+            value *= conversionFactor;
 
             return new DecimalType(value);
         } else if (dataFromSmartthings instanceof String value) {
             double d = Double.parseDouble(value);
-            d *= 3.6;
+            d *= conversionFactor;
+
+            return new DecimalType(d);
+        } else if (dataFromSmartthings instanceof Long value) {
+            double d = value.longValue();
+            d *= conversionFactor;
+
+            return new DecimalType(d);
+        } else if (dataFromSmartthings instanceof BigDecimal decimalValue) {
+            double d = decimalValue.doubleValue();
+            d *= conversionFactor;
+
+            return new DecimalType(d);
+        } else if (dataFromSmartthings instanceof Number numberValue) {
+            double d = numberValue.doubleValue();
+            d *= conversionFactor;
 
             return new DecimalType(d);
         }
 
         return UnDefType.UNDEF;
-
-        /*
-         * if (deviceValue instanceof String stringCommand) {
-         * double d = Double.parseDouble(stringCommand);
-         * d *= 3.6;
-         * return new DecimalType(d);
-         * } else if (deviceValue instanceof Long) {
-         * double d = ((Long) deviceValue).longValue();
-         * d *= 3.6;
-         * return new DecimalType(d);
-         * } else if (deviceValue instanceof BigDecimal decimalValue) {
-         * double d = decimalValue.doubleValue();
-         * d *= 3.6;
-         * return new DecimalType(d);
-         * } else if (deviceValue instanceof Number numberValue) {
-         * double d = numberValue.doubleValue();
-         * d *= 3.6;
-         * return new DecimalType(d);
-         * }
-         */
     }
 }

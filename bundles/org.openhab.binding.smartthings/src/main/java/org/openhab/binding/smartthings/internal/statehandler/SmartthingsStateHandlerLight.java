@@ -13,6 +13,7 @@
 package org.openhab.binding.smartthings.internal.statehandler;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.openhab.binding.smartthings.internal.SmartthingsBindingConstants;
 import org.openhab.binding.smartthings.internal.handler.SmartthingsThingHandler;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.HSBType;
@@ -34,9 +35,9 @@ public class SmartthingsStateHandlerLight extends SmartthingsStateHandler {
 
     @Override
     public void handleStateChange(ChannelUID channelUID, State state, SmartthingsThingHandler thingHandler) {
-        State oldHueState = stateCache.get("hue");
-        State oldSaturationState = stateCache.get("saturation");
-        State oldLevelState = stateCache.get("level");
+        State oldHueState = stateCache.get(SmartthingsBindingConstants.CHANNEL_NAME_HUE);
+        State oldSaturationState = stateCache.get(SmartthingsBindingConstants.CHANNEL_NAME_SATURATION);
+        State oldLevelState = stateCache.get(SmartthingsBindingConstants.CHANNEL_NAME_LEVEL);
 
         if (oldHueState == null) {
             oldHueState = new DecimalType(0);
@@ -52,26 +53,27 @@ public class SmartthingsStateHandlerLight extends SmartthingsStateHandler {
 
         String groupId = channelUID.getGroupId();
         if (groupId == null) {
-            groupId = "main";
+            groupId = SmartthingsBindingConstants.GROUPD_ID_MAIN;
         }
 
-        ChannelUID channelUIDColor = new ChannelUID(thingHandler.getThing().getUID(), groupId, "color");
-        if (channelUID.getIdWithoutGroup().equals("hue")) {
-            stateCache.put("hue", state);
+        ChannelUID channelUIDColor = new ChannelUID(thingHandler.getThing().getUID(), groupId,
+                SmartthingsBindingConstants.CHANNEL_NAME_COLOR);
+        if (SmartthingsBindingConstants.CHANNEL_NAME_HUE.equals(channelUIDColor.getIdWithoutGroup())) {
+            stateCache.put(SmartthingsBindingConstants.CHANNEL_NAME_HUE, state);
             HSBType newColorState = new HSBType((DecimalType) state, convToPercentTypeIfNeed(oldSaturationState),
                     (PercentType) oldLevelState);
 
             thingHandler.sendUpdateState(channelUIDColor, newColorState);
         }
-        if (channelUID.getIdWithoutGroup().equals("saturation")) {
-            stateCache.put("saturation", state);
+        if (SmartthingsBindingConstants.CHANNEL_NAME_SATURATION.equals(channelUIDColor.getIdWithoutGroup())) {
+            stateCache.put(SmartthingsBindingConstants.CHANNEL_NAME_SATURATION, state);
             HSBType newColorState = new HSBType((DecimalType) oldHueState, convToPercentTypeIfNeed(state),
                     (PercentType) oldLevelState);
 
             thingHandler.sendUpdateState(channelUIDColor, newColorState);
         }
-        if (channelUID.getIdWithoutGroup().equals("level")) {
-            stateCache.put("level", state);
+        if (SmartthingsBindingConstants.CHANNEL_NAME_LEVEL.equals(channelUID.getIdWithoutGroup())) {
+            stateCache.put(SmartthingsBindingConstants.CHANNEL_NAME_LEVEL, state);
             HSBType newColorState = new HSBType((DecimalType) oldHueState, convToPercentTypeIfNeed(oldSaturationState),
                     (PercentType) state);
 

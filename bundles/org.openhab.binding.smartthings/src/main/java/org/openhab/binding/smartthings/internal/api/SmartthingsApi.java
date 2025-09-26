@@ -81,11 +81,13 @@ public class SmartthingsApi {
     private static final String APP_NAME = "openhabnew0160";
     private Gson gson = new Gson();
     private String baseUrl = "https://api.smartthings.com/v1";
+
     private String deviceEndPoint = "/devices";
     private String appEndPoint = "/apps";
     private String locationEndPoint = "/locations";
     private String roomsEndPoint = "/rooms";
     private String capabilitiesEndPoint = "/capabilities";
+
     private Dictionary<String, SseEventSource> sseEvents;
 
     /**

@@ -13,6 +13,7 @@
 package org.openhab.binding.smartthings.internal.converter;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.openhab.binding.smartthings.internal.SmartthingsBindingConstants;
 import org.openhab.binding.smartthings.internal.type.SmartthingsTypeRegistry;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
@@ -36,9 +37,12 @@ public class SmartthingsOpenCloseControlConverter extends SmartthingsConverter {
 
     @Override
     public void convertToSmartthingsInternal(Thing thing, ChannelUID channelUid, Command command) {
-        String smartthingsValue = ("open".equals(command.toString().toLowerCase())) ? "open" : "close";
+        String smartthingsValue = (SmartthingsBindingConstants.OPEN_VALUE.equals(command.toString().toLowerCase()))
+                ? SmartthingsBindingConstants.OPEN_VALUE
+                : SmartthingsBindingConstants.CLOSE_VALUE;
         smartthingsValue = surroundWithQuotes(smartthingsValue);
 
+        // @todo : to review, no action !
         // String msg = String.format("{\"capabilityKey\": \"%s\", \"deviceDisplayName\": \"%s\", \"value\": %s}",
         // thing.getThingTypeUID(), "smartthingsName", smartthingsValue);
     }

@@ -130,6 +130,7 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
                 String tpSmart = prop.type;
                 String channelTp = "NA";
 
+                // @todo : review, add support for unit and UoM
                 /*
                  * SmartthingsProperty unit = null;
                  * if (attr.schema.properties.containsKey("unit")) {
@@ -141,24 +142,22 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
                 if (channelDef != null) {
                     channelTp = channelDef.tp;
                 } else {
-                    if ("integer".equals(tpSmart)) {
-                        channelTp = "Number";
-                    } else if ("string".equals(tpSmart)) {
-                        channelTp = "String";
-                    } else if ("object".equals(tpSmart)) {
+                    if (SmartthingsBindingConstants.SM_TYPE_INTEGER.equals(tpSmart)) {
+                        channelTp = SmartthingsBindingConstants.TYPE_NUMBER;
+                    } else if (SmartthingsBindingConstants.SM_TYPE_STRING.equals(tpSmart)) {
+                        channelTp = SmartthingsBindingConstants.TYPE_STRING;
+                    } else if (SmartthingsBindingConstants.SM_TYPE_OBJECT.equals(tpSmart)) {
                         if (prop.title != null && "JsonObject".equals(prop.title)) {
-                            channelTp = "String";
+                            channelTp = SmartthingsBindingConstants.TYPE_STRING;
                         } else {
                             channelTp = "";
                         }
-                    } else if ("array".equals(tpSmart)) {
+                    } else if (SmartthingsBindingConstants.SM_TYPE_ARRAY.equals(tpSmart)) {
                         channelTp = "";
-                    } else if ("string".equals(tpSmart)) {
-                        channelTp = "String";
-                    } else if ("number".equals(tpSmart)) {
-                        channelTp = "Number";
-                    } else if ("boolean".equals(tpSmart)) {
-                        channelTp = "Contact";
+                    } else if (SmartthingsBindingConstants.SM_TYPE_NUMBER.equals(tpSmart)) {
+                        channelTp = SmartthingsBindingConstants.TYPE_NUMBER;
+                    } else if (SmartthingsBindingConstants.SM_TYPE_BOOLEAN.equals(tpSmart)) {
+                        channelTp = SmartthingsBindingConstants.TYPE_CONTACT;
                     } else {
                         logger.info("need review");
                     }
@@ -358,9 +357,9 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
             logger.warn("Can't find channelType for {}", channelTypeUID);
         }
 
-        props.put("component", component.id);
-        props.put("capability", capa.id);
-        props.put("attribute", attrKey);
+        props.put(SmartthingsBindingConstants.COMPONENT, component.id);
+        props.put(SmartthingsBindingConstants.CAPABILITY, capa.id);
+        props.put(SmartthingsBindingConstants.ATTRIBUTE, attrKey);
 
         // capa.commands
         if (channelType != null) {

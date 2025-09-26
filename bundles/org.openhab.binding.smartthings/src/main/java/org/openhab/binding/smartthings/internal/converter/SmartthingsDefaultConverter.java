@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Stack;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.openhab.binding.smartthings.internal.SmartthingsBindingConstants;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsArgument;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsAttribute;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsCapability;
@@ -115,13 +116,14 @@ public class SmartthingsDefaultConverter extends SmartthingsConverter {
 
         Channel channel = thing.getChannel(channelUid);
         if (channel == null) {
-            logger.info("Channel not found:");
+            logger.error("Channel not found: {}", channelUid);
             return;
         }
+
         Map<String, String> properties = channel.getProperties();
-        String componentKey = properties.get("component");
-        String capaKey = properties.get("capability");
-        String attrKey = properties.get("attribute");
+        String componentKey = properties.get(SmartthingsBindingConstants.COMPONENT);
+        String capaKey = properties.get(SmartthingsBindingConstants.CAPABILITY);
+        String attrKey = properties.get(SmartthingsBindingConstants.ATTRIBUTE);
 
         SmartthingsCapability capa = null;
         SmartthingsAttribute attr = null;
@@ -141,8 +143,8 @@ public class SmartthingsDefaultConverter extends SmartthingsConverter {
         Object[] arguments = null;
 
         if (attr != null) {
-            if ("color".equals(attrKey)) {
-                attr.setter = "setColor";
+            if (SmartthingsBindingConstants.CHANNEL_NAME_COLOR.equals(attrKey)) {
+                attr.setter = SmartthingsBindingConstants.CMD_SET_COLOR;
             }
 
             if (attr.setter != null) {

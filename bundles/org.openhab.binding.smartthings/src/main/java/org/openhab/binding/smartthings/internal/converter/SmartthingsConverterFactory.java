@@ -17,6 +17,7 @@ import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.smartthings.internal.SmartthingsBindingConstants;
 import org.openhab.binding.smartthings.internal.type.SmartthingsTypeRegistry;
 
 /**
@@ -30,10 +31,12 @@ public class SmartthingsConverterFactory {
     private static Map<String, SmartthingsConverter> converterCache = new HashMap<>();
 
     public static void registerConverters(SmartthingsTypeRegistry typeRegistry) {
-        registerConverter("color", new SmartthingsColorConverter(typeRegistry));
-        registerConverter("hue", new SmartthingsHue100Converter(typeRegistry));
-        registerConverter("saturation", new SmartthingsSaturationConverter(typeRegistry));
-        registerConverter("default", new SmartthingsDefaultConverter(typeRegistry));
+        registerConverter(SmartthingsBindingConstants.CHANNEL_NAME_COLOR, new SmartthingsColorConverter(typeRegistry));
+        registerConverter(SmartthingsBindingConstants.CHANNEL_NAME_HUE, new SmartthingsHue100Converter(typeRegistry));
+        registerConverter(SmartthingsBindingConstants.CHANNEL_NAME_SATURATION,
+                new SmartthingsSaturationConverter(typeRegistry));
+        registerConverter(SmartthingsBindingConstants.CHANNEL_NAME_DEFAULT,
+                new SmartthingsDefaultConverter(typeRegistry));
     }
 
     private static void registerConverter(String key, SmartthingsConverter tp) {
@@ -46,7 +49,7 @@ public class SmartthingsConverterFactory {
     public static @Nullable SmartthingsConverter getConverter(String itemType) {
         SmartthingsConverter converter = converterCache.get(itemType);
         if (converter == null) {
-            converter = converterCache.get("default");
+            converter = converterCache.get(SmartthingsBindingConstants.CHANNEL_NAME_DEFAULT);
         }
         return converter;
     }

@@ -16,6 +16,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.openhab.binding.smartthings.internal.SmartthingsBindingConstants;
 import org.openhab.binding.smartthings.internal.dto.ColorObject;
 import org.openhab.binding.smartthings.internal.type.SmartthingsTypeRegistry;
 import org.openhab.core.library.types.HSBType;
@@ -33,6 +34,7 @@ import org.slf4j.LoggerFactory;
  * therefore doesn't need to be converted for openHAB
  *
  * @author Bob Raker - Initial contribution
+ * @author Laurent Arnal - review code for new API
  */
 @NonNullByDefault
 public class SmartthingsColorConverter extends SmartthingsConverter {
@@ -52,9 +54,9 @@ public class SmartthingsColorConverter extends SmartthingsConverter {
             double sat = hsbCommand.getSaturation().doubleValue();
             int level = hsbCommand.getBrightness().intValue();
 
-            String componentKey = "main";
-            String capaKey = "colorControl";
-            String cmdName = "setColor";
+            String componentKey = SmartthingsBindingConstants.GROUPD_ID_MAIN;
+            String capaKey = SmartthingsBindingConstants.CAPA_COLOR_CONTROL;
+            String cmdName = SmartthingsBindingConstants.CMD_SET_COLOR;
             Object[] arguments = new Object[1];
             ColorObject colorObj = new ColorObject();
             colorObj.hue = hue;
@@ -67,7 +69,8 @@ public class SmartthingsColorConverter extends SmartthingsConverter {
             // call setLevel of switchLevel instead
             arguments = new Object[1];
             arguments[0] = level;
-            this.pushCommand(componentKey, "switchLevel", "setLevel", arguments);
+            this.pushCommand(componentKey, SmartthingsBindingConstants.CAPA_SWITH_LEVEL,
+                    SmartthingsBindingConstants.CMD_SET_LEVEL, arguments);
         }
     }
 

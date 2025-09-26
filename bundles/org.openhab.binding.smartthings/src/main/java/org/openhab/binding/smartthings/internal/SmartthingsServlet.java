@@ -134,7 +134,7 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
             // Event from webhook CB
             // ========================================
             if (resultObj != null) {
-                if (resultObj.lifecycle.equals("EVENT")) {
+                if (resultObj.lifecycle.equals(SmartthingsBindingConstants.LIFECYCLE_EVENT)) {
                     Data data = resultObj.eventData;
                     String deviceId = data.events[0].deviceEvent.deviceId;
                     String componentId = data.events[0].deviceEvent.componentId;
@@ -159,7 +159,7 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
                     }
 
                     logger.info("EVENT: {} {} {} {} {}", deviceId, componentId, capa, attr, value);
-                } else if (resultObj.lifecycle.equals("INSTALL")) {
+                } else if (resultObj.lifecycle.equals(SmartthingsBindingConstants.LIFECYCLE_INSTALL)) {
                     installedAppId = resultObj.installData.installedApp.installedAppId;
                     String locationId = resultObj.installData.installedApp.locationId;
 
@@ -174,7 +174,7 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
 
                     setupInProgress = false;
                     logger.info("INSTALL");
-                } else if (resultObj.lifecycle.equals("UPDATE")) {
+                } else if (resultObj.lifecycle.equals(SmartthingsBindingConstants.LIFECYCLE_UPDATE)) {
                     installedAppId = resultObj.updateData.installedApp.installedAppId;
 
                     // String subscriptionUri = "https://api.smartthings.com/v1/installedapps/" + installedAppId
@@ -182,10 +182,10 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
                     // registerSubscriptions(tokenInstallUpdate, locationId);
 
                     logger.info("UPDATE");
-                } else if (resultObj.lifecycle.equals("EXECUTE")) {
+                } else if (resultObj.lifecycle.equals(SmartthingsBindingConstants.LIFECYCLE_EXECUTE)) {
                     logger.info("EXCUTE");
-                } else if (resultObj.lifecycle.equals("CONFIGURATION")
-                        && resultObj.configurationData.phase().equals("INITIALIZE")) {
+                } else if (resultObj.lifecycle.equals(SmartthingsBindingConstants.LIFECYCLE_CONFIGURATION)
+                        && resultObj.configurationData.phase().equals(SmartthingsBindingConstants.PHASE_INITIALIZE)) {
                     ConfigurationResponse response = new ConfigurationResponse();
                     response.configurationData = response.new ConfigurationData();
 
@@ -201,8 +201,8 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
 
                     String responseSt = gson.toJson(response);
                     resp.getWriter().print(responseSt);
-                } else if (resultObj.lifecycle.equals("CONFIGURATION")
-                        && resultObj.configurationData.phase().equals("PAGE")) {
+                } else if (resultObj.lifecycle.equals(SmartthingsBindingConstants.LIFECYCLE_CONFIGURATION)
+                        && resultObj.configurationData.phase().equals(SmartthingsBindingConstants.PHASE_PAGE)) {
                     ConfigurationResponse response = new ConfigurationResponse();
                     response.configurationData = response.new ConfigurationData();
 
@@ -269,8 +269,8 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
                     }
 
                     SMEvent evt = new SMEvent();
-                    evt.sourceType = "DEVICE";
-                    evt.device = new device(dev.deviceId, "main", true, null);
+                    evt.sourceType = SmartthingsBindingConstants.EVT_TYPE_DEVICE;
+                    evt.device = new device(dev.deviceId, SmartthingsBindingConstants.GROUPD_ID_MAIN, true, null);
 
                     String body = gson.toJson(evt);
                     networkConnector.doRequest(JsonObject.class, subscriptionUri, null, tokenInstallUpdate, body,

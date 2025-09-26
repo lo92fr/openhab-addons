@@ -83,8 +83,9 @@ public class SmartthingsDiscoveryService extends AbstractDiscoveryService
         if (bridge == null) {
             return;
         }
-        SmartthingsApi api = bridge.getSmartthingsApi();
+        logger.trace("Start Discovery");
 
+        SmartthingsApi api = bridge.getSmartthingsApi();
         SmartthingsDevice[] devices = api.getAllDevices();
 
         for (SmartthingsDevice device : devices) {
@@ -92,21 +93,21 @@ public class SmartthingsDiscoveryService extends AbstractDiscoveryService
             String name = device.name;
             String label = device.label;
 
-            logger.debug("Device");
+            logger.trace("Find Device : {} / {}", device.name, device.label);
 
             if (device.components == null || device.components.length == 0) {
                 return;
             }
 
             Boolean enabled = false;
-            // if ("Four".equals(label)) {
-            // enabled = true;
-            // }
-            // if ("Petrole".equals(label)) {
-            // enabled = true;
-            // }
-            if (label.contains("cuisson")) {
+            if ("Four".equals(label)) {
                 enabled = true;
+            }
+            if ("Petrole".equals(label)) {
+                enabled = false;
+            }
+            if (label.contains("cuisson")) {
+                enabled = false;
             }
 
             enabled = true;
@@ -123,7 +124,7 @@ public class SmartthingsDiscoveryService extends AbstractDiscoveryService
                     for (SmartthingsCategory cat : component.categories) {
                         String catId = cat.name;
 
-                        if ("main".equals(compId)) {
+                        if (SmartthingsBindingConstants.GROUPD_ID_MAIN.equals(compId)) {
                             deviceType = catId;
                         }
                     }
@@ -149,7 +150,7 @@ public class SmartthingsDiscoveryService extends AbstractDiscoveryService
 
         }
 
-        logger.debug("End Discovery");
+        logger.trace("End Discovery");
     }
 
     /**
@@ -175,10 +176,10 @@ public class SmartthingsDiscoveryService extends AbstractDiscoveryService
             String uidStr = String.format("smartthings:%s:%s:%s", deviceType, bridgeId, smartthingsDeviceName);
 
             Map<String, Object> properties = new HashMap<>();
-            properties.put("smartthingsName", name);
-            properties.put("deviceId", device.deviceId);
-            properties.put("deviceLabel", device.label);
-            properties.put("deviceName", device.name);
+            properties.put(SmartthingsBindingConstants.SMARTTHINGS_NAME, name);
+            properties.put(SmartthingsBindingConstants.DEVICE_ID, device.deviceId);
+            properties.put(SmartthingsBindingConstants.DEVICE_LABEL, device.label);
+            properties.put(SmartthingsBindingConstants.DEVICE_NAME, device.name);
 
             DiscoveryResult discoveryResult = DiscoveryResultBuilder.create(new ThingUID(uidStr))
                     .withProperties(properties).withRepresentationProperty("deviceId").withBridge(bridgeUid)

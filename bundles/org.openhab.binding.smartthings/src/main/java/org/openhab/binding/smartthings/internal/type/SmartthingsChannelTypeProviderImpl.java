@@ -26,7 +26,7 @@ import org.openhab.core.thing.type.ChannelTypeUID;
 import org.osgi.service.component.annotations.Component;
 
 /**
- * Provides all ChannelTypes from SiemensHvac bridges.
+ * Provides all ChannelTypes from Smartthings bridges.
  *
  * @author Laurent Arnal - Initial contribution
  */

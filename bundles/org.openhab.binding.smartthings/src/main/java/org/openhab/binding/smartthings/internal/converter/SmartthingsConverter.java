@@ -19,6 +19,7 @@ import java.util.Queue;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.smartthings.internal.SmartthingsBindingConstants;
 import org.openhab.binding.smartthings.internal.type.SmartthingsException;
 import org.openhab.binding.smartthings.internal.type.SmartthingsTypeRegistry;
 import org.openhab.core.library.types.DecimalType;
@@ -107,8 +108,12 @@ public abstract class SmartthingsConverter {
 
         @Override
         public String toString() {
-            return "compoent:" + component + " capability:" + capability + " command:" + command + " arguments:"
-                    + arguments;
+            StringBuilder builder = new StringBuilder();
+            builder.append("component:" + component + "\n");
+            builder.append("capability:" + capability + "\n");
+            builder.append("command:" + command + "\n");
+            builder.append("arguments:" + arguments + "\n");
+            return builder.toString();
         }
     }
 
@@ -131,7 +136,7 @@ public abstract class SmartthingsConverter {
         Channel channel = thing.getChannel(channelUid);
         if (channel == null) {
             // @todo : review, need handling this case
-            logger.info("Channel not found");
+            logger.error("Channel not found: {}", channelUid);
             return UnDefType.UNDEF;
         }
         String acceptedChannelType = channel.getAcceptedItemType();
@@ -140,15 +145,19 @@ public abstract class SmartthingsConverter {
         }
 
         switch (acceptedChannelType) {
-            case "Color":
+            case SmartthingsBindingConstants.TYPE_COLOR:
                 logger.warn(
                         "Conversion of Color is not supported by the default Smartthings to opemHAB converter. The ThingType should specify an appropriate converter");
                 return UnDefType.UNDEF;
-            case "Contact":
-                return "open".equals(dataFromSmartthings) ? OpenClosedType.OPEN : OpenClosedType.CLOSED;
-            case "DateTime":
+
+            case SmartthingsBindingConstants.TYPE_CONTACT:
+                return SmartthingsBindingConstants.OPEN_VALUE.equals(dataFromSmartthings) ? OpenClosedType.OPEN
+                        : OpenClosedType.CLOSED;
+
+            case SmartthingsBindingConstants.TYPE_DATETIME:
                 return UnDefType.UNDEF;
-            case "Dimmer":
+
+            case SmartthingsBindingConstants.TYPE_DIMMER:
                 // The value coming in should be a number
                 if (dataFromSmartthings instanceof String stringCommandDimmer) {
                     return new PercentType(stringCommandDimmer);
@@ -160,7 +169,8 @@ public abstract class SmartthingsConverter {
                             dataFromSmartthings, dataFromSmartthings.getClass().getName());
                     return UnDefType.UNDEF;
                 }
-            case "Number":
+
+            case SmartthingsBindingConstants.TYPE_NUMBER:
                 if (dataFromSmartthings instanceof String stringCommandNumber) {
                     // review this, oven return a bad value of format 00:00:00
                     try {
@@ -177,23 +187,28 @@ public abstract class SmartthingsConverter {
                             dataFromSmartthings, dataFromSmartthings.getClass().getName());
                     return UnDefType.UNDEF;
                 }
-            case "Player":
+
+            case SmartthingsBindingConstants.TYPE_PLAYER:
                 logger.warn("Conversion of Player is not currently supported. Need to provide support for message {}.",
                         dataFromSmartthings);
                 return UnDefType.UNDEF;
-            case "Rollershutter":
-                return "open".equals(dataFromSmartthings) ? UpDownType.DOWN : UpDownType.UP;
-            case "String":
+
+            case SmartthingsBindingConstants.TYPE_ROLLERSHUTTER:
+                return SmartthingsBindingConstants.OPEN_VALUE.equals(dataFromSmartthings) ? UpDownType.DOWN
+                        : UpDownType.UP;
+
+            case SmartthingsBindingConstants.TYPE_STRING:
                 // temp fixes, need review
                 if (dataFromSmartthings instanceof Double) {
                     return new StringType("");
                 }
                 return new StringType((String) dataFromSmartthings);
-            case "Switch":
+
+            case SmartthingsBindingConstants.TYPE_SWITCH:
                 return OnOffType.from("on".equals(dataFromSmartthings));
 
             // Vector3 can't be triggered now but keep it to handle acceleration device
-            case "Vector3":
+            case SmartthingsBindingConstants.TYPE_VECTOR3:
                 // This is a weird result from Smartthings. If the messages is from a "state" request the result will
                 // look like: "value":{"z":22,"y":-36,"x":-987}
                 // But if the result is from sensor change via a subscription to a threeAxis device the results will
@@ -210,6 +225,7 @@ public abstract class SmartthingsConverter {
                             dataFromSmartthings.getClass().getName());
                     return UnDefType.UNDEF;
                 }
+
             default:
                 logger.warn("No type defined to convert with a value of {} from class {} to an appropriate type.",
                         dataFromSmartthings, dataFromSmartthings.getClass().getName());
