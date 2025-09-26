@@ -135,5 +135,4 @@ public class SmartthingsBindingConstants {
     public static final String LIFECYCLE_EXECUTE = "EXECUTE";
     public static final String PHASE_PAGE = "PAGE";
     public static final String PHASE_INITIALIZE = "INITIALIZE";
-
 }
