@@ -156,6 +156,9 @@ public abstract class SmartthingsBridgeHandler extends BaseBridgeHandler
 
     @Override
     public void dispose() {
+        if (servlet != null) {
+            servlet.deactivate();
+        }
         super.dispose();
     }
 
