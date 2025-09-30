@@ -149,7 +149,7 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
                 lockObj.lock();
                 try {
                     startedRequest++;
-                    logger.info("StartedRequest : {}", startedRequest - completedRequest);
+                    logger.trace("StartedRequest : {}", startedRequest - completedRequest);
                 } finally {
                     lockObj.unlock();
                 }
