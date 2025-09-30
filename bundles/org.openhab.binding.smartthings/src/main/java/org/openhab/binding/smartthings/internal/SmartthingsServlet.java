@@ -46,8 +46,6 @@ import org.openhab.binding.smartthings.internal.type.SmartthingsException;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.binding.ThingHandler;
-import org.osgi.service.component.ComponentContext;
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.http.NamespaceException;
 import org.slf4j.Logger;
@@ -82,7 +80,6 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
         super(bridgeHandler, httpService, networkConnector);
     }
 
-    @Activate
     public void activate() {
         try {
             Dictionary<String, String> servletParams = new Hashtable<String, String>();
@@ -95,9 +92,11 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
         }
     }
 
-    protected void deactivate(ComponentContext componentContext) {
+    public void deactivate() {
         try {
             httpService.unregister(PATH);
+            httpService.unregister(PATH + "/img");
+            httpService.unregister(PATH + "/web");
         } catch (IllegalArgumentException e) {
             logger.warn("Could not stop Smartthings servlet service: {}", e.getMessage());
         }
