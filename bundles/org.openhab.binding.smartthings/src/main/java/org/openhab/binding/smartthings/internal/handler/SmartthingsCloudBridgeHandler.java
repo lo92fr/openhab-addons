@@ -105,6 +105,9 @@ public class SmartthingsCloudBridgeHandler extends SmartthingsBridgeHandler {
                 @Override
                 public void execute(URI uri, int status, @Nullable SmartthingsCapability capa) {
                     if (capa != null) {
+                        if (capa.status.equals("proposed")) {
+                            return;
+                        }
                         // logger.info("Cap: {} / {}", capa.id, capa.name);
                         typeRegistry.registerCapability(capa);
                     }
