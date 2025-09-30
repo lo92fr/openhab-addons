@@ -32,7 +32,6 @@ import javax.ws.rs.sse.SseEventSource;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.http.HttpMethod;
-import org.openhab.binding.smartthings.internal.SmartthingsBindingConstants;
 import org.openhab.binding.smartthings.internal.dto.AppRequest;
 import org.openhab.binding.smartthings.internal.dto.AppResponse;
 import org.openhab.binding.smartthings.internal.dto.Event;
@@ -49,8 +48,6 @@ import org.openhab.binding.smartthings.internal.handler.SmartthingsThingHandler;
 import org.openhab.binding.smartthings.internal.type.SmartthingsException;
 import org.openhab.core.auth.client.oauth2.AccessTokenResponse;
 import org.openhab.core.auth.client.oauth2.OAuthClientService;
-import org.openhab.core.auth.client.oauth2.OAuthException;
-import org.openhab.core.auth.client.oauth2.OAuthResponseException;
 import org.openhab.core.io.net.http.HttpClientFactory;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Thing;
@@ -269,35 +266,8 @@ public class SmartthingsApi {
         }
     }
 
-    public boolean isAuthorized() {
-        final AccessTokenResponse accessTokenResponse = getAccessTokenResponse();
-
-        return accessTokenResponse != null && accessTokenResponse.getAccessToken() != null
-                && accessTokenResponse.getRefreshToken() != null;
-    }
-
-    protected @Nullable AccessTokenResponse getAccessTokenByClientCredentials() {
-        try {
-            OAuthClientService lcOAuthService = this.oAuthClientService;
-            return lcOAuthService.getAccessTokenByClientCredentials(SmartthingsBindingConstants.SMARTTHINGS_SCOPES);
-        } catch (OAuthException | IOException | OAuthResponseException | RuntimeException e) {
-            logger.debug("Exception checking authorization: ", e);
-            return null;
-        }
-    }
-
-    protected @Nullable AccessTokenResponse getAccessTokenResponse() {
-        try {
-            OAuthClientService lcOAuthService = this.oAuthClientService;
-            return lcOAuthService.getAccessTokenResponse();
-        } catch (OAuthException | IOException | OAuthResponseException | RuntimeException e) {
-            logger.debug("Exception checking authorization: ", e);
-            return null;
-        }
-    }
-
     public String getToken() throws SmartthingsException {
-        AccessTokenResponse accessTokenResponse = getAccessTokenResponse();
+        AccessTokenResponse accessTokenResponse = bridgeHandler.getAccessTokenResponse();
 
         // Store token is about to expire, ask for a new one.
         if (accessTokenResponse != null && accessTokenResponse.isExpired(Instant.now(), 1200)) {
@@ -305,7 +275,7 @@ public class SmartthingsApi {
         }
 
         if (accessTokenResponse == null) {
-            accessTokenResponse = getAccessTokenByClientCredentials();
+            accessTokenResponse = bridgeHandler.getAccessTokenByClientCredentials();
         }
 
         final String accessToken = accessTokenResponse == null ? null : accessTokenResponse.getAccessToken();

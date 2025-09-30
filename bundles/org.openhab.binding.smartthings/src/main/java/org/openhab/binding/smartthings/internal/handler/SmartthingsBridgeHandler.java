@@ -179,10 +179,21 @@ public abstract class SmartthingsBridgeHandler extends BaseBridgeHandler
                 && accessTokenResponse.getRefreshToken() != null;
     }
 
-    private @Nullable AccessTokenResponse getAccessTokenResponse() {
+    public @Nullable AccessTokenResponse getAccessTokenResponse() {
         try {
             OAuthClientService oAuthService = this.oAuthService;
             return oAuthService == null ? null : oAuthService.getAccessTokenResponse();
+        } catch (OAuthException | IOException | OAuthResponseException | RuntimeException e) {
+            logger.debug("Exception checking authorization: ", e);
+            return null;
+        }
+    }
+
+    public @Nullable AccessTokenResponse getAccessTokenByClientCredentials() {
+        try {
+            OAuthClientService oAuthService = this.oAuthService;
+            return oAuthService == null ? null
+                    : oAuthService.getAccessTokenByClientCredentials(SmartthingsBindingConstants.SMARTTHINGS_SCOPES);
         } catch (OAuthException | IOException | OAuthResponseException | RuntimeException e) {
             logger.debug("Exception checking authorization: ", e);
             return null;
