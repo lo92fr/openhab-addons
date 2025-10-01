@@ -192,6 +192,16 @@ public abstract class SmartthingsBridgeHandler extends BaseBridgeHandler
         }
     }
 
+    public @Nullable AccessTokenResponse refreshToken() {
+        try {
+            OAuthClientService oAuthService = this.oAuthService;
+            return oAuthService == null ? null : oAuthService.refreshToken();
+        } catch (OAuthException | IOException | OAuthResponseException | RuntimeException e) {
+            logger.debug("Exception checking authorization: ", e);
+            return null;
+        }
+    }
+
     public @Nullable AccessTokenResponse getAccessTokenByClientCredentials() {
         try {
             OAuthClientService oAuthService = this.oAuthService;

@@ -271,7 +271,7 @@ public class SmartthingsApi {
 
         // Store token is about to expire, ask for a new one.
         if (accessTokenResponse != null && accessTokenResponse.isExpired(Instant.now(), 1200)) {
-            accessTokenResponse = null;
+            accessTokenResponse = bridgeHandler.refreshToken();
         }
 
         if (accessTokenResponse == null) {
