@@ -390,7 +390,7 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
         }
 
         // generate group
-        String groupId = component.id + "_";
+        String groupId = deviceType + "_" + component.id + "_";
 
         if (!namespace.equals("")) {
             groupId = groupId + namespace + "_";
