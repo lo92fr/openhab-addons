@@ -95,7 +95,21 @@ public class SmartthingsThingHandler extends BaseThingHandler {
                     SmartthingsApi api = cloudBridge.getSmartthingsApi();
                     Map<String, String> properties = this.getThing().getProperties();
                     String deviceId = properties.get("deviceId");
-
+					/*
+                    if (channelUID.getId().equals("oven_main#data")) {
+                        jsonMsg = "";
+                        jsonMsg += "{";
+                        jsonMsg += "   \"commands\":";
+                        jsonMsg += "     [";
+                        jsonMsg += "        {";
+                        jsonMsg += "          \"component\":\"main\",";
+                        jsonMsg += "          \"capability`\":\"refresh\",";
+                        jsonMsg += "          \"command\":\"refresh \"";
+                        jsonMsg += "        }";
+                        jsonMsg += "     ]";
+                        jsonMsg += "}";
+                    }
+					*/
                     if (deviceId != null) {
                         api.sendCommand(deviceId, jsonMsg);
                     }
@@ -109,8 +123,23 @@ public class SmartthingsThingHandler extends BaseThingHandler {
 
     public void refreshDevice(String deviceType, String componentId, String capa, String attr, Object value) {
         try {
+            String namespace = "";
+            String capaKey = capa;
+            if (capa.contains(".")) {
+                String[] idComponents = capa.split("\\.");
+                namespace = idComponents[0];
+                capaKey = idComponents[1];
+            }
+
             String channelName = (StringUtils.join(StringUtils.splitByCharacterTypeCamelCase(attr), '-')).toLowerCase();
-            String groupId = deviceType + "_" + componentId;
+
+            String groupId = componentId + "_";
+
+            if (!namespace.equals("")) {
+                groupId = groupId + namespace + "_";
+            }
+            groupId = groupId + capaKey;
+
             ChannelUID channelUID = new ChannelUID(this.getThing().getUID(), groupId, channelName);
 
             // channelUID
@@ -207,11 +236,41 @@ public class SmartthingsThingHandler extends BaseThingHandler {
         SmartthingsConverterFactory.registerConverters(typeRegistry);
         SmartthingsStateHandlerFactory.registerStateHandler();
 
+        // testCommand();
         refreshDevice();
 
         pollingJob = scheduler.scheduleWithFixedDelay(this::pollingCode, 0, 5, TimeUnit.SECONDS);
 
         updateStatus(ThingStatus.ONLINE);
+    }
+
+    public void testCommand() {
+        Bridge bridge = getBridge();
+        SmartthingsCloudBridgeHandler cloudBridge = (SmartthingsCloudBridgeHandler) bridge.getHandler();
+        SmartthingsApi api = cloudBridge.getSmartthingsApi();
+        Map<String, String> properties = this.getThing().getProperties();
+        String deviceId = "702C1F72-C35A-0000-0000-000000000000";
+
+        String jsonMsg = "";
+        jsonMsg += "{";
+        jsonMsg += "   \"commands\":";
+        jsonMsg += "     [";
+        jsonMsg += "        {";
+        jsonMsg += "          \"component\":\"main\",";
+        jsonMsg += "          \"capability\":\"ovenOperatingState\",";
+        jsonMsg += "          \"command\":\"start\",";
+        jsonMsg += "          \"arguments\":[\"Baker\", 300 , 210 ]";
+        jsonMsg += "        }";
+        jsonMsg += "     ]";
+        jsonMsg += "}";
+
+        try {
+            if (deviceId != null) {
+                api.sendCommand(deviceId, jsonMsg);
+            }
+        } catch (SmartthingsException ex) {
+            logger.info("exception:" + ex.toString());
+        }
     }
 
     @Override
