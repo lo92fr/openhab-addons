@@ -95,21 +95,21 @@ public class SmartthingsThingHandler extends BaseThingHandler {
                     SmartthingsApi api = cloudBridge.getSmartthingsApi();
                     Map<String, String> properties = this.getThing().getProperties();
                     String deviceId = properties.get("deviceId");
-					/*
-                    if (channelUID.getId().equals("oven_main#data")) {
-                        jsonMsg = "";
-                        jsonMsg += "{";
-                        jsonMsg += "   \"commands\":";
-                        jsonMsg += "     [";
-                        jsonMsg += "        {";
-                        jsonMsg += "          \"component\":\"main\",";
-                        jsonMsg += "          \"capability`\":\"refresh\",";
-                        jsonMsg += "          \"command\":\"refresh \"";
-                        jsonMsg += "        }";
-                        jsonMsg += "     ]";
-                        jsonMsg += "}";
-                    }
-					*/
+                    /*
+                     * if (channelUID.getId().equals("oven_main#data")) {
+                     * jsonMsg = "";
+                     * jsonMsg += "{";
+                     * jsonMsg += "   \"commands\":";
+                     * jsonMsg += "     [";
+                     * jsonMsg += "        {";
+                     * jsonMsg += "          \"component\":\"main\",";
+                     * jsonMsg += "          \"capability`\":\"refresh\",";
+                     * jsonMsg += "          \"command\":\"refresh \"";
+                     * jsonMsg += "        }";
+                     * jsonMsg += "     ]";
+                     * jsonMsg += "}";
+                     * }
+                     */
                     if (deviceId != null) {
                         api.sendCommand(deviceId, jsonMsg);
                     }
@@ -133,7 +133,7 @@ public class SmartthingsThingHandler extends BaseThingHandler {
 
             String channelName = (StringUtils.join(StringUtils.splitByCharacterTypeCamelCase(attr), '-')).toLowerCase();
 
-            String groupId = componentId + "_";
+            String groupId = deviceType + "_" + componentId + "_";
 
             if (!namespace.equals("")) {
                 groupId = groupId + namespace + "_";
