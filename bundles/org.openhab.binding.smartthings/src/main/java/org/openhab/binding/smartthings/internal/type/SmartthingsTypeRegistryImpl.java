@@ -411,7 +411,6 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
                 groupTypes.add(groupType);
             }
         }
-
     }
 
     /**

@@ -110,6 +110,10 @@ public class SmartthingsDiscoveryService extends AbstractDiscoveryService
                 enabled = false;
             }
 
+            if (label.contains("Plug")) {
+                enabled = true;
+            }
+
             enabled = true;
 
             if (!enabled) {
