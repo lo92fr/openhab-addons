@@ -135,7 +135,7 @@ public class SmartthingsThingHandler extends BaseThingHandler {
 
             String groupId = deviceType + "_" + componentId + "_";
 
-            if (!namespace.equals("")) {
+            if (!"".equals(namespace)) {
                 groupId = groupId + namespace + "_";
             }
             groupId = groupId + capaKey;
@@ -247,8 +247,10 @@ public class SmartthingsThingHandler extends BaseThingHandler {
     public void testCommand() {
         Bridge bridge = getBridge();
         SmartthingsCloudBridgeHandler cloudBridge = (SmartthingsCloudBridgeHandler) bridge.getHandler();
+        if (cloudBridge == null) {
+            return;
+        }
         SmartthingsApi api = cloudBridge.getSmartthingsApi();
-        Map<String, String> properties = this.getThing().getProperties();
         String deviceId = "702C1F72-C35A-0000-0000-000000000000";
 
         String jsonMsg = "";
@@ -269,7 +271,7 @@ public class SmartthingsThingHandler extends BaseThingHandler {
                 api.sendCommand(deviceId, jsonMsg);
             }
         } catch (SmartthingsException ex) {
-            logger.info("exception:" + ex.toString());
+            logger.error("exception: ", ex);
         }
     }
 
