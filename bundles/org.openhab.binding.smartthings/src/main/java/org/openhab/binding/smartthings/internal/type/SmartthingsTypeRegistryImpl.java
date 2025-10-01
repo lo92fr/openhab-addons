@@ -332,7 +332,6 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
 
     private void addChannels(String deviceType, List<ChannelGroupType> groupTypes, SmartthingsComponent component,
             SmartthingsCapability capa) {
-
         List<ChannelDefinition> channelDefinitions = new ArrayList<>();
         SmartthingsChannelTypeProvider lcChannelTypeProvider = channelTypeProvider;
         SmartthingsChannelGroupTypeProvider lcChannelGroupTypeProvider = channelGroupTypeProvider;
@@ -349,8 +348,6 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
             if (attrKey.indexOf("Range") >= 0) {
                 continue;
             }
-            SmartthingsAttribute attr = capa.attributes.get(attrKey);
-
             Map<String, String> props = new Hashtable<String, String>();
 
             String channelName = (StringUtils.join(StringUtils.splitByCharacterTypeCamelCase(attrKey), '-'))
@@ -392,7 +389,7 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
         // generate group
         String groupId = deviceType + "_" + component.id + "_";
 
-        if (!namespace.equals("")) {
+        if (!"".equals(namespace)) {
             groupId = groupId + namespace + "_";
         }
         groupId = groupId + capaKey;
