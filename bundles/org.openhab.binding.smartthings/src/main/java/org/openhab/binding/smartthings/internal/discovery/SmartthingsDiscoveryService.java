@@ -101,7 +101,7 @@ public class SmartthingsDiscoveryService extends AbstractDiscoveryService
 
             Boolean enabled = false;
             if ("Four".equals(label)) {
-                enabled = true;
+                enabled = false;
             }
             if ("Petrole".equals(label)) {
                 enabled = false;
@@ -114,7 +114,7 @@ public class SmartthingsDiscoveryService extends AbstractDiscoveryService
                 enabled = true;
             }
 
-            enabled = true;
+            // enabled = false;
 
             if (!enabled) {
                 continue;
