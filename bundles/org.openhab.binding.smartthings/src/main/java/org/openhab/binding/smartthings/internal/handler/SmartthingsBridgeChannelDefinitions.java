@@ -20,6 +20,8 @@ import org.openhab.binding.smartthings.internal.SmartthingsBindingConstants;
 import org.openhab.core.semantics.SemanticTag;
 import org.openhab.core.semantics.model.DefaultSemanticTags.Point;
 import org.openhab.core.semantics.model.DefaultSemanticTags.Property;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Configuration data for Smartthings hub
@@ -28,6 +30,8 @@ import org.openhab.core.semantics.model.DefaultSemanticTags.Property;
  */
 @NonNullByDefault
 public class SmartthingsBridgeChannelDefinitions {
+    private final Logger logger = LoggerFactory.getLogger(SmartthingsBridgeChannelDefinitions.class);
+
     private static final SmartthingsBridgeChannelDefinitions INSTANCE = new SmartthingsBridgeChannelDefinitions();
 
     private final Hashtable<String, String> channelTypes = new Hashtable<String, String>();
@@ -102,33 +106,24 @@ public class SmartthingsBridgeChannelDefinitions {
             return channelProperties.get(key);
         }
 
+        logger.info("missing channel property: {}", key);
         return null;
     }
 
     public SmartthingsBridgeChannelDefinitions() {
-        // powerMeter
-        channelProperties.put("powerMeter#power",
-                new ChannelProperty(null, "Power", Point.MEASUREMENT, Property.POWER));
-
-        // energyMeter
-        channelProperties.put("energyMeter#energy",
-                new ChannelProperty(null, "Energy", Point.MEASUREMENT, Property.ENERGY));
-
-        // waterSensor
-        channelProperties.put("waterSensor#water", new ChannelProperty(Point.MEASUREMENT, Property.HUMIDITY));
-
-        // battery
+        // ============================
+        // = battery
+        // ============================
         channelProperties.put("battery#battery",
                 new ChannelProperty(null, "Dimensionless", Point.STATUS, Property.LEVEL));
 
-        channelProperties.put("legendabsolute60149.signalMetrics#signalMetrics",
-                new ChannelProperty(null, "Percent", Point.MEASUREMENT, Property.SIGNAL_STRENGTH));
+        channelProperties.put("battery#quantity", new ChannelProperty(Point.STATUS, Property.INFO));
 
-        // switch
-        channelProperties.put("switch#switch",
-                new ChannelProperty(SmartthingsBindingConstants.TYPE_SWITCH, null, Point.SWITCH, Property.LIGHT));
+        channelProperties.put("battery#type", new ChannelProperty(Point.STATUS, Property.INFO));
 
-        // colorControl
+        // ============================
+        // = colorControl
+        // ============================
         channelProperties.put("colorControl#saturation",
                 new ChannelProperty(SmartthingsBindingConstants.TYPE_NUMBER, null, Point.CONTROL, Property.COLOR));
         channelProperties.put("colorControl#hue",
@@ -136,15 +131,89 @@ public class SmartthingsBridgeChannelDefinitions {
         channelProperties.put("colorControl#color",
                 new ChannelProperty(SmartthingsBindingConstants.TYPE_COLOR, null, Point.CONTROL, Property.COLOR));
 
-        // colorTemperature
+        // ============================
+        // = colorTemperature
+        // ============================
         channelProperties.put("colorTemperature#colorTemperature",
                 new ChannelProperty(SmartthingsBindingConstants.TYPE_NUMBER, null, Point.CONTROL, null));
 
-        // switchLevel
+        // ============================
+        // = energyMeter
+        // ============================
+        channelProperties.put("energyMeter#energy",
+                new ChannelProperty(null, "Energy", Point.MEASUREMENT, Property.ENERGY));
+
+        // ============================
+        // = firmwareUpdate
+        // ============================
+        channelProperties.put("firmwareUpdate#lastUpdateStatusReason",
+                new ChannelProperty(Point.STATUS, Property.INFO));
+        channelProperties.put("firmwareUpdate#imageTransferProgress", new ChannelProperty(Point.STATUS, Property.INFO));
+        channelProperties.put("firmwareUpdate#availableVersion", new ChannelProperty(Point.STATUS, Property.INFO));
+        channelProperties.put("firmwareUpdate#lastUpdateStatus", new ChannelProperty(Point.STATUS, Property.INFO));
+        channelProperties.put("firmwareUpdate#supportedCommands", new ChannelProperty(Point.STATUS, Property.INFO));
+        channelProperties.put("firmwareUpdate#state", new ChannelProperty(Point.STATUS, Property.INFO));
+        channelProperties.put("firmwareUpdate#estimatedTimeRemaining",
+                new ChannelProperty(Point.STATUS, Property.INFO));
+        channelProperties.put("firmwareUpdate#updateAvailable", new ChannelProperty(Point.STATUS, Property.INFO));
+        channelProperties.put("firmwareUpdate#currentVersion", new ChannelProperty(Point.STATUS, Property.INFO));
+        channelProperties.put("firmwareUpdate#lastUpdateTime", new ChannelProperty(Point.STATUS, Property.INFO));
+        channelProperties.put("firmwareUpdate#supportsProgressReports",
+                new ChannelProperty(Point.STATUS, Property.INFO));
+
+        // ============================
+        // = motionSensor
+        // ============================
+        channelProperties.put("motionSensor#motion", new ChannelProperty(Point.ALARM, Property.MOTION));
+        channelProperties.put("legendabsolute60149.sensorSensitivity#sensorSensitivity",
+                new ChannelProperty(Point.MEASUREMENT, Property.LEVEL));
+
+        // ============================
+        // = powerMeter
+        // ============================
+        channelProperties.put("powerMeter#power",
+                new ChannelProperty(null, "Power", Point.MEASUREMENT, Property.POWER));
+
+        // =================================
+        // = samsungce.ovenOperatingState
+        // =================================
+        channelProperties.put("samsungce.ovenOperatingState#progress",
+                new ChannelProperty(Point.MEASUREMENT, Property.PROGRESS));
+        channelProperties.put("samsungce.ovenOperatingState#ovenJobState",
+                new ChannelProperty(Point.MEASUREMENT, Property.INFO));
+        channelProperties.put("samsungce.ovenOperatingState#operationTime",
+                new ChannelProperty(Point.MEASUREMENT, Property.PROGRESS));
+        channelProperties.put("samsungce.ovenOperatingState#operatingState",
+                new ChannelProperty(Point.MEASUREMENT, Property.INFO));
+        channelProperties.put("samsungce.ovenOperatingState#completionTime",
+                new ChannelProperty(Point.MEASUREMENT, Property.PROGRESS));
+
+        // ============================
+        // = signal Metrics
+        // ============================
+        channelProperties.put("legendabsolute60149.signalMetrics#signalMetrics",
+                new ChannelProperty(null, "Percent", Point.MEASUREMENT, Property.SIGNAL_STRENGTH));
+
+        // ============================
+        // = switch
+        // ============================
+        channelProperties.put("switch#switch",
+                new ChannelProperty(SmartthingsBindingConstants.TYPE_SWITCH, null, Point.SWITCH, Property.POWER));
+
+        // ============================
+        // = switchLevel
+        // ============================
         channelProperties.put("switchLevel#level", new ChannelProperty(SmartthingsBindingConstants.TYPE_DIMMER,
                 "Dimensionless", Point.CONTROL, Property.BRIGHTNESS));
 
-        // base type
+        // ============================
+        // = waterSensor
+        // ============================
+        channelProperties.put("waterSensor#water", new ChannelProperty(Point.MEASUREMENT, Property.HUMIDITY));
+
+        // ============================
+        // = base type
+        // ============================
         channelTypes.put(SmartthingsBindingConstants.SM_TYPE_INTEGER, SmartthingsBindingConstants.TYPE_NUMBER);
         channelTypes.put(SmartthingsBindingConstants.SM_TYPE_STRING, SmartthingsBindingConstants.TYPE_STRING);
         channelTypes.put(SmartthingsBindingConstants.SM_TYPE_OBJECT, SmartthingsBindingConstants.TYPE_STRING);
