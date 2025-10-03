@@ -34,7 +34,8 @@ public class SmartthingsStateHandlerLight extends SmartthingsStateHandler {
     }
 
     @Override
-    public void handleStateChange(ChannelUID channelUID, State state, SmartthingsThingHandler thingHandler) {
+    public void handleStateChange(ChannelUID channelUID, String deviceType, String componentId, State state,
+            SmartthingsThingHandler thingHandler) {
         State oldHueState = stateCache.get(SmartthingsBindingConstants.CHANNEL_NAME_HUE);
         State oldSaturationState = stateCache.get(SmartthingsBindingConstants.CHANNEL_NAME_SATURATION);
         State oldLevelState = stateCache.get(SmartthingsBindingConstants.CHANNEL_NAME_LEVEL);
@@ -51,31 +52,29 @@ public class SmartthingsStateHandlerLight extends SmartthingsStateHandler {
             oldLevelState = new PercentType(0);
         }
 
-        String groupId = channelUID.getGroupId();
-        if (groupId == null) {
-            groupId = SmartthingsBindingConstants.GROUPD_ID_MAIN;
-        }
+        String groupId = deviceType + "_" + componentId + "_" + "colorControl";
 
         ChannelUID channelUIDColor = new ChannelUID(thingHandler.getThing().getUID(), groupId,
                 SmartthingsBindingConstants.CHANNEL_NAME_COLOR);
+
         if (SmartthingsBindingConstants.CHANNEL_NAME_HUE.equals(channelUID.getIdWithoutGroup())) {
             stateCache.put(SmartthingsBindingConstants.CHANNEL_NAME_HUE, state);
-            HSBType newColorState = new HSBType((DecimalType) state, convToPercentTypeIfNeed(oldSaturationState),
+            HSBType newColorState = new HSBType((DecimalType) state, (PercentType) oldSaturationState,
                     (PercentType) oldLevelState);
 
             thingHandler.sendUpdateState(channelUIDColor, newColorState);
         }
         if (SmartthingsBindingConstants.CHANNEL_NAME_SATURATION.equals(channelUID.getIdWithoutGroup())) {
-            stateCache.put(SmartthingsBindingConstants.CHANNEL_NAME_SATURATION, state);
-            HSBType newColorState = new HSBType((DecimalType) oldHueState, convToPercentTypeIfNeed(state),
-                    (PercentType) oldLevelState);
+            PercentType pcState = convToPercentTypeIfNeed(state);
+            stateCache.put(SmartthingsBindingConstants.CHANNEL_NAME_SATURATION, pcState);
+            HSBType newColorState = new HSBType((DecimalType) oldHueState, pcState, (PercentType) oldLevelState);
 
             thingHandler.sendUpdateState(channelUIDColor, newColorState);
         }
         if (SmartthingsBindingConstants.CHANNEL_NAME_LEVEL.equals(channelUID.getIdWithoutGroup())) {
-            stateCache.put(SmartthingsBindingConstants.CHANNEL_NAME_LEVEL, state);
-            HSBType newColorState = new HSBType((DecimalType) oldHueState, convToPercentTypeIfNeed(oldSaturationState),
-                    (PercentType) state);
+            PercentType pcState = convToPercentTypeIfNeed(state);
+            stateCache.put(SmartthingsBindingConstants.CHANNEL_NAME_LEVEL, pcState);
+            HSBType newColorState = new HSBType((DecimalType) oldHueState, (PercentType) oldSaturationState, pcState);
 
             thingHandler.sendUpdateState(channelUIDColor, newColorState);
         }

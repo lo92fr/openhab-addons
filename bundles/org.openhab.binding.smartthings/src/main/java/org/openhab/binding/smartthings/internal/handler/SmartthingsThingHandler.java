@@ -131,6 +131,10 @@ public class SmartthingsThingHandler extends BaseThingHandler {
                 capaKey = idComponents[1];
             }
 
+            if (attr.indexOf("Range") >= 0) {
+                return;
+            }
+
             String channelName = (StringUtils.join(StringUtils.splitByCharacterTypeCamelCase(attr), '-')).toLowerCase();
 
             String groupId = deviceType + "_" + componentId + "_";
@@ -151,7 +155,7 @@ public class SmartthingsThingHandler extends BaseThingHandler {
                 updateState(channelUID, state);
 
                 if (stateHandler != null) {
-                    stateHandler.handleStateChange(channelUID, state, this);
+                    stateHandler.handleStateChange(channelUID, deviceType, componentId, state, this);
                 }
             }
         } catch (Exception ex) {
