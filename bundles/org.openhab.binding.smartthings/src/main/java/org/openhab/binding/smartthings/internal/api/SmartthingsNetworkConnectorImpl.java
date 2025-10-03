@@ -292,5 +292,4 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
     public static Gson getGson() {
         return gson;
     }
-
 }
