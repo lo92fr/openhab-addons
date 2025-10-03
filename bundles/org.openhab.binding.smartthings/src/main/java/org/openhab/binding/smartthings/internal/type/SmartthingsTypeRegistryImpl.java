@@ -12,6 +12,7 @@
  */
 package org.openhab.binding.smartthings.internal.type;
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,7 +32,6 @@ import org.openhab.binding.smartthings.internal.dto.SmartthingsComponent;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsDevice;
 import org.openhab.binding.smartthings.internal.dto.SmartthingsProperty;
 import org.openhab.binding.smartthings.internal.handler.SmartthingsBridgeChannelDefinitions;
-import org.openhab.binding.smartthings.internal.handler.SmartthingsBridgeChannelDefinitions.SmartthingsBridgeChannelDef;
 import org.openhab.binding.smartthings.internal.handler.SmartthingsCloudBridgeHandler;
 import org.openhab.core.config.core.ConfigDescriptionBuilder;
 import org.openhab.core.config.core.ConfigDescriptionParameter;
@@ -99,6 +99,26 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
         this.bridgeHandler = bridgeHandler;
     }
 
+    public String getOpenhabChannelType(String smartThingsType, SmartthingsCapability capa, String key,
+            SmartthingsProperty prop) {
+        String openhabChannelType = SmartthingsBridgeChannelDefinitions.getChannelType(smartThingsType);
+        String openhabUoM = SmartthingsBridgeChannelDefinitions.getChannelUoM(key);
+        String result = "";
+
+        if (openhabChannelType == null) {
+            logger.info("need review");
+            return result;
+        }
+
+        result = openhabChannelType;
+
+        if (openhabUoM != null) {
+            result = result + ":" + openhabUoM;
+        }
+
+        return result;
+    }
+
     public void createChannelTypes(SmartthingsCapability capa) {
         SmartthingsChannelTypeProvider lcChannelTypeProvider = channelTypeProvider;
 
@@ -109,7 +129,7 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
                 continue;
             }
 
-            logger.trace("capa: {} <> {}", capa.id, key);
+            // logger.info("capa: {} <> {}", capa.id, key);
 
             if (attr == null) {
                 continue;
@@ -127,42 +147,19 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
             SmartthingsProperty prop = attr.schema.properties.get("value");
 
             if (prop != null) {
-                String tpSmart = prop.type;
-                String channelTp = "NA";
+                String smartThingsType = prop.type;
+                String openHabChannelType = "NA";
 
-                // @todo : review, add support for unit and UoM
-                /*
-                 * SmartthingsProperty unit = null;
-                 * if (attr.schema.properties.containsKey("unit")) {
-                 * unit = attr.schema.properties.get("unit");
-                 * }
-                 */
-
-                SmartthingsBridgeChannelDef channelDef = SmartthingsBridgeChannelDefinitions.getChannelDefs(key);
-                if (channelDef != null) {
-                    channelTp = channelDef.tp;
-                } else {
-                    if (SmartthingsBindingConstants.SM_TYPE_INTEGER.equals(tpSmart)) {
-                        channelTp = SmartthingsBindingConstants.TYPE_NUMBER;
-                    } else if (SmartthingsBindingConstants.SM_TYPE_STRING.equals(tpSmart)) {
-                        channelTp = SmartthingsBindingConstants.TYPE_STRING;
-                    } else if (SmartthingsBindingConstants.SM_TYPE_OBJECT.equals(tpSmart)) {
-                        if (prop.title != null && "JsonObject".equals(prop.title)) {
-                            channelTp = SmartthingsBindingConstants.TYPE_STRING;
-                        } else {
-                            channelTp = "";
-                        }
-                    } else if (SmartthingsBindingConstants.SM_TYPE_ARRAY.equals(tpSmart)) {
-                        channelTp = "";
-                    } else if (SmartthingsBindingConstants.SM_TYPE_NUMBER.equals(tpSmart)) {
-                        channelTp = SmartthingsBindingConstants.TYPE_NUMBER;
-                    } else if (SmartthingsBindingConstants.SM_TYPE_BOOLEAN.equals(tpSmart)) {
-                        channelTp = SmartthingsBindingConstants.TYPE_CONTACT;
-                    } else {
-                        logger.info("need review");
-                    }
+                SmartthingsProperty unit = null;
+                if (attr.schema.properties.containsKey("unit")) {
+                    unit = attr.schema.properties.get("unit");
                 }
 
+                openHabChannelType = getOpenhabChannelType(smartThingsType, capa, key, prop);
+
+                if (openHabChannelType.equals("")) {
+                    logger.info("need review");
+                }
                 String label = capa.name;
 
                 String channelTypeName = capa.id.replace(".", "_") + "_"
@@ -170,7 +167,7 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
 
                 List<StateOption> options = new ArrayList<StateOption>();
 
-                if (prop.enumeration != null && channelDef == null) {
+                if (prop.enumeration != null) {
                     for (String opt : prop.enumeration) {
                         String optValue = opt;
                         String optName = StringUtils.capitalize(
@@ -181,7 +178,7 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
                     }
                 }
 
-                if ("".equals(channelTp)) {
+                if ("".equals(openHabChannelType)) {
                     continue;
                 }
 
@@ -190,8 +187,8 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
                 if (lcChannelTypeProvider != null) {
                     channelType = lcChannelTypeProvider.getInternalChannelType(channelTypeUID);
                     if (channelType == null) {
-                        channelType = createChannelType(capa, channelTypeName, "", label, channelTp, channelTypeUID,
-                                options);
+                        channelType = createChannelType(capa, unit, channelTypeName, "", label, openHabChannelType,
+                                channelTypeUID, options);
                         lcChannelTypeProvider.addChannelType(channelType);
                     }
                 }
@@ -200,8 +197,9 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
         }
     }
 
-    private ChannelType createChannelType(SmartthingsCapability capa, String channelName, String category,
-            String description, String channelTp, ChannelTypeUID channelTypeUID, List<StateOption> options) {
+    private ChannelType createChannelType(SmartthingsCapability capa, @Nullable SmartthingsProperty unit,
+            String channelName, String category, String description, String openhabChannelType,
+            ChannelTypeUID channelTypeUID, List<StateOption> options) {
         ChannelType channelType;
 
         StateDescriptionFragmentBuilder stateFragment = StateDescriptionFragmentBuilder.create();
@@ -210,8 +208,22 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
             stateFragment = stateFragment.withOptions(options);
         }
 
+        if (unit != null) {
+            stateFragment = stateFragment.withPattern("%d " + unit.defaultUnit);
+            if (unit.minimum != 0) {
+                stateFragment = stateFragment.withMinimum(new BigDecimal(unit.minimum));
+            }
+            if (unit.maximum != 0) {
+                stateFragment = stateFragment.withMaximum(new BigDecimal(unit.maximum));
+            }
+
+            // .withStep(step)
+            // .withReadOnly(false);
+        }
+
         final StateChannelTypeBuilder channelTypeBuilder = ChannelTypeBuilder
-                .state(channelTypeUID, channelName, channelTp).withStateDescriptionFragment(stateFragment.build());
+                .state(channelTypeUID, channelName, openhabChannelType)
+                .withStateDescriptionFragment(stateFragment.build());
 
         Boolean isAdvanced = false;
         if (capa.id.contains("ocf")) {

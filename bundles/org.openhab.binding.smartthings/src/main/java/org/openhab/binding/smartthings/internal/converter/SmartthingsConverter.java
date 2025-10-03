@@ -140,8 +140,15 @@ public abstract class SmartthingsConverter {
             return UnDefType.UNDEF;
         }
         String acceptedChannelType = channel.getAcceptedItemType();
+        String uoM = "";
         if (acceptedChannelType == null) {
             return UnDefType.NULL;
+        }
+
+        if (acceptedChannelType.contains(":")) {
+            String[] acceptedChannelTypeParts = acceptedChannelType.split(":");
+            acceptedChannelType = acceptedChannelTypeParts[0];
+            uoM = acceptedChannelTypeParts[1];
         }
 
         switch (acceptedChannelType) {
