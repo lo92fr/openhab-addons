@@ -47,7 +47,6 @@ import org.openhab.binding.smartthings.internal.handler.SmartthingsBridgeHandler
 import org.openhab.binding.smartthings.internal.handler.SmartthingsThingHandler;
 import org.openhab.binding.smartthings.internal.type.SmartthingsException;
 import org.openhab.core.auth.client.oauth2.AccessTokenResponse;
-import org.openhab.core.auth.client.oauth2.OAuthClientService;
 import org.openhab.core.io.net.http.HttpClientFactory;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Thing;
@@ -71,7 +70,6 @@ public class SmartthingsApi {
 
     private final SmartthingsNetworkConnector networkConnector;
     private final SmartthingsBridgeHandler bridgeHandler;
-    private final OAuthClientService oAuthClientService;
     private final ClientBuilder clientBuilder;
     private final SseEventSourceFactory eventSourceFactory;
 
@@ -95,11 +93,10 @@ public class SmartthingsApi {
      * @param token The token to access the API
      */
     public SmartthingsApi(HttpClientFactory httpClientFactory, SmartthingsBridgeHandler bridgeHandler,
-            SmartthingsNetworkConnector networkConnector, OAuthClientService oAuthClientService,
-            ClientBuilder clientBuilder, SseEventSourceFactory eventSourceFactory) {
+            SmartthingsNetworkConnector networkConnector, ClientBuilder clientBuilder,
+            SseEventSourceFactory eventSourceFactory) {
         this.networkConnector = networkConnector;
         this.bridgeHandler = bridgeHandler;
-        this.oAuthClientService = oAuthClientService;
         this.clientBuilder = clientBuilder;
         this.eventSourceFactory = eventSourceFactory;
         this.sseEvents = new Hashtable<String, SseEventSource>();
@@ -403,10 +400,6 @@ public class SmartthingsApi {
         try {
             Event evt = gson.fromJson(data, Event.class);
 
-            if (evt == null) {
-                logger.info("Event decoding is null:");
-                return;
-            }
             String deviceId = evt.deviceEvent.deviceId;
             String componentId = evt.deviceEvent.componentId;
             String capa = evt.deviceEvent.capability;
