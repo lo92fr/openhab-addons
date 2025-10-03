@@ -114,7 +114,7 @@ public class SmartthingsDiscoveryService extends AbstractDiscoveryService
                 enabled = true;
             }
 
-            // enabled = false;
+            enabled = true;
 
             if (!enabled) {
                 continue;
