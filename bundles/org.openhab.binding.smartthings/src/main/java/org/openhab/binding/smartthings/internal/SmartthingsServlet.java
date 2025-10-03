@@ -132,116 +132,114 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
             // ========================================
             // Event from webhook CB
             // ========================================
-            if (resultObj != null) {
-                if (resultObj.lifecycle.equals(SmartthingsBindingConstants.LIFECYCLE_EVENT)) {
-                    Data data = resultObj.eventData;
-                    String deviceId = data.events[0].deviceEvent.deviceId;
-                    String componentId = data.events[0].deviceEvent.componentId;
-                    String capa = data.events[0].deviceEvent.capability;
-                    String attr = data.events[0].deviceEvent.attribute;
-                    String value = data.events[0].deviceEvent.value;
+            if (resultObj.lifecycle.equals(SmartthingsBindingConstants.LIFECYCLE_EVENT)) {
+                Data data = resultObj.eventData;
+                String deviceId = data.events[0].deviceEvent.deviceId;
+                String componentId = data.events[0].deviceEvent.componentId;
+                String capa = data.events[0].deviceEvent.capability;
+                String attr = data.events[0].deviceEvent.attribute;
+                String value = data.events[0].deviceEvent.value;
 
-                    Bridge bridge = bridgeHandler.getThing();
-                    List<Thing> things = bridge.getThings();
+                Bridge bridge = bridgeHandler.getThing();
+                List<Thing> things = bridge.getThings();
 
-                    Optional<Thing> theThingOpt = things.stream().filter(x -> x.getProperties().containsValue(deviceId))
-                            .findFirst();
-                    if (theThingOpt.isPresent()) {
-                        Thing theThing = theThingOpt.get();
+                Optional<Thing> theThingOpt = things.stream().filter(x -> x.getProperties().containsValue(deviceId))
+                        .findFirst();
+                if (theThingOpt.isPresent()) {
+                    Thing theThing = theThingOpt.get();
 
-                        ThingHandler handler = theThing.getHandler();
-                        SmartthingsThingHandler smarthingsHandler = (SmartthingsThingHandler) handler;
-                        if (smarthingsHandler != null) {
-                            smarthingsHandler.refreshDevice(theThing.getThingTypeUID().getId(), componentId, capa, attr,
-                                    value);
-                        }
+                    ThingHandler handler = theThing.getHandler();
+                    SmartthingsThingHandler smarthingsHandler = (SmartthingsThingHandler) handler;
+                    if (smarthingsHandler != null) {
+                        smarthingsHandler.refreshDevice(theThing.getThingTypeUID().getId(), componentId, capa, attr,
+                                value);
                     }
-
-                    logger.info("EVENT: {} {} {} {} {}", deviceId, componentId, capa, attr, value);
-                } else if (resultObj.lifecycle.equals(SmartthingsBindingConstants.LIFECYCLE_INSTALL)) {
-                    installedAppId = resultObj.installData.installedApp.installedAppId;
-                    String locationId = resultObj.installData.installedApp.locationId;
-
-                    try {
-                        SmartthingsLocation loc = api.getLocation(locationId);
-                        installedLocation = loc.name;
-                    } catch (SmartthingsException ex) {
-                        installedLocation = "Unable to retrieve location!!";
-                    }
-
-                    // registerSubscriptions(tokenInstallUpdate, locationId);
-
-                    setupInProgress = false;
-                    logger.info("INSTALL");
-                } else if (resultObj.lifecycle.equals(SmartthingsBindingConstants.LIFECYCLE_UPDATE)) {
-                    installedAppId = resultObj.updateData.installedApp.installedAppId;
-
-                    // String subscriptionUri = "https://api.smartthings.com/v1/installedapps/" + installedAppId
-                    // + "/subscriptions";
-                    // registerSubscriptions(tokenInstallUpdate, locationId);
-
-                    logger.info("UPDATE");
-                } else if (resultObj.lifecycle.equals(SmartthingsBindingConstants.LIFECYCLE_EXECUTE)) {
-                    logger.info("EXCUTE");
-                } else if (resultObj.lifecycle.equals(SmartthingsBindingConstants.LIFECYCLE_CONFIGURATION)
-                        && resultObj.configurationData.phase().equals(SmartthingsBindingConstants.PHASE_INITIALIZE)) {
-                    ConfigurationResponse response = new ConfigurationResponse();
-                    response.configurationData = response.new ConfigurationData();
-
-                    Initialize init = response.configurationData.new Initialize();
-                    response.configurationData.initialize = init;
-                    init.name = "Openhab";
-                    init.description = "Openhab";
-                    init.firstPageId = "1";
-                    init.id = "Openhab";
-
-                    init.permissions = new String[1];
-                    init.permissions[0] = "r:devices:*";
-
-                    String responseSt = gson.toJson(response);
-                    resp.getWriter().print(responseSt);
-                } else if (resultObj.lifecycle.equals(SmartthingsBindingConstants.LIFECYCLE_CONFIGURATION)
-                        && resultObj.configurationData.phase().equals(SmartthingsBindingConstants.PHASE_PAGE)) {
-                    ConfigurationResponse response = new ConfigurationResponse();
-                    response.configurationData = response.new ConfigurationData();
-
-                    Page page1 = response.configurationData.new Page();
-                    response.configurationData.page = page1;
-                    page1.pageId = "1";
-                    page1.nextPageId = null;
-                    page1.previousPageId = null;
-                    page1.name = "Openhab";
-                    page1.complete = true;
-
-                    String responseSt = gson.toJson(response);
-                    resp.getWriter().print(responseSt);
-                } else if (resultObj.lifecycle.equals("CONFIRMATION")) {
-                    String appId = resultObj.confirmationData.appId();
-                    String confirmUrl = resultObj.confirmationData.confirmationUrl();
-
-                    bridgeHandler.setAppId(appId);
-
-                    String responseSt = "{";
-
-                    responseSt = responseSt + "\"targetUrl\": \"" + confirmUrl + "\"";
-                    responseSt = responseSt + "}";
-                    resp.getWriter().print(responseSt);
-
-                    try {
-                        Thread.sleep(2000);
-                        this.networkConnector.doBasicRequest(String.class, confirmUrl, null, "", "", HttpMethod.GET);
-                    } catch (Exception ex) {
-                        logger.error("error during confirmation {}", confirmUrl);
-                    }
-
-                    try {
-                        api.createAppOAuth(appId);
-                    } catch (SmartthingsException ex) {
-                        logger.error("Unable to setup app oauth settings!!");
-                    }
-
-                    logger.trace("CONFIRMATION {}", confirmUrl);
                 }
+
+                logger.info("EVENT: {} {} {} {} {}", deviceId, componentId, capa, attr, value);
+            } else if (resultObj.lifecycle.equals(SmartthingsBindingConstants.LIFECYCLE_INSTALL)) {
+                installedAppId = resultObj.installData.installedApp.installedAppId;
+                String locationId = resultObj.installData.installedApp.locationId;
+
+                try {
+                    SmartthingsLocation loc = api.getLocation(locationId);
+                    installedLocation = loc.name;
+                } catch (SmartthingsException ex) {
+                    installedLocation = "Unable to retrieve location!!";
+                }
+
+                // registerSubscriptions(tokenInstallUpdate, locationId);
+
+                setupInProgress = false;
+                logger.info("INSTALL");
+            } else if (resultObj.lifecycle.equals(SmartthingsBindingConstants.LIFECYCLE_UPDATE)) {
+                installedAppId = resultObj.updateData.installedApp.installedAppId;
+
+                // String subscriptionUri = "https://api.smartthings.com/v1/installedapps/" + installedAppId
+                // + "/subscriptions";
+                // registerSubscriptions(tokenInstallUpdate, locationId);
+
+                logger.info("UPDATE");
+            } else if (resultObj.lifecycle.equals(SmartthingsBindingConstants.LIFECYCLE_EXECUTE)) {
+                logger.info("EXCUTE");
+            } else if (resultObj.lifecycle.equals(SmartthingsBindingConstants.LIFECYCLE_CONFIGURATION)
+                    && resultObj.configurationData.phase().equals(SmartthingsBindingConstants.PHASE_INITIALIZE)) {
+                ConfigurationResponse response = new ConfigurationResponse();
+                response.configurationData = response.new ConfigurationData();
+
+                Initialize init = response.configurationData.new Initialize();
+                response.configurationData.initialize = init;
+                init.name = "Openhab";
+                init.description = "Openhab";
+                init.firstPageId = "1";
+                init.id = "Openhab";
+
+                init.permissions = new String[1];
+                init.permissions[0] = "r:devices:*";
+
+                String responseSt = gson.toJson(response);
+                resp.getWriter().print(responseSt);
+            } else if (resultObj.lifecycle.equals(SmartthingsBindingConstants.LIFECYCLE_CONFIGURATION)
+                    && resultObj.configurationData.phase().equals(SmartthingsBindingConstants.PHASE_PAGE)) {
+                ConfigurationResponse response = new ConfigurationResponse();
+                response.configurationData = response.new ConfigurationData();
+
+                Page page1 = response.configurationData.new Page();
+                response.configurationData.page = page1;
+                page1.pageId = "1";
+                page1.nextPageId = null;
+                page1.previousPageId = null;
+                page1.name = "Openhab";
+                page1.complete = true;
+
+                String responseSt = gson.toJson(response);
+                resp.getWriter().print(responseSt);
+            } else if (resultObj.lifecycle.equals("CONFIRMATION")) {
+                String appId = resultObj.confirmationData.appId();
+                String confirmUrl = resultObj.confirmationData.confirmationUrl();
+
+                bridgeHandler.setAppId(appId);
+
+                String responseSt = "{";
+
+                responseSt = responseSt + "\"targetUrl\": \"" + confirmUrl + "\"";
+                responseSt = responseSt + "}";
+                resp.getWriter().print(responseSt);
+
+                try {
+                    Thread.sleep(2000);
+                    this.networkConnector.doBasicRequest(String.class, confirmUrl, null, "", "", HttpMethod.GET);
+                } catch (Exception ex) {
+                    logger.error("error during confirmation {}", confirmUrl);
+                }
+
+                try {
+                    api.createAppOAuth(appId);
+                } catch (SmartthingsException ex) {
+                    logger.error("Unable to setup app oauth settings!!");
+                }
+
+                logger.trace("CONFIRMATION {}", confirmUrl);
             }
         }
         logger.trace("Smartthings servlet returning.");
