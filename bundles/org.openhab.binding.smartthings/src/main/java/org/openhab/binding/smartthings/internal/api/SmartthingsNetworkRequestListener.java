@@ -55,9 +55,9 @@ public class SmartthingsNetworkRequestListener<T> extends BufferingResponseListe
      * @param callback Callback which execute method has to be called.
      */
     public SmartthingsNetworkRequestListener(Class<T> resultClass, SmartthingsNetworkCallback<T> callback,
-            SmartthingsNetworkConnector hvacConnector) {
+            SmartthingsNetworkConnector networkConnector) {
         this.callback = callback;
-        this.networkConnector = hvacConnector;
+        this.networkConnector = networkConnector;
         this.resultClass = resultClass;
     }
 
@@ -107,7 +107,7 @@ public class SmartthingsNetworkRequestListener<T> extends BufferingResponseListe
                 } else {
                     Object resultObj = null;
                     try {
-                        Gson gson = SmartthingsNetworkConnectorImpl.getGson();
+                        Gson gson = networkConnector.getGson();
 
                         Type type = callback.getClass().getGenericInterfaces()[0];
                         if (type instanceof ParameterizedType) {
