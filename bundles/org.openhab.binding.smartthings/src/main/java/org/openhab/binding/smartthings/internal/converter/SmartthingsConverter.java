@@ -146,9 +146,18 @@ public abstract class SmartthingsConverter {
         }
 
         if (acceptedChannelType.contains(":")) {
-            String[] acceptedChannelTypeParts = acceptedChannelType.split(":");
-            acceptedChannelType = acceptedChannelTypeParts[0];
-            uoM = acceptedChannelTypeParts[1];
+            int posSep = acceptedChannelType.indexOf(":");
+            if (posSep < acceptedChannelType.length() - 1) {
+                uoM = acceptedChannelType.substring(posSep + 1);
+            } else {
+                uoM = "";
+            }
+            if (posSep > 0) {
+                acceptedChannelType = acceptedChannelType.substring(0, posSep);
+            } else {
+                acceptedChannelType = "";
+            }
+
         }
 
         switch (acceptedChannelType) {
@@ -207,9 +216,12 @@ public abstract class SmartthingsConverter {
             case SmartthingsBindingConstants.TYPE_STRING:
                 // temp fixes, need review
                 if (dataFromSmartthings instanceof Double) {
-                    return new StringType("");
+                    return new StringType(((Double) dataFromSmartthings).toString());
+                } else if (dataFromSmartthings instanceof String) {
+                    return new StringType((String) dataFromSmartthings);
+                } else {
+                    logger.error("@todo : handle this case");
                 }
-                return new StringType((String) dataFromSmartthings);
 
             case SmartthingsBindingConstants.TYPE_SWITCH:
                 return OnOffType.from("on".equals(dataFromSmartthings));

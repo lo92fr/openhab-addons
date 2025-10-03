@@ -108,6 +108,10 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
 
         if (channelProp != null) {
             openhabUoM = channelProp.getUoM();
+
+            if (channelProp.getOpenhabChannelType() != null) {
+                openhabChannelType = channelProp.getOpenhabChannelType();
+            }
         }
 
         if (openhabChannelType == null) {
@@ -160,7 +164,8 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
                     unit = attr.schema.properties.get("unit");
                 }
 
-                ChannelProperty channelProp = SmartthingsBridgeChannelDefinitions.getChannelProperty(key);
+                ChannelProperty channelProp = SmartthingsBridgeChannelDefinitions
+                        .getChannelProperty(capa.id + "#" + key);
 
                 openHabChannelType = getOpenhabChannelType(smartThingsType, capa, key, channelProp);
 
@@ -223,6 +228,10 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
             if (unit.maximum != 0) {
                 stateFragment = stateFragment.withMaximum(new BigDecimal(unit.maximum));
             }
+        }
+
+        if (channelName.contains("hue")) {
+            stateFragment = stateFragment.withMaximum(new BigDecimal(360));
         }
 
         StateChannelTypeBuilder channelTypeBuilder = ChannelTypeBuilder
