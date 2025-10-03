@@ -37,6 +37,8 @@ import org.openhab.binding.smartthings.internal.handler.SmartthingsCloudBridgeHa
 import org.openhab.core.config.core.ConfigDescriptionBuilder;
 import org.openhab.core.config.core.ConfigDescriptionParameter;
 import org.openhab.core.config.core.ConfigDescriptionParameterGroup;
+import org.openhab.core.semantics.SemanticTag;
+import org.openhab.core.semantics.model.DefaultSemanticTags.Equipment;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingTypeUID;
 import org.openhab.core.thing.type.ChannelDefinition;
@@ -68,6 +70,7 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
 
     private final Logger logger = LoggerFactory.getLogger(SmartthingsTypeRegistryImpl.class);
 
+    private Hashtable<String, SemanticTag> sementicTags = new Hashtable<String, SemanticTag>();
     private @Nullable SmartthingsThingTypeProvider thingTypeProvider;
     private @Nullable SmartthingsChannelTypeProvider channelTypeProvider;
     private @Nullable SmartthingsChannelGroupTypeProvider channelGroupTypeProvider;
@@ -77,6 +80,20 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
     private Hashtable<String, SmartthingsCapability> capabilitiesDict = new Hashtable<String, SmartthingsCapability>();
 
     public SmartthingsTypeRegistryImpl() {
+        initSemanticTags();
+    }
+
+    public void initSemanticTags() {
+        sementicTags.put("light", Equipment.LIGHTBULB);
+        sementicTags.put("motionsensor", Equipment.MOTION_DETECTOR);
+        sementicTags.put("oven", Equipment.OVEN);
+        sementicTags.put("dishwasher", Equipment.DISHWASHER);
+        sementicTags.put("smartplug", Equipment.POWER_OUTLET);
+        sementicTags.put("leaksensor", Equipment.LEAK_SENSOR);
+
+        // @todo: review this one
+        sementicTags.put("hub", Equipment.NETWORK_APPLIANCE);
+        sementicTags.put("networking", Equipment.NETWORK_APPLIANCE);
     }
 
     @Override
@@ -472,11 +489,31 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
             groupDefinitions.add(new ChannelGroupDefinition(id, groupType.getUID()));
         }
 
-        return ThingTypeBuilder.instance(thingTypeUID, name).withSupportedBridgeTypeUIDs(supportedBridgeTypeUids)
-                .withLabel(label).withRepresentationProperty(Thing.PROPERTY_MODEL_ID)
-                .withConfigDescriptionURI(configDescriptionURI)
-                .withCategory(SmartthingsBindingConstants.CATEGORY_THING_SMARTTHINGS)
-                .withChannelGroupDefinitions(groupDefinitions).withProperties(properties).build();
+        ThingTypeBuilder builder = ThingTypeBuilder.instance(thingTypeUID, name);
+
+        builder = builder.withSupportedBridgeTypeUIDs(supportedBridgeTypeUids);
+        builder = builder.withLabel(label);
+        builder = builder.withRepresentationProperty(Thing.PROPERTY_MODEL_ID);
+        builder = builder.withConfigDescriptionURI(configDescriptionURI);
+        builder = builder.withCategory(SmartthingsBindingConstants.CATEGORY_THING_SMARTTHINGS);
+        builder = builder.withChannelGroupDefinitions(groupDefinitions);
+        builder = builder.withProperties(properties);
+
+        SemanticTag semanticTag = getThingSemanticType(device);
+        if (semanticTag != null) {
+            builder = builder.withSemanticEquipmentTag(semanticTag);
+        }
+
+        return builder.build();
+    }
+
+    public @Nullable SemanticTag getThingSemanticType(String deviceType) {
+        if (sementicTags.containsKey(deviceType)) {
+            return sementicTags.get(deviceType);
+        } else {
+            logger.info("@need review, missing semanticTag for deviceType:" + deviceType);
+        }
+        return null;
     }
 
     private URI getConfigDescriptionURI(String device) {
