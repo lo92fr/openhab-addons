@@ -46,21 +46,41 @@ public class SmartthingsBridgeChannelDefinitions {
     }
 
     public class ChannelProperty {
-        private String uOm;
+        private @Nullable String openhabChannelType;
+        private @Nullable String uOm;
         private @Nullable SemanticTag semanticPoint;
         private @Nullable SemanticTag semanticProperty;
 
-        public ChannelProperty(String uOm) {
+        public ChannelProperty(String openhabChannelType) {
+            this.openhabChannelType = openhabChannelType;
+            this.uOm = null;
+        }
+
+        public ChannelProperty(@Nullable String openhabChannelType, @Nullable String uOm) {
+            this.openhabChannelType = openhabChannelType;
             this.uOm = uOm;
         }
 
-        public ChannelProperty(String uOm, SemanticTag semanticPoint, SemanticTag semanticProperty) {
+        public ChannelProperty(@Nullable String openhabChannelType, @Nullable String uOm, SemanticTag semanticPoint,
+                SemanticTag semanticProperty) {
+            this.openhabChannelType = openhabChannelType;
             this.uOm = uOm;
             this.semanticPoint = semanticPoint;
             this.semanticProperty = semanticProperty;
         }
 
-        public String getUoM() {
+        public ChannelProperty(SemanticTag semanticPoint, SemanticTag semanticProperty) {
+            this.openhabChannelType = null;
+            this.uOm = null;
+            this.semanticPoint = semanticPoint;
+            this.semanticProperty = semanticProperty;
+        }
+
+        public @Nullable String getOpenhabChannelType() {
+            return this.openhabChannelType;
+        }
+
+        public @Nullable String getUoM() {
             return this.uOm;
         }
 
@@ -86,8 +106,43 @@ public class SmartthingsBridgeChannelDefinitions {
     }
 
     public SmartthingsBridgeChannelDefinitions() {
-        channelProperties.put("power", new ChannelProperty("Power", Point.MEASUREMENT, Property.POWER));
-        channelProperties.put("energy", new ChannelProperty("Energy", Point.MEASUREMENT, Property.ENERGY));
+        // powerMeter
+        channelProperties.put("powerMeter#power",
+                new ChannelProperty(null, "Power", Point.MEASUREMENT, Property.POWER));
+
+        // energyMeter
+        channelProperties.put("energyMeter#energy",
+                new ChannelProperty(null, "Energy", Point.MEASUREMENT, Property.ENERGY));
+
+        // waterSensor
+        channelProperties.put("waterSensor#water", new ChannelProperty(Point.MEASUREMENT, Property.HUMIDITY));
+
+        // battery
+        channelProperties.put("battery#battery",
+                new ChannelProperty(null, "Dimensionless", Point.STATUS, Property.LEVEL));
+
+        channelProperties.put("legendabsolute60149.signalMetrics#signalMetrics",
+                new ChannelProperty(null, "Percent", Point.MEASUREMENT, Property.SIGNAL_STRENGTH));
+
+        // switch
+        channelProperties.put("switch#switch",
+                new ChannelProperty(SmartthingsBindingConstants.TYPE_SWITCH, null, Point.SWITCH, Property.LIGHT));
+
+        // colorControl
+        channelProperties.put("colorControl#saturation",
+                new ChannelProperty(SmartthingsBindingConstants.TYPE_DIMMER, null, Point.CONTROL, Property.COLOR));
+        channelProperties.put("colorControl#hue",
+                new ChannelProperty(SmartthingsBindingConstants.TYPE_DIMMER, null, Point.CONTROL, Property.COLOR));
+        channelProperties.put("colorControl#color",
+                new ChannelProperty(SmartthingsBindingConstants.TYPE_COLOR, null, Point.CONTROL, Property.COLOR));
+
+        // colorTemperature
+        channelProperties.put("colorTemperature#colorTemperature", new ChannelProperty(
+                SmartthingsBindingConstants.TYPE_DIMMER, "Dimensionless", Point.CONTROL, Property.COLOR_TEMPERATURE));
+
+        // switchLevel
+        channelProperties.put("switchLevel#level", new ChannelProperty(SmartthingsBindingConstants.TYPE_DIMMER,
+                "Dimensionless", Point.CONTROL, Property.BRIGHTNESS));
 
         // base type
         channelTypes.put(SmartthingsBindingConstants.SM_TYPE_INTEGER, SmartthingsBindingConstants.TYPE_NUMBER);
