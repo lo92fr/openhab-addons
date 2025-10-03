@@ -61,15 +61,15 @@ public class SmartthingsBridgeChannelDefinitions {
             this.uOm = uOm;
         }
 
-        public ChannelProperty(@Nullable String openhabChannelType, @Nullable String uOm, SemanticTag semanticPoint,
-                SemanticTag semanticProperty) {
+        public ChannelProperty(@Nullable String openhabChannelType, @Nullable String uOm,
+                @Nullable SemanticTag semanticPoint, @Nullable SemanticTag semanticProperty) {
             this.openhabChannelType = openhabChannelType;
             this.uOm = uOm;
             this.semanticPoint = semanticPoint;
             this.semanticProperty = semanticProperty;
         }
 
-        public ChannelProperty(SemanticTag semanticPoint, SemanticTag semanticProperty) {
+        public ChannelProperty(@Nullable SemanticTag semanticPoint, @Nullable SemanticTag semanticProperty) {
             this.openhabChannelType = null;
             this.uOm = null;
             this.semanticPoint = semanticPoint;
@@ -130,15 +130,15 @@ public class SmartthingsBridgeChannelDefinitions {
 
         // colorControl
         channelProperties.put("colorControl#saturation",
-                new ChannelProperty(SmartthingsBindingConstants.TYPE_DIMMER, null, Point.CONTROL, Property.COLOR));
+                new ChannelProperty(SmartthingsBindingConstants.TYPE_NUMBER, null, Point.CONTROL, Property.COLOR));
         channelProperties.put("colorControl#hue",
-                new ChannelProperty(SmartthingsBindingConstants.TYPE_DIMMER, null, Point.CONTROL, Property.COLOR));
+                new ChannelProperty(SmartthingsBindingConstants.TYPE_NUMBER, null, Point.CONTROL, Property.COLOR));
         channelProperties.put("colorControl#color",
                 new ChannelProperty(SmartthingsBindingConstants.TYPE_COLOR, null, Point.CONTROL, Property.COLOR));
 
         // colorTemperature
-        channelProperties.put("colorTemperature#colorTemperature", new ChannelProperty(
-                SmartthingsBindingConstants.TYPE_DIMMER, "Dimensionless", Point.CONTROL, Property.COLOR_TEMPERATURE));
+        channelProperties.put("colorTemperature#colorTemperature",
+                new ChannelProperty(SmartthingsBindingConstants.TYPE_NUMBER, null, Point.CONTROL, null));
 
         // switchLevel
         channelProperties.put("switchLevel#level", new ChannelProperty(SmartthingsBindingConstants.TYPE_DIMMER,
