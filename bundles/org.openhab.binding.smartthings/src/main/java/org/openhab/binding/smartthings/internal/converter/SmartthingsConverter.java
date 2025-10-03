@@ -157,7 +157,6 @@ public abstract class SmartthingsConverter {
             } else {
                 acceptedChannelType = "";
             }
-
         }
 
         switch (acceptedChannelType) {

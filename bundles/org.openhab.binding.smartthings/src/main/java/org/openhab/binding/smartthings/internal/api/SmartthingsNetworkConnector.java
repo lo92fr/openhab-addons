@@ -18,6 +18,8 @@ import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.http.HttpMethod;
 import org.openhab.binding.smartthings.internal.type.SmartthingsException;
 
+import com.google.gson.Gson;
+
 /**
  * @author Laurent Arnal - Initial contribution
  */
@@ -38,4 +40,6 @@ public interface SmartthingsNetworkConnector {
     public void onComplete(Request request);
 
     public <T> void onError(Request request, SmartthingsNetworkCallback<T> cb) throws Exception;
+
+    public Gson getGson();
 }

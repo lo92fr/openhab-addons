@@ -51,7 +51,7 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
 
     private final Logger logger = LoggerFactory.getLogger(SmartthingsNetworkConnectorImpl.class);
 
-    private static final @NotNull Gson gSon;
+    private final @NotNull Gson gSon;
 
     protected final HttpClientFactory httpClientFactory;
 
@@ -62,13 +62,14 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
     private Lock lockObj = new ReentrantLock();
 
     static {
-        GsonBuilder builder = new GsonBuilder();
-        gSon = builder.setPrettyPrinting().create();
     }
 
     @Activate
     public SmartthingsNetworkConnectorImpl(HttpClientFactory httpClientFactory, OAuthClientService oAuthClientService) {
         this.httpClientFactory = httpClientFactory;
+
+        GsonBuilder builder = new GsonBuilder();
+        gSon = builder.setPrettyPrinting().create();
 
         SslContextFactory ctxFactory = new SslContextFactory.Client(true);
         ctxFactory.setRenegotiationAllowed(false);
@@ -225,16 +226,16 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
 
         if (response != null) {
             if (resultClass.isArray()) {
-                JsonObject obj = getGson().fromJson(response, JsonObject.class);
+                JsonObject obj = gSon.fromJson(response, JsonObject.class);
                 if (obj != null && obj.has("items")) {
-                    T resultObj = getGson().fromJson(obj.get("items"), resultClass);
+                    T resultObj = gSon.fromJson(obj.get("items"), resultClass);
                     return resultObj;
                 } else {
                     throw new SmartthingsException(
                             "Requesting a Array result object, but data does not contains array definition");
                 }
             } else {
-                T resultObj = getGson().fromJson(response, resultClass);
+                T resultObj = gSon.fromJson(response, resultClass);
                 return resultObj;
             }
         }
@@ -288,13 +289,9 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
         logger.debug("WaitNoNewRequest:end WaitAllStartingRequest");
     }
 
-    public static Gson getGson() {
+    @Override
+    public Gson getGson() {
         return gSon;
     }
 
-    /*
-     * public static Gson getGsonWithAdapter() {
-     * return gsonWithAdpter;
-     * }
-     */
 }

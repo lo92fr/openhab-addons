@@ -186,7 +186,7 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
 
                 openHabChannelType = getOpenhabChannelType(smartThingsType, capa, key, channelProp);
 
-                if (openHabChannelType.equals("")) {
+                if ("".equals(openHabChannelType)) {
                     logger.info("need review");
                 }
                 String label = capa.name;
@@ -511,7 +511,7 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
         if (sementicTags.containsKey(deviceType)) {
             return sementicTags.get(deviceType);
         } else {
-            logger.info("@need review, missing semanticTag for deviceType:" + deviceType);
+            logger.info("@need review, missing semanticTag for deviceType: {}", deviceType);
         }
         return null;
     }
