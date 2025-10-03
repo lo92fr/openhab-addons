@@ -246,6 +246,9 @@ public class SmartthingsThingHandler extends BaseThingHandler {
 
     public void testCommand() {
         Bridge bridge = getBridge();
+        if (bridge == null) {
+            return;
+        }
         SmartthingsCloudBridgeHandler cloudBridge = (SmartthingsCloudBridgeHandler) bridge.getHandler();
         if (cloudBridge == null) {
             return;
@@ -267,9 +270,7 @@ public class SmartthingsThingHandler extends BaseThingHandler {
         jsonMsg += "}";
 
         try {
-            if (deviceId != null) {
-                api.sendCommand(deviceId, jsonMsg);
-            }
+            api.sendCommand(deviceId, jsonMsg);
         } catch (SmartthingsException ex) {
             logger.error("exception: ", ex);
         }
