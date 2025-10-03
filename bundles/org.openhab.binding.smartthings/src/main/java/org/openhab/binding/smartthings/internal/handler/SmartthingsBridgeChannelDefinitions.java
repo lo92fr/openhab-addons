@@ -17,6 +17,9 @@ import java.util.Hashtable;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.smartthings.internal.SmartthingsBindingConstants;
+import org.openhab.core.semantics.SemanticTag;
+import org.openhab.core.semantics.model.DefaultSemanticTags.Point;
+import org.openhab.core.semantics.model.DefaultSemanticTags.Property;
 
 /**
  * Configuration data for Smartthings hub
@@ -28,7 +31,7 @@ public class SmartthingsBridgeChannelDefinitions {
     private static final SmartthingsBridgeChannelDefinitions INSTANCE = new SmartthingsBridgeChannelDefinitions();
 
     private final Hashtable<String, String> channelTypes = new Hashtable<String, String>();
-    private final Hashtable<String, String> channelUoM = new Hashtable<String, String>();
+    private final Hashtable<String, ChannelProperty> channelProperties = new Hashtable<String, ChannelProperty>();
 
     public static @Nullable String getChannelType(String key) {
         return SmartthingsBridgeChannelDefinitions.INSTANCE.getChannelTypeInternal(key);
@@ -42,21 +45,49 @@ public class SmartthingsBridgeChannelDefinitions {
         return null;
     }
 
-    public static @Nullable String getChannelUoM(String key) {
-        return SmartthingsBridgeChannelDefinitions.INSTANCE.getChannelUoMInternal(key);
+    public class ChannelProperty {
+        private String uOm;
+        private @Nullable SemanticTag semanticPoint;
+        private @Nullable SemanticTag semanticProperty;
+
+        public ChannelProperty(String uOm) {
+            this.uOm = uOm;
+        }
+
+        public ChannelProperty(String uOm, SemanticTag semanticPoint, SemanticTag semanticProperty) {
+            this.uOm = uOm;
+            this.semanticPoint = semanticPoint;
+            this.semanticProperty = semanticProperty;
+        }
+
+        public String getUoM() {
+            return this.uOm;
+        }
+
+        public @Nullable SemanticTag getSemanticPoint() {
+            return this.semanticPoint;
+        }
+
+        public @Nullable SemanticTag getSemanticProperty() {
+            return this.semanticProperty;
+        }
     }
 
-    private @Nullable String getChannelUoMInternal(String key) {
-        if (channelUoM.containsKey(key)) {
-            return channelUoM.get(key);
+    public static @Nullable ChannelProperty getChannelProperty(String key) {
+        return SmartthingsBridgeChannelDefinitions.INSTANCE.getChannelPropertyInternal(key);
+    }
+
+    private @Nullable ChannelProperty getChannelPropertyInternal(String key) {
+        if (channelProperties.containsKey(key)) {
+            return channelProperties.get(key);
         }
 
         return null;
     }
 
     public SmartthingsBridgeChannelDefinitions() {
-        channelUoM.put("power", "Power");
-        channelUoM.put("energy", "Energy");
+        channelProperties.put("power", new ChannelProperty("Power", Point.MEASUREMENT, Property.POWER));
+        channelProperties.put("energy", new ChannelProperty("Energy", Point.MEASUREMENT, Property.ENERGY));
 
         // base type
         channelTypes.put(SmartthingsBindingConstants.SM_TYPE_INTEGER, SmartthingsBindingConstants.TYPE_NUMBER);
