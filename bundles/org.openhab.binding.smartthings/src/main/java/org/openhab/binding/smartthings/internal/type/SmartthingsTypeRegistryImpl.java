@@ -369,7 +369,7 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
                                             cap.version);
                                     capa = api.getCapability(cap.id, cap.version, null);
                                     if (capa != null) {
-                                        logger.trace("capa is:" + gson.toJson(capa));
+                                        logger.trace("capa is: {}", gson.toJson(capa));
                                     }
                                     registerCapability(capa);
                                 } catch (SmartthingsException ex) {
