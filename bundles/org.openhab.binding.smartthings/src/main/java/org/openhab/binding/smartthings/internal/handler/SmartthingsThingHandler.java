@@ -160,7 +160,7 @@ public class SmartthingsThingHandler extends BaseThingHandler {
                 }
             }
         } catch (Exception ex) {
-            logger.error("Unable to refresh device: {}", ex.toString());
+            logger.error("Unable to refresh device: {} {}", this.getThing().getUID(), ex.toString(), ex);
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, ex.getMessage());
         }
     }
@@ -169,7 +169,6 @@ public class SmartthingsThingHandler extends BaseThingHandler {
         updateState(channelUid, state);
     }
 
-    // @todo: review this function, is this really the good thing we handle ?
     public void refreshDevice() {
         Bridge bridge = getBridge();
         if (bridge == null) {

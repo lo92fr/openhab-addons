@@ -61,9 +61,6 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
     private static int completedRequest = 0;
     private Lock lockObj = new ReentrantLock();
 
-    static {
-    }
-
     @Activate
     public SmartthingsNetworkConnectorImpl(HttpClientFactory httpClientFactory, OAuthClientService oAuthClientService) {
         this.httpClientFactory = httpClientFactory;
@@ -126,7 +123,7 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
                 // executeRequest(retryRequest, cb);
             }
         } catch (Exception ex) {
-            logger.error("exception");
+            logger.error("exception: {}", ex.toString(), ex);
             throw ex;
         }
     }
@@ -158,6 +155,7 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
                 request.send(requestListener);
             } else {
                 response = request.send();
+                logger.trace("request response: {}", response.getContentAsString());
             }
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
             throw new SmartthingsException(
