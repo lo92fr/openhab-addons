@@ -159,7 +159,7 @@ public class SmartthingsThingHandler extends BaseThingHandler {
                 }
             }
         } catch (Exception ex) {
-            logger.error("Unable to refresh device: {}", ex.toString());
+            logger.error("Unable to refresh device: {} {}", this.getThing().getUID(), ex.toString(), ex);
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, ex.getMessage());
         }
     }

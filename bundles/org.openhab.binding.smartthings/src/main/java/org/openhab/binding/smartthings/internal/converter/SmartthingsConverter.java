@@ -219,7 +219,8 @@ public abstract class SmartthingsConverter {
                 } else if (dataFromSmartthings instanceof String) {
                     return new StringType((String) dataFromSmartthings);
                 } else {
-                    logger.error("@todo : handle this case");
+                    logger.error("@todo : handle this case: {} inputClass: {}", channelUid,
+                            dataFromSmartthings.getClass());
                 }
 
             case SmartthingsBindingConstants.TYPE_SWITCH:
