@@ -169,7 +169,6 @@ public class SmartthingsThingHandler extends BaseThingHandler {
         updateState(channelUid, state);
     }
 
-    // @todo: review this function, is this really the good thing we handle ?
     public void refreshDevice() {
         Bridge bridge = getBridge();
         if (bridge == null) {
