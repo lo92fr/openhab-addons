@@ -60,6 +60,8 @@ import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.Gson;
+
 /**
  *
  * @author Laurent Arnal - Initial contribution
@@ -76,6 +78,7 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
     private @Nullable SmartthingsChannelGroupTypeProvider channelGroupTypeProvider;
     private @Nullable SmartthingsConfigDescriptionProvider configDescriptionProvider;
     private @Nullable SmartthingsCloudBridgeHandler bridgeHandler;
+    private Gson gson = new Gson();
 
     private Hashtable<String, SmartthingsCapability> capabilitiesDict = new Hashtable<String, SmartthingsCapability>();
 
@@ -321,6 +324,7 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
     @Override
     public void register(String deviceType, SmartthingsDevice device) {
         try {
+            logger.trace("registerDeviceType: {} {}", deviceType, gson.toJson(device));
             generateThingsType(device.deviceId, device.label, deviceType, device);
         } catch (Exception ex) {
             logger.info("wrong: {}", ex.toString());
@@ -361,10 +365,15 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
                             if (bridgeHandler != null) {
                                 SmartthingsApi api = bridgeHandler.getSmartthingsApi();
                                 try {
-                                    capa = api.getCapability(cap.id, "1", null);
+                                    logger.trace("Need capability not registered in cache: id:{} version:{}", cap.id,
+                                            cap.version);
+                                    capa = api.getCapability(cap.id, cap.version, null);
+                                    if (capa != null) {
+                                        logger.trace("capa is:" + gson.toJson(capa));
+                                    }
                                     registerCapability(capa);
                                 } catch (SmartthingsException ex) {
-                                    // @todo: handle this exception
+                                    logger.error("Exception during capa reading:{}", ex.toString(), ex);
 
                                 }
                             }

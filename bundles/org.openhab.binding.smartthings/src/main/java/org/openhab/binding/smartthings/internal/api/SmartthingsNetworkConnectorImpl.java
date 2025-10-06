@@ -158,6 +158,7 @@ public class SmartthingsNetworkConnectorImpl implements SmartthingsNetworkConnec
                 request.send(requestListener);
             } else {
                 response = request.send();
+                logger.trace("request response: {}", response.getContentAsString());
             }
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
             throw new SmartthingsException(
