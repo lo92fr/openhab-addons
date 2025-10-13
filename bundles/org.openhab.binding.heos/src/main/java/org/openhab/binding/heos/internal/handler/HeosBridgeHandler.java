@@ -101,8 +101,6 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
 
     private static final int HEOS_PORT = 1255;
 
-    private final Logger logger = LoggerFactory.getLogger(HeosBridgeHandler.class);
-
     private final Set<HeosMediaEventListener> heosMediaEventListeners = new CopyOnWriteArraySet<>();
     private final List<HeosPlayerDiscoveryListener> playerDiscoveryList = new CopyOnWriteArrayList<>();
     private final HeosChannelManager channelManager = new HeosChannelManager(this);
