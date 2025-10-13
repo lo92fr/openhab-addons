@@ -182,6 +182,11 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
 
     }
 
+    @Override
+    public String getStreamUri(String cmdVal) {
+        return "";
+    }
+
     public MediaService getMediaService() {
         return mediaService;
     }
