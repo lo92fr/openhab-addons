@@ -14,6 +14,8 @@ package org.openhab.binding.heos.internal.json.payload;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -24,6 +26,7 @@ import com.google.gson.annotations.SerializedName;
  */
 @NonNullByDefault
 public class BrowseResult {
+    private static final Logger logger = LoggerFactory.getLogger(BrowseResult.class);
     public @Nullable YesNoEnum container;
     @SerializedName("mid")
     public @Nullable String mediaId;
@@ -33,7 +36,7 @@ public class BrowseResult {
     public @Nullable String containerId;
     public @Nullable String name;
     @SerializedName("image_url")
-    public @Nullable String imageUrl;
+    private @Nullable String imageUrl;
     @SerializedName("sid")
     public @Nullable String sid;
 
@@ -44,5 +47,37 @@ public class BrowseResult {
         return "BrowseResult{" + "container=" + container + ", mediaId='" + mediaId + '\'' + ", playable=" + playable
                 + ", type=" + type + ", containerId='" + containerId + '\'' + ", sid='" + sid + '\'' + ", name='" + name
                 + '\'' + ", imageUrl='" + imageUrl + '\'' + '}';
+    }
+
+    public String getImageUrl() {
+        if (name.equals("TuneIn")) {
+            return "/static/TuneIn.png";
+        } else if (name.equals("Deezer")) {
+            return "/static/Deezer.png";
+        } else if (name.equals("Tidal")) {
+            return "/static/Tidal.png";
+        } else if (name.equals("Amazon")) {
+            return "/static/Amazon.png";
+        } else if (name.equals("SoundCloud")) {
+            return "/static/SoundCloud.png";
+        } else if (name.equals("Qobuz")) {
+            return "/static/Qobuz.png";
+        } else if (name.equals("Local Music")) {
+            return "/static/LocalMusic.png";
+        } else if (name.equals("Playlists")) {
+            return "/static/playlist.png";
+        } else if (name.equals("History")) {
+            return "/static/History.png";
+        } else if (name.equals("Favorites")) {
+            return "/static/Favorites.png";
+        } else if (name.equals("AUX Input")) {
+            return "/static/AuxInput.png";
+        } else {
+            logger.info("name:" + name);
+        }
+        if (imageUrl != null) {
+            return imageUrl;
+        }
+        return "";
     }
 }

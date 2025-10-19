@@ -291,7 +291,7 @@ public class HeosJsonParserResponseTest {
         assertEquals(YesNoEnum.YES, result.playable);
         assertEquals("194001", result.containerId);
         assertEquals("Clean Bandit", result.name);
-        assertEquals("", result.imageUrl);
+        assertEquals("", result.getImageUrl());
     }
 
     @Test
@@ -325,7 +325,7 @@ public class HeosJsonParserResponseTest {
         assertEquals(BrowseResultType.STATION, result.type);
         assertEquals(YesNoEnum.YES, result.playable);
         assertEquals("NPO 3FM 96.8 (Top 40 %26 Pop Music)", result.name);
-        assertEquals("http://cdn-profiles.tunein.com/s6707/images/logoq.png?t=636268", result.imageUrl);
+        assertEquals("http://cdn-profiles.tunein.com/s6707/images/logoq.png?t=636268", result.getImageUrl());
 
         // TODO validate options
     }

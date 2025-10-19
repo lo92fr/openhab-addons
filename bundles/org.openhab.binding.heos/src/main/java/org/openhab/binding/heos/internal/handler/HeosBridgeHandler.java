@@ -200,7 +200,7 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
                     for (BrowseResult result : results) {
                         String sid = result.sid == null ? "" : result.sid;
                         String name = result.name == null ? "" : result.name;
-                        String imageUrl = result.imageUrl == null ? "" : result.imageUrl;
+                        String imageUrl = result.getImageUrl() == null ? "" : result.getImageUrl();
 
                         mediaEntry.registerEntry(sid, () -> {
                             return new MediaSource(sid, name, imageUrl);
@@ -216,7 +216,7 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
                         String mediaId = result.mediaId == null ? "" : result.mediaId;
                         String name = result.name == null ? "" : result.name;
 
-                        String rawImageUrl = result.imageUrl == null ? "" : result.imageUrl;
+                        String rawImageUrl = result.getImageUrl() == null ? "" : result.getImageUrl();
                         rawImageUrl = resolveImageUrl(rawImageUrl, result.type, name);
 
                         String imageUrl = rawImageUrl;
@@ -284,7 +284,7 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
                             rawKey = rawKey.startsWith("/") ? rawKey.substring(1) : rawKey;
 
                             String name = result.name == null ? "" : result.name;
-                            String rawImageUrl = result.imageUrl == null ? "" : result.imageUrl;
+                            String rawImageUrl = result.getImageUrl() == null ? "" : result.getImageUrl();
                             rawImageUrl = resolveImageUrl(rawImageUrl, result.type, name);
 
                             String imageUrl = rawImageUrl;
