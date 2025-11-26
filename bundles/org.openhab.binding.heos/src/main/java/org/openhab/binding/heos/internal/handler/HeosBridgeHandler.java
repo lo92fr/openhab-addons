@@ -60,16 +60,16 @@ import org.openhab.binding.heos.internal.resources.Telnet;
 import org.openhab.binding.heos.internal.resources.Telnet.ReadException;
 import org.openhab.core.library.CoreItemFactory;
 import org.openhab.core.library.types.OnOffType;
-import org.openhab.core.media.MediaDevice;
 import org.openhab.core.media.MediaListenner;
 import org.openhab.core.media.MediaService;
+import org.openhab.core.media.MediaSink;
 import org.openhab.core.media.model.MediaAlbum;
 import org.openhab.core.media.model.MediaArtist;
 import org.openhab.core.media.model.MediaCollection;
+import org.openhab.core.media.model.MediaCollectionSource;
 import org.openhab.core.media.model.MediaEntry;
 import org.openhab.core.media.model.MediaPlayList;
 import org.openhab.core.media.model.MediaRegistry;
-import org.openhab.core.media.model.MediaSource;
 import org.openhab.core.media.model.MediaTrack;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Channel;
@@ -174,7 +174,7 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
         MediaRegistry mediaRegistry = mediaService.getMediaRegistry();
 
         mediaRegistry.registerEntry(HeosBindingConstants.BINDING_ID, () -> {
-            return new MediaSource(HeosBindingConstants.BINDING_ID, HeosBindingConstants.BINDING_LABEL,
+            return new MediaCollectionSource(HeosBindingConstants.BINDING_ID, HeosBindingConstants.BINDING_LABEL,
                     "/static/Heos.png");
         });
 
@@ -203,11 +203,11 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
                         String imageUrl = result.getImageUrl() == null ? "" : result.getImageUrl();
 
                         mediaEntry.registerEntry(sid, () -> {
-                            return new MediaSource(sid, name, imageUrl);
+                            return new MediaCollectionSource(sid, name, imageUrl);
                         });
                     }
-                } else if (mediaEntry instanceof MediaSource) {
-                    MediaSource mediaSource = (MediaSource) mediaEntry;
+                } else if (mediaEntry instanceof MediaCollectionSource) {
+                    MediaCollectionSource mediaSource = (MediaCollectionSource) mediaEntry;
                     List<BrowseResult> results = lcApiConnection.getBrowseResults(mediaSource.getKey());
 
                     for (BrowseResult result : results) {
@@ -235,7 +235,7 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
                         String key = rawKey;
                         mediaEntry.registerEntry(key, () -> {
                             if (!sid.isEmpty()) {
-                                return new MediaSource(key, name, imageUrl);
+                                return new MediaCollectionSource(key, name, imageUrl);
                             } else {
 
                                 return new MediaCollection(key, name, imageUrl);
@@ -245,7 +245,7 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
                 } else if (mediaEntry instanceof MediaCollection) {
                     MediaCollection mediaCollection = (MediaCollection) mediaEntry;
 
-                    MediaSource mediaSource = mediaCollection.getMediaSource(true);
+                    MediaCollectionSource mediaSource = mediaCollection.getMediaCollectionSource(true);
 
                     if (mediaSource != null) {
                         String sourceKey = mediaSource.getKey();
@@ -426,8 +426,8 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
                     Set<String> target = handler instanceof HeosPlayerHandler ? players : groups;
                     String id = heosHandler.getId();
 
-                    mediaService.registerDevice(new MediaDevice(id, "" + handler.getThing().getLabel(), "",
-                            HeosBindingConstants.BINDING_ID));
+                    mediaService.registerDevice(
+                            new MediaSink(id, "" + handler.getThing().getLabel(), "", HeosBindingConstants.BINDING_ID));
 
                     if (target.contains(id)) {
                         heosHandler.setStatusOnline();
