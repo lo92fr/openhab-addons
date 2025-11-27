@@ -62,11 +62,10 @@ import org.openhab.core.library.CoreItemFactory;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.media.MediaListenner;
 import org.openhab.core.media.MediaService;
-import org.openhab.core.media.MediaSink;
 import org.openhab.core.media.model.MediaAlbum;
 import org.openhab.core.media.model.MediaArtist;
 import org.openhab.core.media.model.MediaCollection;
-import org.openhab.core.media.model.MediaCollectionSource;
+import org.openhab.core.media.model.MediaEntrySupplier;
 import org.openhab.core.media.model.MediaEntry;
 import org.openhab.core.media.model.MediaPlayList;
 import org.openhab.core.media.model.MediaRegistry;
@@ -174,7 +173,7 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
         MediaRegistry mediaRegistry = mediaService.getMediaRegistry();
 
         mediaRegistry.registerEntry(HeosBindingConstants.BINDING_ID, () -> {
-            return new MediaCollectionSource(HeosBindingConstants.BINDING_ID, HeosBindingConstants.BINDING_LABEL,
+            return new MediaEntrySupplier(HeosBindingConstants.BINDING_ID, HeosBindingConstants.BINDING_LABEL,
                     "/static/Heos.png");
         });
 
@@ -203,11 +202,11 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
                         String imageUrl = result.getImageUrl() == null ? "" : result.getImageUrl();
 
                         mediaEntry.registerEntry(sid, () -> {
-                            return new MediaCollectionSource(sid, name, imageUrl);
+                            return new MediaEntrySupplier(sid, name, imageUrl);
                         });
                     }
-                } else if (mediaEntry instanceof MediaCollectionSource) {
-                    MediaCollectionSource mediaSource = (MediaCollectionSource) mediaEntry;
+                } else if (mediaEntry instanceof MediaEntrySupplier) {
+                    MediaEntrySupplier mediaSource = (MediaEntrySupplier) mediaEntry;
                     List<BrowseResult> results = lcApiConnection.getBrowseResults(mediaSource.getKey());
 
                     for (BrowseResult result : results) {
@@ -235,7 +234,7 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
                         String key = rawKey;
                         mediaEntry.registerEntry(key, () -> {
                             if (!sid.isEmpty()) {
-                                return new MediaCollectionSource(key, name, imageUrl);
+                                return new MediaEntrySupplier(key, name, imageUrl);
                             } else {
 
                                 return new MediaCollection(key, name, imageUrl);
@@ -245,7 +244,7 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
                 } else if (mediaEntry instanceof MediaCollection) {
                     MediaCollection mediaCollection = (MediaCollection) mediaEntry;
 
-                    MediaCollectionSource mediaSource = mediaCollection.getMediaCollectionSource(true);
+                    MediaEntrySupplier mediaSource = mediaCollection.getMediaCollectionSource(true);
 
                     if (mediaSource != null) {
                         String sourceKey = mediaSource.getKey();
@@ -425,9 +424,6 @@ public class HeosBridgeHandler extends BaseBridgeHandler implements HeosEventLis
                 if (handler instanceof HeosThingBaseHandler heosHandler) {
                     Set<String> target = handler instanceof HeosPlayerHandler ? players : groups;
                     String id = heosHandler.getId();
-
-                    mediaService.registerDevice(
-                            new MediaSink(id, "" + handler.getThing().getLabel(), "", HeosBindingConstants.BINDING_ID));
 
                     if (target.contains(id)) {
                         heosHandler.setStatusOnline();

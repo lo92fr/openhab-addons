@@ -28,7 +28,7 @@ import org.openhab.binding.heos.internal.resources.Telnet.ReadException;
 import org.openhab.core.library.types.MediaCommandEnumType;
 import org.openhab.core.library.types.MediaCommandType;
 import org.openhab.core.media.MediaService;
-import org.openhab.core.media.model.MediaCollectionSource;
+import org.openhab.core.media.model.MediaEntrySupplier;
 import org.openhab.core.media.model.MediaEntry;
 import org.openhab.core.media.model.MediaRegistry;
 import org.openhab.core.thing.ThingUID;
@@ -94,7 +94,7 @@ public class HeosChannelHandlerControl extends BaseHeosChannelHandler implements
 
                 String cid = parentEntry.getSubPath();
                 String mid = mediaEntry.getSubPath();
-                MediaCollectionSource mediaSource = mediaEntry.getMediaCollectionSource(true);
+                MediaEntrySupplier mediaSource = mediaEntry.getMediaCollectionSource(true);
                 String mediaSourceKey = mediaSource.getKey();
 
                 if (mediaSourceKey.equals("10")) {

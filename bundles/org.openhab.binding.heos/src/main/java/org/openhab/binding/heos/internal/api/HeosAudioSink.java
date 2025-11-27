@@ -19,6 +19,7 @@ import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.heos.internal.HeosBindingConstants;
 import org.openhab.binding.heos.internal.handler.HeosThingBaseHandler;
 import org.openhab.binding.heos.internal.resources.Telnet.ReadException;
 import org.openhab.core.audio.AudioFormat;
@@ -68,6 +69,21 @@ public class HeosAudioSink extends AudioSinkAsync {
     @Override
     public @Nullable String getLabel(@Nullable Locale locale) {
         return handler.getThing().getLabel();
+    }
+
+    @Override
+    public String getName() {
+        return handler.getThing().getUID().getId();
+    }
+
+    @Override
+    public String getBinding() {
+        return HeosBindingConstants.BINDING_ID;
+    }
+
+    @Override
+    public String getType() {
+        return "";
     }
 
     @Override
