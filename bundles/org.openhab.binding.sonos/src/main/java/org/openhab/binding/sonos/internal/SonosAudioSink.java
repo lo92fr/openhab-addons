@@ -74,6 +74,21 @@ public class SonosAudioSink extends AudioSinkSync {
     }
 
     @Override
+    public String getName() {
+        return handler.getThing().getUID().getId();
+    }
+
+    @Override
+    public String getBinding() {
+        return SonosBindingConstants.BINDING_ID;
+    }
+
+    @Override
+    public String getType() {
+        return "";
+    }
+
+    @Override
     public CompletableFuture<@Nullable Void> processAndComplete(@Nullable AudioStream audioStream) {
         if (audioStream instanceof URLAudioStream) {
             // Asynchronous handling for URLAudioStream
