@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<thing:thing-descriptions bindingId="audio"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+
+	<!-- Thing Types -->
+	<thing-type id="internalaudio">
+		<label>Internal Audio</label>
+		<description>Internal Audio</description>
+		<semantic-equipment-tag>MediaPlayer</semantic-equipment-tag>
+		<channels>
+			<channel id="volume" typeId="system.volume"/>
+			<channel id="mute" typeId="system.mute"/>
+
+			<channel id="control" typeId="system.media-control"/>
+			<channel id="stop" typeId="stop"/>
+
+			<channel id="uri" typeId="uri"/>
+			<channel id="title" typeId="system.media-title"/>
+			<channel id="album" typeId="album"/>
+			<channel id="albumart" typeId="albumart"/>
+			<channel id="artist" typeId="system.media-artist"/>
+		</channels>
+		<config-description>
+		</config-description>
+	</thing-type>
+	
+		<thing-type id="webaudio">
+		<label>Web Audio</label>
+		<description>Web Audio</description>
+		<semantic-equipment-tag>MediaPlayer</semantic-equipment-tag>
+		<channels>
+			<channel id="volume" typeId="system.volume"/>
+			<channel id="mute" typeId="system.mute"/>
+
+			<channel id="control" typeId="system.media-control"/>
+			<channel id="stop" typeId="stop"/>
+
+			<channel id="uri" typeId="uri"/>
+			<channel id="title" typeId="system.media-title"/>
+			<channel id="album" typeId="album"/>
+			<channel id="albumart" typeId="albumart"/>
+			<channel id="artist" typeId="system.media-artist"/>
+		</channels>
+		<config-description>
+		</config-description>
+	</thing-type>
+
+
+
+	<channel-type id="stop">
+		<item-type>Switch</item-type>
+		<label>Stop</label>
+		<description>Stop the player</description>
+		<tags>
+			<tag>Switch</tag>
+			<tag>MediaControl</tag>
+		</tags>
+		<autoUpdatePolicy>veto</autoUpdatePolicy>
+	</channel-type>
+	<channel-type id="uri">
+		<item-type>String</item-type>
+		<label>URI</label>
+		<description>Now playing URI</description>
+		<tags>
+			<tag>Status</tag>
+			<tag>Info</tag>
+		</tags>
+	</channel-type>
+	<channel-type id="album">
+		<item-type>String</item-type>
+		<label>Album</label>
+		<description>Now playing album</description>
+		<tags>
+			<tag>Status</tag>
+			<tag>Info</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="albumart">
+		<item-type>Image</item-type>
+		<label>Album Art</label>
+		<description>Now playing album art</description>
+		<tags>
+			<tag>Status</tag>
+			<tag>Info</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+</thing:thing-descriptions>
