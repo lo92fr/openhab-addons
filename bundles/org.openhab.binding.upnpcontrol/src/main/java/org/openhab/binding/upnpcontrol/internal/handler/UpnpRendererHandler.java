@@ -817,7 +817,9 @@ public class UpnpRendererHandler extends UpnpHandler {
                     || mediaTypeCommand == MediaCommandEnumType.ENQUEUE) {
                 if (val.contains("/Root/upnpcontrol")) {
                     int idx = val.indexOf("/l");
-                    val = val.substring(idx);
+                    if (idx >= 0) {
+                        val = val.substring(idx);
+                    }
 
                     if (serverHandlers.isEmpty()) {
                         setUpnpRenderer(mediaType.getParam().toFullString());
