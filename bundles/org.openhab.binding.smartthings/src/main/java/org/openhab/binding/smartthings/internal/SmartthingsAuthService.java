@@ -33,7 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The {@link SpotifyAuthService} class to manage the servlets and bind authorization servlet to bridges.
+ * The {@link SmartthingsAuthService} class to manage the servlets and bind authorization servlet to bridges.
  *
  * @author Laurent Arnal - Initial contribution
  */
@@ -44,8 +44,6 @@ public class SmartthingsAuthService {
     private static final String ERROR_UKNOWN_BRIDGE = "Returned 'state' by doesn't match any Bridges. Has the bridge been removed?";
 
     private final Logger logger = LoggerFactory.getLogger(SmartthingsAuthService.class);
-
-    // private final List<SpotifyAccountHandler> handlers = new ArrayList<>();
 
     private @NonNullByDefault({}) HttpService httpService;
     private @Nullable SmartthingsAccountHandler accountHandler;
@@ -65,7 +63,7 @@ public class SmartthingsAuthService {
     }
 
     /**
-     * Creates a new {@link SpotifyAuthServlet}.
+     * Creates a new {@link SmartthingsAuthServlet}.
      *
      * @return the newly created servlet
      */
@@ -78,7 +76,7 @@ public class SmartthingsAuthService {
                     SmartthingsBindingConstants.SMARTTHINGS_ALIAS + SmartthingsBindingConstants.SMARTTHINGS_IMG_ALIAS,
                     "web", null);
         } catch (Exception e) {
-            logger.warn("Error during spotify servlet startup", e);
+            logger.warn("Error during smartthings servlet startup", e);
         }
     }
 

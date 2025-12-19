@@ -48,7 +48,7 @@ public class SmartthingsBindingConstants {
                     "x:locations:*", "r:scenes:*", "x:scenes:*", "r:rules:*", "w:rules:*")
             .collect(Collectors.joining(" "));
 
-    // List of Spotify services related urls, information
+    // List of Smartthings services related urls, information
     public static final String SMARTTHINGS_ACCOUNT_URL = "https://api.smartthings.com/oauth";
     public static final String SMARTTHINGS_AUTHORIZE_URL = SMARTTHINGS_ACCOUNT_URL + "/authorize";
     public static final String SMARTTHINGS_API_TOKEN_URL = SMARTTHINGS_ACCOUNT_URL + "/token";
