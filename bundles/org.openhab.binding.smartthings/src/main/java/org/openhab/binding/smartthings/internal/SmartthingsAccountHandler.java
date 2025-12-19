@@ -17,7 +17,7 @@ import org.openhab.binding.smartthings.internal.type.SmartthingsException;
 import org.openhab.core.thing.binding.ThingHandler;
 
 /**
- * Interface to decouple Spotify Bridge Handler implementation from other code.
+ * Interface to decouple SmartthingAuthHandler Bridge Handler implementation from other code.
  *
  * @author Laurent Arnal - Initial contribution
  */
@@ -25,7 +25,7 @@ import org.openhab.core.thing.binding.ThingHandler;
 public interface SmartthingsAccountHandler extends ThingHandler {
 
     /**
-     * @return Returns true if the Spotify Bridge is authorized.
+     * @return Returns true if the Smartthings Bridge is authorized.
      */
     boolean isAuthorized();
 
