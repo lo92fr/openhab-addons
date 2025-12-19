@@ -13,6 +13,7 @@
 package org.openhab.binding.smartthings.internal.converter;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
@@ -38,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
+import com.google.gson.internal.LinkedTreeMap;
 
 /**
  * Base converter class.
@@ -218,6 +220,33 @@ public abstract class SmartthingsConverter {
                     return new StringType(((Double) dataFromSmartthings).toString());
                 } else if (dataFromSmartthings instanceof String) {
                     return new StringType((String) dataFromSmartthings);
+                } else if (dataFromSmartthings instanceof ArrayList array) {
+                    StringBuffer result = new StringBuffer();
+                    for (Object val : array) {
+                        if (val instanceof String st) {
+                            result.append(val);
+                            result.append(", ");
+                        } else {
+                            logger.error("@todo : handle this case: {} inputClass: {}", channelUid,
+                                    dataFromSmartthings.getClass());
+
+                        }
+                    }
+
+                    String resultSt = result.toString();
+                    return new StringType(resultSt);
+
+                } else if (dataFromSmartthings instanceof LinkedTreeMap map) {
+
+                    String resultSt = gson.toJson(map).toString();
+                    // if (map.keySet().contains("deltaEnergy")) {
+                    // SmartthingsTestType ttype = new SmartthingsTestType();
+                    // ttype.setEnergy(new BigDecimal(100));
+                    // ttype.setDeltaEnergy(new BigDecimal(10));
+                    // return ttype;
+                    // }
+                    return new StringType(resultSt);
+
                 } else {
                     logger.error("@todo : handle this case: {} inputClass: {}", channelUid,
                             dataFromSmartthings.getClass());
