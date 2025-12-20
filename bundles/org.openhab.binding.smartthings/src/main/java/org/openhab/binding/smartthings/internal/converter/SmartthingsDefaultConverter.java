@@ -13,6 +13,7 @@
 package org.openhab.binding.smartthings.internal.converter;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Stack;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -40,6 +41,7 @@ import org.openhab.core.library.types.UpDownType;
 import org.openhab.core.thing.Channel;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
+import org.openhab.core.thing.ThingTypeUID;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.RefreshType;
 import org.openhab.core.types.State;
@@ -68,9 +70,8 @@ public class SmartthingsDefaultConverter extends SmartthingsConverter {
         super(typeRegistry);
     }
 
-    @Override
-    public void convertToSmartthingsInternal(Thing thing, ChannelUID channelUid, Command command) {
-        Object value;
+    private Object getValue(Command command, ThingTypeUID thingUid, String channelId) {
+        Object value = null;
 
         if (command instanceof DateTimeType dateTimeCommand) {
             value = dateTimeCommand.format("%m/%d/%Y %H.%M.%S");
@@ -93,7 +94,7 @@ public class SmartthingsDefaultConverter extends SmartthingsConverter {
         } else if (command instanceof PointType) {
             logger.warn(
                     "Warning - PointType Command is not supported by Smartthings. Please configure to use a different command type. CapabilityKey: {}, capabilityAttribute {}",
-                    thing.getThingTypeUID(), channelUid.getId());
+                    thingUid, channelId);
             value = command.toFullString();
         } else if (command instanceof RefreshType) {
             value = command.toString().toLowerCase();
@@ -117,9 +118,16 @@ public class SmartthingsDefaultConverter extends SmartthingsConverter {
         } else {
             logger.warn(
                     "Warning - The Smartthings converter does not know how to handle the {} command. The Smartthingsonverter class should be updated.  CapabilityKey: {},  capabilityAttribute {}",
-                    command.getClass().getName(), thing.getThingTypeUID(), channelUid.getId());
+                    command.getClass().getName(), thingUid, channelId);
             value = command.toString().toLowerCase();
         }
+
+        return Objects.requireNonNull(value);
+    }
+
+    @Override
+    public void convertToSmartthingsInternal(Thing thing, ChannelUID channelUid, Command command) {
+        Object value = getValue(command, thing.getThingTypeUID(), channelUid.getId());
 
         Channel channel = thing.getChannel(channelUid);
         if (channel == null) {
@@ -164,6 +172,7 @@ public class SmartthingsDefaultConverter extends SmartthingsConverter {
                         if (arg.optional) {
                             continue;
                         }
+
                         stack.push(value);
                     }
                     arguments = stack.toArray();
