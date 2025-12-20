@@ -54,7 +54,7 @@ public abstract class SmartthingsConverter {
     private final Logger logger = LoggerFactory.getLogger(SmartthingsConverter.class);
 
     protected SmartthingsTypeRegistry typeRegistry;
-    private Gson gson = new Gson();
+    protected Gson gson = new Gson();
 
     SmartthingsConverter(SmartthingsTypeRegistry typeRegistry) {
         this.typeRegistry = typeRegistry;
@@ -126,6 +126,7 @@ public abstract class SmartthingsConverter {
 
     private String getJSonCommands() {
         String result = gson.toJson(smartthingsActions);
+        result = result.replace("\\u003d", "=");
         smartthingsActions.commands.clear();
         return result;
     }
