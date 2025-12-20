@@ -129,6 +129,8 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
 
             LifeCycle resultObj = gson.fromJson(s, LifeCycle.class);
 
+            logger.trace("Callback called with lifeCycle: {}", resultObj.lifecycle);
+
             // ========================================
             // Event from webhook CB
             // ========================================
@@ -139,6 +141,10 @@ public class SmartthingsServlet extends SmartthingsBaseServlet {
                 String capa = data.events[0].deviceEvent.capability;
                 String attr = data.events[0].deviceEvent.attribute;
                 String value = data.events[0].deviceEvent.value;
+
+                logger.trace(
+                        "Callback called with lifeCycle (Event): deviceId : {}, componentId: {}, capa: {}, attr: {}, value:{} ",
+                        deviceId, componentId, capa, attr, value);
 
                 Bridge bridge = bridgeHandler.getThing();
                 List<Thing> things = bridge.getThings();
