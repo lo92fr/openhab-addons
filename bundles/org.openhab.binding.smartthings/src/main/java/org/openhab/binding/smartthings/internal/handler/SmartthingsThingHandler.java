@@ -124,6 +124,8 @@ public class SmartthingsThingHandler extends BaseThingHandler {
 
     public void refreshDevice(String deviceType, String componentId, String capa, String attr, Object value) {
         try {
+            logger.trace("refreshDevice called: deviceType:{} componentId: {} capa: {} attr :{} value: {}", deviceType,
+                    componentId, capa, attr, value);
             String namespace = "";
             String capaKey = capa;
             if (capa.contains(".")) {
@@ -147,6 +149,8 @@ public class SmartthingsThingHandler extends BaseThingHandler {
 
             ChannelUID channelUID = new ChannelUID(this.getThing().getUID(), groupId, channelName);
 
+            logger.trace("refreshDevice called: channelName:{}", channelName);
+
             // channelUID
             SmartthingsConverter converter = SmartthingsConverterFactory.getConverter(channelUID.getIdWithoutGroup());
             SmartthingsStateHandler stateHandler = SmartthingsStateHandlerFactory.getStateHandler(deviceType);
@@ -156,6 +160,7 @@ public class SmartthingsThingHandler extends BaseThingHandler {
                 updateState(channelUID, state);
 
                 if (stateHandler != null) {
+                    logger.trace("refreshDevice called: stateHandler:{}", stateHandler);
                     stateHandler.handleStateChange(channelUID, deviceType, componentId, state, this);
                 }
             }
@@ -170,6 +175,7 @@ public class SmartthingsThingHandler extends BaseThingHandler {
     }
 
     public void refreshDevice() {
+        logger.trace("refreh Device called");
         Bridge bridge = getBridge();
         if (bridge == null) {
             return;
@@ -184,9 +190,13 @@ public class SmartthingsThingHandler extends BaseThingHandler {
 
         String deviceId = properties.get("deviceId");
 
+        logger.trace("refrehDevice for deviceId: {}", deviceId);
+
         if (deviceId != null) {
             try {
                 SmartthingsStatus status = api.getStatus(deviceId);
+
+                logger.trace("refrehDevice for deviceId: status : {}", status);
 
                 if (status != null) {
                     for (String componentKey : status.components.keySet()) {
@@ -204,6 +214,8 @@ public class SmartthingsThingHandler extends BaseThingHandler {
                                             Object value = props.value;
 
                                             if (value != null) {
+                                                logger.trace("refrehDevice for deviceId: value : {}", value);
+
                                                 refreshDevice(thing.getThingTypeUID().getId(), componentKey, capaKey,
                                                         propertyKey, value);
                                             }
