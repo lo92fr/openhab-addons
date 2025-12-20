@@ -247,7 +247,7 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
         }
 
         if (unit != null) {
-            stateFragment = stateFragment.withPattern("%d " + unit.defaultUnit);
+            stateFragment = stateFragment.withPattern("%d " + unit.defaultObj);
             if (unit.minimum != 0) {
                 stateFragment = stateFragment.withMinimum(new BigDecimal(unit.minimum));
             }
@@ -376,9 +376,7 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
                                     logger.trace("Need capability not registered in cache: id:{} version:{}", cap.id,
                                             cap.version);
                                     capa = api.getCapability(cap.id, cap.version, null);
-                                    if (capa != null) {
-                                        logger.trace("capa is: {}", gson.toJson(capa));
-                                    }
+                                    logger.trace("capa is: {}", gson.toJson(capa));
                                     registerCapability(capa);
                                 } catch (SmartthingsException ex) {
                                     logger.error("Exception during capa reading:{}", ex.toString(), ex);
@@ -414,6 +412,8 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
             capaKey = idComponents[1];
         }
 
+        String componentId = UidUtils.sanetizeId(component.id);
+
         for (String attrKey : capa.attributes.keySet()) {
             if (attrKey.indexOf("Range") >= 0) {
                 continue;
@@ -438,7 +438,7 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
                 logger.warn("Can't find channelType for {}", channelTypeUID);
             }
 
-            props.put(SmartthingsBindingConstants.COMPONENT, component.id);
+            props.put(SmartthingsBindingConstants.COMPONENT, componentId);
             props.put(SmartthingsBindingConstants.CAPABILITY, capa.id);
             props.put(SmartthingsBindingConstants.ATTRIBUTE, attrKey);
 
@@ -458,7 +458,7 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
         }
 
         // generate group
-        String groupId = deviceType + "_" + component.id + "_";
+        String groupId = deviceType + "_" + componentId + "_";
 
         if (!"".equals(namespace)) {
             groupId = groupId + namespace + "_";
@@ -473,7 +473,7 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
             groupType = lcChannelGroupTypeProvider.getInternalChannelGroupType(groupTypeUID);
 
             if (groupType == null) {
-                String groupLabel = StringUtils.capitalize(component.id + " " + namespace + " " + capaKey);
+                String groupLabel = StringUtils.capitalize(componentId + " " + namespace + " " + capaKey);
                 groupType = ChannelGroupTypeBuilder.instance(groupTypeUID, groupLabel)
                         .withChannelDefinitions(channelDefinitions).withCategory("").build();
                 lcChannelGroupTypeProvider.addChannelGroupType(groupType);

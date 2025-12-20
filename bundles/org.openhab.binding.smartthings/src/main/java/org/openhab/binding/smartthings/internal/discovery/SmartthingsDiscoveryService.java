@@ -37,6 +37,8 @@ import org.openhab.core.thing.binding.ThingHandlerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.Gson;
+
 /**
  * Smartthings Discovery service
  *
@@ -78,6 +80,8 @@ public class SmartthingsDiscoveryService extends AbstractDiscoveryService
         }
     }
 
+    private Gson gson = new Gson();
+
     public void doScan(Boolean addDevice) throws SmartthingsException {
         SmartthingsBridgeHandler bridge = smartthingsBridgeHandler;
         if (bridge == null) {
@@ -89,72 +93,76 @@ public class SmartthingsDiscoveryService extends AbstractDiscoveryService
         SmartthingsDevice[] devices = api.getAllDevices();
 
         for (SmartthingsDevice device : devices) {
-
-            String name = device.name;
-            String label = device.label;
-
-            logger.trace("Find Device : {} / {}", device.name, device.label);
-
-            if (device.components == null || device.components.length == 0) {
-                return;
-            }
-
-            Boolean enabled = false;
-            if ("Four".equals(label)) {
-                enabled = false;
-            }
-            if ("Petrole".equals(label)) {
-                enabled = false;
-            }
-            if (label.contains("cuisson")) {
-                enabled = false;
-            }
-
-            if (label.contains("Plug")) {
-                enabled = true;
-            }
-
-            enabled = true;
-
-            if (!enabled) {
-                continue;
-            }
-
-            String deviceType = null;
-            for (SmartthingsComponent component : device.components) {
-                String compId = component.id;
-
-                if (component.categories != null && component.categories.length > 0) {
-                    for (SmartthingsCategory cat : component.categories) {
-                        String catId = cat.name;
-
-                        if (SmartthingsBindingConstants.GROUPD_ID_MAIN.equals(compId)) {
-                            deviceType = catId;
-                        }
-                    }
-                }
-            }
-
-            if (deviceType == null) {
-                logger.info("unknow device, bypass");
-                continue;
-            }
-
-            if ("white-and-color-ambiance".equals(name)) {
-                continue;
-            }
-
-            deviceType = deviceType.toLowerCase();
-            if (this.typeRegistry != null) {
-                this.typeRegistry.register(deviceType, device);
-            }
-            if (addDevice) {
-                createDevice(deviceType, Objects.requireNonNull(device));
-            }
+            registerDevice(device, addDevice);
 
         }
 
         logger.trace("End Discovery");
+    }
+
+    public void registerDevice(SmartthingsDevice device, Boolean addDevice) {
+        String name = device.name;
+        String label = device.label;
+
+        logger.trace("Find Device : {} / {}", device.name, device.label);
+
+        if (device.components == null || device.components.length == 0) {
+            return;
+        }
+
+        Boolean enabled = false;
+        if ("Four".equals(label)) {
+            enabled = false;
+        }
+        if ("Petrole".equals(label)) {
+            enabled = false;
+        }
+        if (label.contains("cuisson")) {
+            enabled = false;
+        }
+
+        if (label.contains("Plug")) {
+            enabled = true;
+        }
+
+        enabled = true;
+
+        if (!enabled) {
+            return;
+        }
+
+        String deviceType = null;
+        for (SmartthingsComponent component : device.components) {
+            String compId = component.id;
+
+            if (component.categories != null && component.categories.length > 0) {
+                for (SmartthingsCategory cat : component.categories) {
+                    String catId = cat.name;
+
+                    if (SmartthingsBindingConstants.GROUPD_ID_MAIN.equals(compId)) {
+                        deviceType = catId;
+                    }
+                }
+            }
+        }
+
+        if (deviceType == null) {
+            logger.info("unknow device, bypass");
+            return;
+        }
+
+        if ("white-and-color-ambiance".equals(name)) {
+            return;
+        }
+
+        deviceType = deviceType.toLowerCase();
+        if (this.typeRegistry != null) {
+            this.typeRegistry.register(deviceType, device);
+        }
+        if (addDevice) {
+            createDevice(deviceType, Objects.requireNonNull(device));
+        }
+
     }
 
     /**
