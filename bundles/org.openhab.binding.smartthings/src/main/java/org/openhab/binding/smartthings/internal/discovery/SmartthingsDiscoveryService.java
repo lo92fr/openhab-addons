@@ -162,7 +162,6 @@ public class SmartthingsDiscoveryService extends AbstractDiscoveryService
         if (addDevice) {
             createDevice(deviceType, Objects.requireNonNull(device));
         }
-
     }
 
     /**
