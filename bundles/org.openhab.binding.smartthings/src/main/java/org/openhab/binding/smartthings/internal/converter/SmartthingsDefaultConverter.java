@@ -149,7 +149,7 @@ public class SmartthingsDefaultConverter extends SmartthingsConverter {
         String cmdName = "";
         Object[] arguments = null;
 
-        if (attr != null && value != null) {
+        if (attr != null) {
             if (SmartthingsBindingConstants.CHANNEL_NAME_COLOR.equals(attrKey)) {
                 attr.setter = SmartthingsBindingConstants.CMD_SET_COLOR;
             }

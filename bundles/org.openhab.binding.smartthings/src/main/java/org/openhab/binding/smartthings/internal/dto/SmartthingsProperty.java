@@ -26,8 +26,9 @@ public class SmartthingsProperty {
     public int minimum;
     public int maximum;
     public String title;
+
     @SerializedName("default")
-    public String defaultUnit;
+    public Object defaultObj;
 
     @SerializedName("enum")
     public String[] enumeration;
