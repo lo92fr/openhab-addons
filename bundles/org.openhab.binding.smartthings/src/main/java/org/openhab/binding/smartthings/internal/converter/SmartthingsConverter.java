@@ -225,7 +225,7 @@ public abstract class SmartthingsConverter {
                     StringBuffer result = new StringBuffer();
                     for (Object val : array) {
                         if (val instanceof String st) {
-                            result.append(val);
+                            result.append(st);
                             result.append(", ");
                         } else {
                             logger.error("@todo : handle this case: {} inputClass: {}", channelUid,
