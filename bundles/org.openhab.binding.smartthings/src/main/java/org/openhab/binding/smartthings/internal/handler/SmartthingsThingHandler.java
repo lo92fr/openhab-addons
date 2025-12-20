@@ -89,6 +89,7 @@ public class SmartthingsThingHandler extends BaseThingHandler {
                 refreshDevice();
             } else {
                 try {
+
                     if (converter != null) {
                         jsonMsg = converter.convertToSmartthings(thing, channelUID, command);
                     }

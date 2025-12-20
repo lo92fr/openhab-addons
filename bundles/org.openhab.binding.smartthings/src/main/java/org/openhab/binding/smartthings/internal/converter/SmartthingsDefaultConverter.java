@@ -46,6 +46,8 @@ import org.openhab.core.types.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.JsonElement;
+
 /**
  * This "Converter" is assigned to a channel when a special converter is not needed.
  * A channel specific converter is specified in the thing-type channel property smartthings-converter then that channel
@@ -104,7 +106,12 @@ public class SmartthingsDefaultConverter extends SmartthingsConverter {
         } else if (command instanceof StringListType) {
             value = command.toString();
         } else if (command instanceof StringType) {
-            value = command.toString();
+            String st = command.toString();
+            if (st.startsWith("{")) {
+                value = gson.fromJson(st, JsonElement.class);
+            } else {
+                value = st;
+            }
         } else if (command instanceof UpDownType) {
             value = command.toString().toLowerCase();
         } else {
