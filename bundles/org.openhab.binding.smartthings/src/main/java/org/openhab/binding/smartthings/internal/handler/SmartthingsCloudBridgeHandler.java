@@ -72,6 +72,7 @@ public class SmartthingsCloudBridgeHandler extends SmartthingsBridgeHandler {
                 initRegistry();
                 updateStatus(ThingStatus.ONLINE);
             } catch (SmartthingsException e) {
+                logger.error("Unable to initialize", e);
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, e.getMessage());
             }
         });

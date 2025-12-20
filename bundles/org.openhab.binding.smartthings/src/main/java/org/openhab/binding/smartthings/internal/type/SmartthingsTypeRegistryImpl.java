@@ -151,8 +151,12 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
     public void createChannelTypes(SmartthingsCapability capa) {
         SmartthingsChannelTypeProvider lcChannelTypeProvider = channelTypeProvider;
 
+        logger.trace("createChannelTypes: capa:{} / {}", capa.id, capa.version);
+
         for (String key : capa.attributes.keySet()) {
             SmartthingsAttribute attr = capa.attributes.get(key);
+
+            logger.trace("createChannelTypes: key {}", key);
 
             if (key.indexOf("Range") > 0) {
                 continue;
@@ -213,6 +217,8 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
                 if ("".equals(openHabChannelType)) {
                     continue;
                 }
+
+                logger.trace("createChannelTypes: channelTypeName {}", channelTypeName);
 
                 ChannelTypeUID channelTypeUID = UidUtils.generateChannelTypeUID(channelTypeName);
                 ChannelType channelType = null;
@@ -334,6 +340,8 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
     private void generateThingsType(String deviceId, String deviceLabel, String deviceType, SmartthingsDevice device) {
         SmartthingsThingTypeProvider lcThingTypeProvider = thingTypeProvider;
 
+        logger.trace("generateThingsType: {} {}", deviceType, deviceId);
+
         if (lcThingTypeProvider != null) {
             ThingTypeUID thingTypeUID = UidUtils.generateThingTypeUID(deviceType);
             ThingType tt = null;
@@ -418,6 +426,7 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
 
             final String fChannelName = channelName;
 
+            logger.trace("addChannels: channelTypeName: {}", channelTypeName);
             ChannelTypeUID channelTypeUID = UidUtils.generateChannelTypeUID(channelTypeName);
 
             ChannelType channelType = null;
@@ -456,6 +465,7 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
         }
         groupId = groupId + capaKey;
 
+        logger.trace("addChannels: groupId:{}", groupId);
         ChannelGroupTypeUID groupTypeUID = UidUtils.generateChannelGroupTypeUID(groupId);
         ChannelGroupType groupType = null;
 
@@ -479,9 +489,12 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
         SmartthingsConfigDescriptionProvider lcConfigDescriptionProvider = configDescriptionProvider;
         String name = device;
 
+        logger.trace("createThingType: device:{} {}", device, label);
+
         List<String> supportedBridgeTypeUids = new ArrayList<>();
         supportedBridgeTypeUids.add(SmartthingsBindingConstants.THING_TYPE_SMARTTHINGSCLOUD.toString());
 
+        logger.trace("GenerateThingTypeUID: device:{}", device);
         ThingTypeUID thingTypeUID = UidUtils.generateThingTypeUID(device);
 
         Map<String, String> properties = new HashMap<>();
@@ -526,8 +539,11 @@ public class SmartthingsTypeRegistryImpl implements SmartthingsTypeRegistry {
     }
 
     private URI getConfigDescriptionURI(String device) {
+        logger.trace("getConfigDescriptionURI: device: {}", device);
+        ThingTypeUID thingTypeUID = UidUtils.generateThingTypeUID(device);
+
         return URI.create((String.format("%s:%s", SmartthingsBindingConstants.CONFIG_DESCRIPTION_URI_THING_PREFIX,
-                UidUtils.generateThingTypeUID(device))));
+                thingTypeUID)));
     }
 
     private void generateConfigDescription(String device, List<ChannelGroupType> groupTypes, URI configDescriptionURI) {
