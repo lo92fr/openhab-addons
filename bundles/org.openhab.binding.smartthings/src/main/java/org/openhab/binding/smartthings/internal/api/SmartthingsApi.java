@@ -146,7 +146,8 @@ public class SmartthingsApi {
             SmartthingsCapability capabilitie = doRequest(SmartthingsCapability.class, uri, cb);
             return capabilitie;
         } catch (final Exception e) {
-            throw new SmartthingsException("SmartthingsApi : Unable to retrieve capability", e);
+            throw new SmartthingsException(
+                    String.format("SmartthingsApi : Unable to retrieve capability : %s", capabilityId), e);
         }
     }
 
@@ -168,7 +169,8 @@ public class SmartthingsApi {
 
             return loc;
         } catch (final Exception e) {
-            throw new SmartthingsException("SmartthingsApi : Unable to retrieve location", e);
+            throw new SmartthingsException(
+                    String.format("SmartthingsApi : Unable to retrieve location : %s", locationId), e);
         }
     }
 
@@ -190,7 +192,8 @@ public class SmartthingsApi {
 
             return loc;
         } catch (final Exception e) {
-            throw new SmartthingsException("SmartthingsApi : Unable to retrieve room", e);
+            throw new SmartthingsException(
+                    String.format("SmartthingsApi : Unable to retrieve room : %s %s", locationId, roomId), e);
         }
     }
 
@@ -215,7 +218,7 @@ public class SmartthingsApi {
 
             return app;
         } catch (final Exception e) {
-            throw new SmartthingsException("SmartthingsApi : Unable to retrieve app", e);
+            throw new SmartthingsException(String.format("SmartthingsApi : Unable to retrieve app : %s", appId), e);
         }
     }
 
@@ -289,7 +292,8 @@ public class SmartthingsApi {
             String uri = baseUrl + deviceEndPoint + "/" + deviceId + "/commands";
             doRequest(JsonObject.class, uri, jsonMsg, false);
         } catch (final Exception e) {
-            throw new SmartthingsException("SmartthingsApi : Unable to send command", e);
+            throw new SmartthingsException(
+                    String.format("SmartthingsApi : Unable to send command: %s %s", deviceId, jsonMsg), e);
         }
     }
 
@@ -300,7 +304,8 @@ public class SmartthingsApi {
             SmartthingsStatus res = doRequest(SmartthingsStatus.class, uri, null, false);
             return res;
         } catch (final Exception e) {
-            throw new SmartthingsException("SmartthingsApi : Unable to send status", e);
+            throw new SmartthingsException(
+                    String.format("SmartthingsApi : Unable to send status : device:%s", deviceId), e);
         }
     }
 
@@ -332,6 +337,7 @@ public class SmartthingsApi {
             T res = networkConnector.doRequest(resultClass, uri, callback, getToken(), body, httpMethod);
             return res;
         } catch (final Exception e) {
+            logger.trace("Request failed : {}", uri);
             throw new SmartthingsException("SmartthingsApi : Unable to do request", e);
         }
     }
@@ -359,7 +365,6 @@ public class SmartthingsApi {
                     eventTypes);
 
             String body = gson.toJson(evtReg);
-            logger.info("body: {}", body);
 
             JsonObject result = networkConnector.doRequest(JsonObject.class, subscriptionUri, null, getToken(), body,
                     HttpMethod.POST);
