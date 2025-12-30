@@ -13,20 +13,24 @@
 
 package org.openhab.binding.smartthings.internal.dto;
 
-import org.openhab.binding.smartthings.internal.SmartThingsBindingConstants;
-
 /**
- * Data object for a color
+ * Data object for smartthings app description
  *
  * @author Laurent ARNAL - Initial contribution
  */
-public class ColorObject {
-    public Double hue = 0.0;
-    public Double saturation = 0.0;
 
-    @Override
-    public String toString() {
-        return String.format("%s : %s, %s : %s", SmartThingsBindingConstants.CHANNEL_NAME_HUE, hue,
-                SmartThingsBindingConstants.CHANNEL_NAME_SATURATION, saturation);
+public class SmartThingsRoom {
+    public String roomId;
+    public String locationId;
+    public String name;
+    public String backgroundImage;
+
+    public String[] allowed;
+    public String created;
+    public String lastModified;
+
+    public record indoorMap(String mapRoomId, String color) {
     }
+
+    public indoorMap indoorMap;
 }

@@ -12,7 +12,7 @@
 
   <artifactId>org.openhab.binding.smartthings</artifactId>
 
-  <name>openHAB Add-ons :: Bundles :: Samsung Smartthings Binding</name>
+  <name>openHAB Add-ons :: Bundles :: Samsung SmartThings Binding</name>
 
   <dependencies>
     <dependency>
