@@ -1,6 +1,6 @@
 # Samsung SmartThings Binding
 
-This binding integrates the Samsung SmartThings Cloud into openhab.
+This binding integrates the Samsung SmartThings Cloud into openHAB.
 
 The central part would be the "SmarThings Cloud Hub" bridge, that will enable communication between openHAB and SmartThings Cloud.
 There will be also an number of differents things for each of your home device.
@@ -24,7 +24,7 @@ It's more convenient to setup : no need for end user to setup an external web ho
 Registration process is also far more easy :  
 
 - We use OAuth authentification in place of registration tokens.
-- All setup occurs directly inside Openhab.
+- All setup occurs directly inside openHAB.
 - The smartapp stuff are totally hide behind the scene, not needing complex setup.
 
 ## Supported things
@@ -37,7 +37,7 @@ If you find a device that doesn't work [follow these instructions](doc/Troublesh
 
 **The binding will not work until this part has been completed, do not skip this part of the setup.**
 
-In this version, the binding need to have a redirect URL using openhabcloud to do the first oAuth authorization. This URL will be only use during registration, and not during day to day use of the addons.
+In this version, the binding need to have a redirect URL using the openHAB Cloud service to do the first oAuth authorization. This URL will be only use during registration, and not during day to day use of the addons.
 
 URL will be of this form : https://home.myopenhab.org/connectsmartthings
 
@@ -68,10 +68,10 @@ To do the registration, follow this steps:
 
 ![alt text](doc/Authorize04.png)
 
-5. On this last step, your browser should be redirected to openhab.
+5. On this last step, your browser should be redirected to openHAB.
    The page will display a confirmation with the selected location, and the number of device foudn in the location.
 
-   You can now close the window, and go to Openhab Inbox to trigger a device scan.
+    You can now close the window, and go to the openHAB Inbox to trigger a device scan.
 
 ![alt text](doc/Authorize05.png)
 
