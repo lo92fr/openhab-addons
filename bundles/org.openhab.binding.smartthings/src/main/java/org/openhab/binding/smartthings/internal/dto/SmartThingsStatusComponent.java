@@ -13,20 +13,14 @@
 
 package org.openhab.binding.smartthings.internal.dto;
 
-import org.openhab.binding.smartthings.internal.SmartThingsBindingConstants;
+import java.util.Hashtable;
 
 /**
- * Data object for a color
+ * Data object for SmartThings device description
  *
  * @author Laurent ARNAL - Initial contribution
  */
-public class ColorObject {
-    public Double hue = 0.0;
-    public Double saturation = 0.0;
 
-    @Override
-    public String toString() {
-        return String.format("%s : %s, %s : %s", SmartThingsBindingConstants.CHANNEL_NAME_HUE, hue,
-                SmartThingsBindingConstants.CHANNEL_NAME_SATURATION, saturation);
-    }
+public class SmartThingsStatusComponent extends Hashtable<String, SmartThingsStatusCapabilities> {
+    private static final long serialVersionUID = -4719613645562518232L;
 }

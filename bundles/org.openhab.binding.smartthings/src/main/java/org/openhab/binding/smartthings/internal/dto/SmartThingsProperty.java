@@ -10,23 +10,28 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-
 package org.openhab.binding.smartthings.internal.dto;
 
-import org.openhab.binding.smartthings.internal.SmartThingsBindingConstants;
+import java.util.Hashtable;
+
+import com.google.gson.annotations.SerializedName;
 
 /**
- * Data object for a color
+ * Data object for SmartThings capabilities description
  *
  * @author Laurent ARNAL - Initial contribution
  */
-public class ColorObject {
-    public Double hue = 0.0;
-    public Double saturation = 0.0;
+public class SmartThingsProperty {
+    public String type;
+    public int minimum;
+    public int maximum;
+    public String title;
 
-    @Override
-    public String toString() {
-        return String.format("%s : %s, %s : %s", SmartThingsBindingConstants.CHANNEL_NAME_HUE, hue,
-                SmartThingsBindingConstants.CHANNEL_NAME_SATURATION, saturation);
-    }
+    @SerializedName("default")
+    public Object defaultObj;
+
+    @SerializedName("enum")
+    public String[] enumeration;
+
+    public Hashtable<String, SmartThingsProperty> properties;
 }

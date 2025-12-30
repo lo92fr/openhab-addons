@@ -13,7 +13,7 @@
 package org.openhab.binding.smartthings.internal.type;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.openhab.binding.smartthings.internal.SmartthingsBindingConstants;
+import org.openhab.binding.smartthings.internal.SmartThingsBindingConstants;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.ThingTypeUID;
@@ -104,18 +104,18 @@ public class UidUtils {
      */
     public static ThingTypeUID generateThingTypeUID(Object device) {
         // String type = sanetizeId(device.getType());
-        return new ThingTypeUID(SmartthingsBindingConstants.BINDING_ID, "type");
+        return new ThingTypeUID(SmartThingsBindingConstants.BINDING_ID, "type");
     }
 
     public static ThingTypeUID generateThingTypeUID(String name) {
-        return new ThingTypeUID(SmartthingsBindingConstants.BINDING_ID, name);
+        return new ThingTypeUID(SmartThingsBindingConstants.BINDING_ID, name);
     }
 
     /**
      * Generates the ChannelTypeUID for the given datapoint with deviceType, channelNumber and datapointName.
      */
     public static ChannelTypeUID generateChannelTypeUID(String id) {
-        return new ChannelTypeUID(SmartthingsBindingConstants.BINDING_ID, id);
+        return new ChannelTypeUID(SmartThingsBindingConstants.BINDING_ID, id);
     }
 
     /**
@@ -138,6 +138,6 @@ public class UidUtils {
      * Generates the ChannelTypeUID for the given datapoint with deviceType and channelNumber.
      */
     public static ChannelGroupTypeUID generateChannelGroupTypeUID(String name) {
-        return new ChannelGroupTypeUID(SmartthingsBindingConstants.BINDING_ID, name);
+        return new ChannelGroupTypeUID(SmartThingsBindingConstants.BINDING_ID, name);
     }
 }

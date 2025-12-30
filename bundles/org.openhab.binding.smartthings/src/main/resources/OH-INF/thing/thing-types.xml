@@ -6,8 +6,8 @@
 
 	<!-- The Bridge Type -->
 	<bridge-type id="smartthingscloud">
-		<label>Smartthings Cloud Hub</label>
-		<description>Smartthings Cloud Hub</description>
+		<label>SmartThings Cloud Hub</label>
+		<description>SmartThings Cloud Hub</description>
 
 		<config-description>
 			<parameter name="clientId" type="text" required="true">
