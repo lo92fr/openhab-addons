@@ -251,7 +251,7 @@ public class SmartThingsApi {
             String uri = baseUrl + appEndPoint + "/" + appId + "/oauth";
 
             OAuthConfigRequest oAuthConfig = new OAuthConfigRequest();
-            oAuthConfig.clientName = "Openhab Integration";
+            oAuthConfig.clientName = "openHAB Integration";
             oAuthConfig.scope = new String[1];
             oAuthConfig.scope[0] = "r:devices:*";
 
@@ -356,7 +356,7 @@ public class SmartThingsApi {
 
             String[] eventTypes = { "DEVICE_EVENT", "DEVICE_LIFECYCLE_EVENT", "DEVICE_HEALTH_EVENT" };
             EventRegistration evtReg = new EventRegistration();
-            evtReg.name = "Openhab sub";
+            evtReg.name = "openHAB sub";
             evtReg.version = 20250122;
             evtReg.clientDeviceId = "iapp_" + installedAppId;
             evtReg.subscriptionFilters = new EventRegistration.SubscriptionFilters[1];

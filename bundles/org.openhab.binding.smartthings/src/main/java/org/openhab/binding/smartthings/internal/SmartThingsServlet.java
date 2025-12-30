@@ -195,10 +195,10 @@ public class SmartThingsServlet extends SmartThingsBaseServlet {
 
                 Initialize init = response.configurationData.new Initialize();
                 response.configurationData.initialize = init;
-                init.name = "Openhab";
-                init.description = "Openhab";
+                init.name = "openHAB";
+                init.description = "openHAB";
                 init.firstPageId = "1";
-                init.id = "Openhab";
+                init.id = "openHAB";
 
                 init.permissions = new String[1];
                 init.permissions[0] = "r:devices:*";
@@ -215,7 +215,7 @@ public class SmartThingsServlet extends SmartThingsBaseServlet {
                 page1.pageId = "1";
                 page1.nextPageId = null;
                 page1.previousPageId = null;
-                page1.name = "Openhab";
+                page1.name = "openHAB";
                 page1.complete = true;
 
                 String responseSt = gson.toJson(response);
