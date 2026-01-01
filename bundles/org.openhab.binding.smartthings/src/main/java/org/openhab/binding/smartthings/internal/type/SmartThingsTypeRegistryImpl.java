@@ -377,7 +377,7 @@ public class SmartThingsTypeRegistryImpl implements SmartThingsTypeRegistry {
                                             cap.version);
                                     capa = api.getCapability(cap.id, cap.version, null);
 
-                                        logger.trace("capa is: {}", gson.toJson(capa));
+                                    logger.trace("capa is: {}", gson.toJson(capa));
                                     registerCapability(capa);
                                 } catch (SmartThingsException ex) {
                                     logger.error("Exception during capa reading:{}", ex.toString(), ex);
@@ -430,34 +430,33 @@ public class SmartThingsTypeRegistryImpl implements SmartThingsTypeRegistry {
             logger.trace("addChannels: channelTypeName: {}", channelTypeName);
             ChannelTypeUID channelTypeUID = UidUtils.generateChannelTypeUID(channelTypeName);
 
-        ChannelType channelType = null;
-        if (lcChannelTypeProvider != null) {
-            channelType = lcChannelTypeProvider.getInternalChannelType(channelTypeUID);
-        }
+            ChannelType channelType = null;
+            if (lcChannelTypeProvider != null) {
+                channelType = lcChannelTypeProvider.getInternalChannelType(channelTypeUID);
+            }
 
-        if (channelType == null) {
+            if (channelType == null) {
                 logger.warn("Can't find channelType for {}", channelTypeUID);
-        }
+            }
 
             props.put(SmartThingsBindingConstants.COMPONENT, componentId);
-        props.put(SmartThingsBindingConstants.CAPABILITY, capa.id);
-        props.put(SmartThingsBindingConstants.ATTRIBUTE, attrKey);
+            props.put(SmartThingsBindingConstants.CAPABILITY, capa.id);
+            props.put(SmartThingsBindingConstants.ATTRIBUTE, attrKey);
 
             ChannelDefinition channelDef = null;
 
-        // capa.commands
-        if (channelType != null) {
+            // capa.commands
+            if (channelType != null) {
                 channelDef = new ChannelDefinitionBuilder(channelName, channelType.getUID())
                         .withLabel(StringUtils.capitalize(channelName)).withProperties(props).build();
 
-            Optional<ChannelDefinition> previous = channelDefinitions.stream()
+                Optional<ChannelDefinition> previous = channelDefinitions.stream()
                         .filter(x -> x.getId().equals(fChannelName)).findFirst();
-            if (previous.isEmpty()) {
-                channelDefinitions.add(channelDef);
+                if (previous.isEmpty()) {
+                    channelDefinitions.add(channelDef);
+                }
             }
         }
-        }
-
 
         // generate group
         String groupId = deviceType + "_" + componentId + "_";
