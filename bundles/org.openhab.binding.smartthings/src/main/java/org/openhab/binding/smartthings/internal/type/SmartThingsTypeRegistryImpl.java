@@ -376,6 +376,7 @@ public class SmartThingsTypeRegistryImpl implements SmartThingsTypeRegistry {
                                     logger.trace("Need capability not registered in cache: id:{} version:{}", cap.id,
                                             cap.version);
                                     capa = api.getCapability(cap.id, cap.version, null);
+
                                         logger.trace("capa is: {}", gson.toJson(capa));
                                     registerCapability(capa);
                                 } catch (SmartThingsException ex) {
@@ -456,6 +457,7 @@ public class SmartThingsTypeRegistryImpl implements SmartThingsTypeRegistry {
             }
         }
         }
+
 
         // generate group
         String groupId = deviceType + "_" + componentId + "_";
