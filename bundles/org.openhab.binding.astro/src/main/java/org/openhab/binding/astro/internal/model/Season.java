@@ -13,11 +13,19 @@
 package org.openhab.binding.astro.internal.model;
 
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-import java.util.Calendar;
+import java.time.Instant;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.TimeZone;
 
 import javax.measure.quantity.Time;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.binding.astro.internal.util.DateTimeUtils;
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.unit.Units;
@@ -27,110 +35,114 @@ import org.openhab.core.library.unit.Units;
  *
  * @author Gerhard Riegler - Initial contribution
  */
+@NonNullByDefault
 public class Season {
-    private Calendar spring;
-    private Calendar summer;
-    private Calendar autumn;
-    private Calendar winter;
+    private static final Map<Hemisphere, List<SeasonName>> SEASON_ORDER = Map.of(Hemisphere.NORTHERN,
+            List.of(SeasonName.WINTER, SeasonName.SPRING, SeasonName.SUMMER, SeasonName.AUTUMN, SeasonName.WINTER,
+                    SeasonName.SPRING),
+            Hemisphere.SOUTHERN, List.of(SeasonName.SUMMER, SeasonName.AUTUMN, SeasonName.WINTER, SeasonName.SPRING,
+                    SeasonName.SUMMER, SeasonName.AUTUMN));
 
-    private SeasonName name;
+    private record LocalSeason(SeasonName name, Instant startsOn, Instant endsOn, int year) {
+        boolean contains(Instant when) {
+            return !startsOn.isAfter(when) && endsOn.isAfter(when);
+        }
+    }
+
+    private final List<LocalSeason> seasons = new ArrayList<>(5);
+    private final int year;
+
+    public Season(double latitude, boolean useMeteorologicalSeason, TimeZone zone, Instant... equiSols) {
+        // Expect to receive last of previous year, all from current year, first of next year
+        if (equiSols.length != SeasonName.values().length + 2) {
+            throw new IllegalArgumentException("Incorrect number of seasons provided");
+        }
+        var hemisphere = Hemisphere.getHemisphere(latitude);
+        List<Instant> moments = Arrays.stream(equiSols).sorted()
+                .map(i -> useMeteorologicalSeason ? DateTimeUtils.atMidnightOfFirstMonthDay(i, zone) : i).toList();
+        for (int i = 0; i < moments.size() - 1; i++) {
+            var current = moments.get(i);
+            var next = moments.get(i + 1);
+            var seasonName = Objects.requireNonNull(SEASON_ORDER.get(hemisphere)).get(i);
+            ZonedDateTime zonedDateTime = current.atZone(zone.toZoneId());
+            seasons.add(new LocalSeason(seasonName, current, next, zonedDateTime.getYear()));
+        }
+        year = seasons.stream().mapToInt(LocalSeason::year).max().orElseThrow(NoSuchElementException::new);
+    }
+
+    public int getYear() {
+        return year;
+    }
+
+    private Instant getSeasonStart(SeasonName season) {
+        return seasons.stream().filter(s -> s.name.equals(season) && s.year == year).map(s -> s.startsOn).findFirst()
+                .orElseThrow(NoSuchElementException::new);
+    }
 
     /**
      * Returns the date of the beginning of spring.
      */
-    public Calendar getSpring() {
-        return spring;
-    }
-
-    /**
-     * Sets the date of the beginning of spring.
-     */
-    public void setSpring(Calendar spring) {
-        this.spring = spring;
+    public Instant getSpring() {
+        return getSeasonStart(SeasonName.SPRING);
     }
 
     /**
      * Returns the date of the beginning of summer.
      */
-    public Calendar getSummer() {
-        return summer;
-    }
-
-    /**
-     * Sets the date of the beginning of summer.
-     */
-    public void setSummer(Calendar summer) {
-        this.summer = summer;
+    public Instant getSummer() {
+        return getSeasonStart(SeasonName.SUMMER);
     }
 
     /**
      * Returns the date of the beginning of autumn.
      */
-    public Calendar getAutumn() {
-        return autumn;
-    }
-
-    /**
-     * Sets the date of the beginning of autumn.
-     */
-    public void setAutumn(Calendar autumn) {
-        this.autumn = autumn;
+    public Instant getAutumn() {
+        return getSeasonStart(SeasonName.AUTUMN);
     }
 
     /**
      * Returns the date of the beginning of winter.
      */
-    public Calendar getWinter() {
-        return winter;
+    public Instant getWinter() {
+        return getSeasonStart(SeasonName.WINTER);
     }
 
-    /**
-     * Returns the date of the beginning of winter.
-     */
-    public void setWinter(Calendar winter) {
-        this.winter = winter;
+    private LocalSeason getSeason(Instant when) {
+        return seasons.stream().filter(s -> s.contains(when)).findFirst().orElseThrow(NoSuchElementException::new);
     }
 
     /**
      * Returns the current season name.
      */
     public SeasonName getName() {
-        return name;
-    }
-
-    /**
-     * Sets the current season name.
-     */
-    public void setName(SeasonName name) {
-        this.name = name;
+        return getSeason(Instant.now()).name;
     }
 
     /**
      * Returns the next season.
      */
-    public Calendar getNextSeason() {
-        return DateTimeUtils.getNextFromToday(spring, summer, autumn, winter);
+    public Instant getNextSeason() {
+        return getSeason(Instant.now()).endsOn;
     }
 
     /**
      * Returns the next season name.
      */
     public SeasonName getNextName() {
-        int ordinal = name.ordinal() + 1;
-        if (ordinal > 3) {
-            ordinal = 0;
-        }
-        return SeasonName.values()[ordinal];
+        return getSeason(Instant.now()).name.next();
     }
 
     /**
      * Returns the time left for current season
      */
     public QuantityType<Time> getTimeLeft() {
-        final Calendar now = Calendar.getInstance();
-        final Calendar next = getNextSeason();
-        final Duration timeLeft = Duration.of(next.getTimeInMillis() - now.getTimeInMillis(), ChronoUnit.MILLIS);
+        var now = Instant.now();
+        var timeLeft = Duration.between(now, getSeason(now).endsOn);
 
         return new QuantityType<>(timeLeft.toDays(), Units.DAY);
+    }
+
+    public Instant getNext(Instant when) {
+        return getSeason(when).endsOn;
     }
 }

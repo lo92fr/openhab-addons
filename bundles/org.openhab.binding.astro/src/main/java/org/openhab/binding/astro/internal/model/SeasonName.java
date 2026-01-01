@@ -12,14 +12,22 @@
  */
 package org.openhab.binding.astro.internal.model;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
+
 /**
  * All season names.
  *
  * @author Gerhard Riegler - Initial contribution
  */
+@NonNullByDefault
 public enum SeasonName {
     SPRING,
     SUMMER,
     AUTUMN,
-    WINTER
+    WINTER;
+
+    public SeasonName next() {
+        SeasonName[] values = values();
+        return values[(this.ordinal() + 1) % values.length];
+    }
 }

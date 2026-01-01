@@ -194,12 +194,14 @@ public class AhaWasteCollectionHandler extends BaseThingHandler {
         switch (channelId) {
             case AhaWasteCollectionBindingConstants.BIOWASTE:
                 return WasteType.BIO_WASTE;
-            case AhaWasteCollectionBindingConstants.LEIGHTWEIGHT_PACKAGING:
+            case AhaWasteCollectionBindingConstants.LIGHTWEIGHT_PACKAGING:
                 return WasteType.LIGHT_PACKAGES;
             case AhaWasteCollectionBindingConstants.PAPER:
                 return WasteType.PAPER;
             case AhaWasteCollectionBindingConstants.GENERAL_WASTE:
                 return WasteType.GENERAL_WASTE;
+            case AhaWasteCollectionBindingConstants.CHRISTMAS_TREE:
+                return WasteType.CHRISTMAS_TREES;
             default:
                 throw new IllegalArgumentException("Unknown channel type: " + channelId);
         }

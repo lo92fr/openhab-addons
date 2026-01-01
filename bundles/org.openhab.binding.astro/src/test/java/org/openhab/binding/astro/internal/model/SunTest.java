@@ -14,8 +14,11 @@ package org.openhab.binding.astro.internal.model;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.time.ZoneId;
+import java.util.Objects;
+import java.util.TimeZone;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openhab.binding.astro.internal.config.AstroChannelConfig;
@@ -32,12 +35,13 @@ import org.openhab.core.types.UnDefType;
  * @see <a href="https://github.com/openhab/openhab-addons/issues/5006">[astro]
  *      Sun Phase returns UNDEF</a>
  */
+@NonNullByDefault
 public class SunTest {
 
-    private Sun sun;
-    private AstroChannelConfig config;
+    private @Nullable Sun sun;
+    private @Nullable AstroChannelConfig config;
 
-    private static final ZoneId ZONE = ZoneId.systemDefault();
+    private static final TimeZone TIME_ZONE = TimeZone.getTimeZone("Asia/Gaza");
 
     @BeforeEach
     public void init() {
@@ -47,39 +51,37 @@ public class SunTest {
 
     @Test
     public void testConstructor() throws Exception {
+        Sun sun = this.sun;
+        assertNotNull(sun);
         assertNotNull(sun.getPhase());
-        assertEquals(UnDefType.UNDEF,
-                PropertyUtils.getState(new ChannelUID("astro:sun:home:phase#name"), config, sun, ZONE));
+        assertEquals(UnDefType.UNDEF, PropertyUtils.getState(new ChannelUID("astro:sun:home:phase#name"),
+                Objects.requireNonNull(config), sun, TIME_ZONE));
     }
 
     @Test
     public void testGetStateWhenNullPhaseName() throws Exception {
+        Sun sun = this.sun;
+        assertNotNull(sun);
         sun.getPhase().setName(null);
 
-        assertEquals(UnDefType.UNDEF,
-                PropertyUtils.getState(new ChannelUID("astro:sun:home:phase#name"), config, sun, ZONE));
+        assertEquals(UnDefType.UNDEF, PropertyUtils.getState(new ChannelUID("astro:sun:home:phase#name"),
+                Objects.requireNonNull(config), sun, TIME_ZONE));
     }
 
     @Test
     public void testGetStateWhenNotNullPhaseName() throws Exception {
+        Sun sun = this.sun;
+        assertNotNull(sun);
         sun.getPhase().setName(SunPhaseName.DAYLIGHT);
 
-        assertEquals(new StringType("DAYLIGHT"),
-                PropertyUtils.getState(new ChannelUID("astro:sun:home:phase#name"), config, sun, ZONE));
-    }
-
-    @Test
-    public void testGetStateWhenNullPhase() throws Exception {
-        sun.setPhase(null);
-
-        assertNull(sun.getPhase());
-
-        assertThrows(NullPointerException.class, () -> assertEquals(UnDefType.UNDEF,
-                PropertyUtils.getState(new ChannelUID("astro:sun:home:phase#name"), config, sun, ZONE)));
+        assertEquals(new StringType("DAYLIGHT"), PropertyUtils.getState(new ChannelUID("astro:sun:home:phase#name"),
+                Objects.requireNonNull(config), sun, TIME_ZONE));
     }
 
     @Test
     public void testGetAllRangesForNight() {
+        Sun sun = this.sun;
+        assertNotNull(sun);
         sun.setNight(new Range());
 
         assertTrue(sun.getAllRanges().containsKey(SunPhaseName.NIGHT));
@@ -87,6 +89,8 @@ public class SunTest {
 
     @Test
     public void testGetAllRangesForMorningNight() {
+        Sun sun = this.sun;
+        assertNotNull(sun);
         sun.setMorningNight(new Range());
 
         assertTrue(sun.getAllRanges().containsKey(SunPhaseName.MORNING_NIGHT));
@@ -94,6 +98,8 @@ public class SunTest {
 
     @Test
     public void testGetAllRangesForAstroDawn() {
+        Sun sun = this.sun;
+        assertNotNull(sun);
         sun.setAstroDawn(new Range());
 
         assertTrue(sun.getAllRanges().containsKey(SunPhaseName.ASTRO_DAWN));
@@ -101,6 +107,8 @@ public class SunTest {
 
     @Test
     public void testGetAllRangesForNauticDawn() {
+        Sun sun = this.sun;
+        assertNotNull(sun);
         sun.setNauticDawn(new Range());
 
         assertTrue(sun.getAllRanges().containsKey(SunPhaseName.NAUTIC_DAWN));
@@ -108,6 +116,8 @@ public class SunTest {
 
     @Test
     public void testGetAllRangesForCivilDawn() {
+        Sun sun = this.sun;
+        assertNotNull(sun);
         sun.setCivilDawn(new Range());
 
         assertTrue(sun.getAllRanges().containsKey(SunPhaseName.CIVIL_DAWN));
@@ -115,6 +125,8 @@ public class SunTest {
 
     @Test
     public void testGetAllRangesForRise() {
+        Sun sun = this.sun;
+        assertNotNull(sun);
         sun.setRise(new Range());
 
         assertTrue(sun.getAllRanges().containsKey(SunPhaseName.SUN_RISE));
@@ -122,6 +134,8 @@ public class SunTest {
 
     @Test
     public void testGetAllRangesForDaylight() {
+        Sun sun = this.sun;
+        assertNotNull(sun);
         sun.setDaylight(new Range());
 
         assertTrue(sun.getAllRanges().containsKey(SunPhaseName.DAYLIGHT));
@@ -129,6 +143,8 @@ public class SunTest {
 
     @Test
     public void testGetAllRangesForNoon() {
+        Sun sun = this.sun;
+        assertNotNull(sun);
         sun.setNoon(new Range());
 
         assertTrue(sun.getAllRanges().containsKey(SunPhaseName.NOON));
@@ -136,6 +152,8 @@ public class SunTest {
 
     @Test
     public void testGetAllRangesForSet() {
+        Sun sun = this.sun;
+        assertNotNull(sun);
         sun.setSet(new Range());
 
         assertTrue(sun.getAllRanges().containsKey(SunPhaseName.SUN_SET));
@@ -143,6 +161,8 @@ public class SunTest {
 
     @Test
     public void testGetAllRangesForCivilDusk() {
+        Sun sun = this.sun;
+        assertNotNull(sun);
         sun.setCivilDusk(new Range());
 
         assertTrue(sun.getAllRanges().containsKey(SunPhaseName.CIVIL_DUSK));
@@ -150,6 +170,8 @@ public class SunTest {
 
     @Test
     public void testGetAllRangesForNauticDusk() {
+        Sun sun = this.sun;
+        assertNotNull(sun);
         sun.setNauticDusk(new Range());
 
         assertTrue(sun.getAllRanges().containsKey(SunPhaseName.NAUTIC_DUSK));
@@ -157,6 +179,8 @@ public class SunTest {
 
     @Test
     public void testGetAllRangesForAstroDusk() {
+        Sun sun = this.sun;
+        assertNotNull(sun);
         sun.setAstroDusk(new Range());
 
         assertTrue(sun.getAllRanges().containsKey(SunPhaseName.ASTRO_DUSK));
@@ -164,6 +188,8 @@ public class SunTest {
 
     @Test
     public void testGetAllRangesForEveningNight() {
+        Sun sun = this.sun;
+        assertNotNull(sun);
         sun.setEveningNight(new Range());
 
         assertTrue(sun.getAllRanges().containsKey(SunPhaseName.EVENING_NIGHT));
