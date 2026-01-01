@@ -109,11 +109,7 @@ public class SmartThingsCloudBridgeHandler extends SmartThingsBridgeHandler {
                     	if (capa.status.equals("proposed")) {
                             return;
                         }
-<<<<<<< HEAD
-                       logger.info("Cap: {} / {}", capa.id, capa.name);
-=======
-                        logger.trace("Cap: {} / {}", capa.id, capa.name);
->>>>>>> 9a02241519 (fix logging)
+       logger.trace("Cap: {} / {}", capa.id, capa.name);
                         typeRegistry.registerCapability(capa);
                     }
                 }

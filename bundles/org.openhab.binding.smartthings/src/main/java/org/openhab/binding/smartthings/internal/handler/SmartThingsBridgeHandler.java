@@ -134,7 +134,9 @@ public abstract class SmartThingsBridgeHandler extends BaseBridgeHandler
                 eventSourceFactory);
 
         if (servlet == null) {
-            servlet = new SmartThingsServlet(this, httpService, networkConnector);
+            SmartThingsBridgeHandler bridgeHandler = this;
+            SmartThingsServlet servlet = new SmartThingsServlet(bridgeHandler, httpService, networkConnector);
+            this.servlet = servlet;
             servlet.activate();
         }
 
@@ -156,6 +158,7 @@ public abstract class SmartThingsBridgeHandler extends BaseBridgeHandler
 
     @Override
     public void dispose() {
+        SmartThingsServlet servlet = this.servlet;
         if (servlet != null) {
             servlet.deactivate();
         }

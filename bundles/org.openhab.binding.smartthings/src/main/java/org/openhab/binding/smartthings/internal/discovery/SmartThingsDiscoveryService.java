@@ -170,8 +170,10 @@ public class SmartThingsDiscoveryService extends AbstractDiscoveryService
         }
 
         deviceType = deviceType.toLowerCase();
-        if (this.typeRegistry != null) {
-            this.typeRegistry.register(deviceType, device);
+
+        SmartThingsTypeRegistry registry = this.typeRegistry;
+        if (registry != null) {
+            registry.register(deviceType, device);
         }
         if (addDevice) {
             createDevice(deviceType, Objects.requireNonNull(device));
@@ -195,8 +197,9 @@ public class SmartThingsDiscoveryService extends AbstractDiscoveryService
         }
         String deviceNameNoSpaces = name.replaceAll("\\s", "_");
         String smartthingsDeviceName = findIllegalChars.matcher(deviceNameNoSpaces).replaceAll("");
-        if (smartthingsBridgeHandler != null) {
-            ThingUID bridgeUid = smartthingsBridgeHandler.getThing().getUID();
+        SmartThingsBridgeHandler bridgeHandler = smartthingsBridgeHandler;
+        if (bridgeHandler != null) {
+            ThingUID bridgeUid = bridgeHandler.getThing().getUID();
             String bridgeId = bridgeUid.getId();
             String uidStr = String.format("smartthings:%s:%s:%s", deviceType, bridgeId, smartthingsDeviceName);
 
@@ -245,7 +248,7 @@ public class SmartThingsDiscoveryService extends AbstractDiscoveryService
     public void setThingHandler(@Nullable ThingHandler handler) {
         if (handler instanceof SmartThingsBridgeHandler smartthingsBridgeHandler) {
             this.smartthingsBridgeHandler = smartthingsBridgeHandler;
-            this.smartthingsBridgeHandler.registerDiscoveryListener(this);
+            smartthingsBridgeHandler.registerDiscoveryListener(this);
         }
     }
 

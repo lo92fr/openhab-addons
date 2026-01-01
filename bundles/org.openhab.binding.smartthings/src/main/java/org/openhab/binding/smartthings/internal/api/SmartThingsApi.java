@@ -334,8 +334,7 @@ public class SmartThingsApi {
                     httpMethod = HttpMethod.POST;
                 }
             }
-            T res = networkConnector.doRequest(resultClass, uri, callback, getToken(), body, httpMethod);
-            return res;
+            return networkConnector.doRequest(resultClass, uri, callback, getToken(), body, httpMethod);
         } catch (final Exception e) {
             logger.trace("Request failed : {}", uri);
             throw new SmartThingsException("SmartThingsApi : Unable to do request", e);
@@ -368,6 +367,7 @@ public class SmartThingsApi {
 
             JsonObject result = networkConnector.doRequest(JsonObject.class, subscriptionUri, null, getToken(), body,
                     HttpMethod.POST);
+
             String uri = result.get("registrationUrl").getAsString();
 
             String token = getToken();
@@ -389,6 +389,7 @@ public class SmartThingsApi {
             source.open();
 
             logger.debug("result");
+
         } catch (Exception ex) {
             logger.debug("ex: {}", ex.toString());
         }
@@ -403,7 +404,7 @@ public class SmartThingsApi {
 
         logger.info("Received: {}", event.readData());
         try {
-            Event evt = gson.fromJson(data, Event.class);
+            final Event evt = gson.fromJson(data, Event.class);
 
             String deviceId = evt.deviceEvent.deviceId;
             String componentId = evt.deviceEvent.componentId;

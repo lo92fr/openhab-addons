@@ -19,7 +19,7 @@ package org.openhab.binding.smartthings.internal.dto;
  */
 public class Event {
     public String eventTime;
-    public String evnetType;
+    public String eventType;
 
     public class DeviceEvent {
         public String eventId;

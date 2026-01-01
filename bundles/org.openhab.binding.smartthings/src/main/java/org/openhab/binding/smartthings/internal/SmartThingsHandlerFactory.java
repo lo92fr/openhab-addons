@@ -111,6 +111,7 @@ public class SmartThingsHandlerFactory extends BaseThingHandlerFactory implement
             logger.debug("SmartThingsHandlerFactory created CloudBridgeHandler for {}", thingTypeUID.getAsString());
             return bridgeHandler;
         } else if (SmartThingsBindingConstants.BINDING_ID.equals(thing.getThingTypeUID().getBindingId())) {
+            ThingUID bridgeUID = this.bridgeUID;
             // Everything but the bridge is handled by this one handler
             // Make sure this thing belongs to the registered Bridge
             if (bridgeUID != null && !bridgeUID.equals(thing.getBridgeUID())) {

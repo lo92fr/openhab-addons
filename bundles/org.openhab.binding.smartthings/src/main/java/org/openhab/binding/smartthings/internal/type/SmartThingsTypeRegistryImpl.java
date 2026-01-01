@@ -33,6 +33,7 @@ import org.openhab.binding.smartthings.internal.dto.SmartThingsDevice;
 import org.openhab.binding.smartthings.internal.dto.SmartThingsProperty;
 import org.openhab.binding.smartthings.internal.handler.SmartThingsBridgeChannelDefinitions;
 import org.openhab.binding.smartthings.internal.handler.SmartThingsBridgeChannelDefinitions.ChannelProperty;
+import org.openhab.binding.smartthings.internal.handler.SmartThingsBridgeHandler;
 import org.openhab.binding.smartthings.internal.handler.SmartThingsCloudBridgeHandler;
 import org.openhab.core.config.core.ConfigDescriptionBuilder;
 import org.openhab.core.config.core.ConfigDescriptionParameter;
@@ -72,7 +73,7 @@ public class SmartThingsTypeRegistryImpl implements SmartThingsTypeRegistry {
 
     private final Logger logger = LoggerFactory.getLogger(SmartThingsTypeRegistryImpl.class);
 
-    private Hashtable<String, SemanticTag> sementicTags = new Hashtable<String, SemanticTag>();
+    private HashMap<String, SemanticTag> sementicTags = new HashMap<String, SemanticTag>();
     private @Nullable SmartThingsThingTypeProvider thingTypeProvider;
     private @Nullable SmartThingsChannelTypeProvider channelTypeProvider;
     private @Nullable SmartThingsChannelGroupTypeProvider channelGroupTypeProvider;
@@ -80,7 +81,7 @@ public class SmartThingsTypeRegistryImpl implements SmartThingsTypeRegistry {
     private @Nullable SmartThingsCloudBridgeHandler bridgeHandler;
     private Gson gson = new Gson();
 
-    private Hashtable<String, SmartThingsCapability> capabilitiesDict = new Hashtable<String, SmartThingsCapability>();
+    private HashMap<String, SmartThingsCapability> capabilitiesDict = new HashMap<String, SmartThingsCapability>();
 
     public SmartThingsTypeRegistryImpl() {
         initSemanticTags();
@@ -370,12 +371,14 @@ public class SmartThingsTypeRegistryImpl implements SmartThingsTypeRegistry {
                         if (capabilitiesDict.containsKey(capId)) {
                             capa = capabilitiesDict.get(capId);
                         } else {
+                            SmartThingsBridgeHandler bridgeHandler = this.bridgeHandler;
                             if (bridgeHandler != null) {
                                 SmartThingsApi api = bridgeHandler.getSmartThingsApi();
                                 try {
                                     logger.trace("Need capability not registered in cache: id:{} version:{}", cap.id,
                                             cap.version);
                                     capa = api.getCapability(cap.id, cap.version, null);
+
                                     logger.trace("capa is: {}", gson.toJson(capa));
                                     registerCapability(capa);
                                 } catch (SmartThingsException ex) {

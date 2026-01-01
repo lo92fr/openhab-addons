@@ -20,8 +20,6 @@ import org.openhab.binding.smartthings.internal.SmartThingsBindingConstants;
 import org.openhab.core.semantics.SemanticTag;
 import org.openhab.core.semantics.model.DefaultSemanticTags.Point;
 import org.openhab.core.semantics.model.DefaultSemanticTags.Property;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Configuration data for SmartThings hub
@@ -30,8 +28,6 @@ import org.slf4j.LoggerFactory;
  */
 @NonNullByDefault
 public class SmartThingsBridgeChannelDefinitions {
-    private final Logger logger = LoggerFactory.getLogger(SmartThingsBridgeChannelDefinitions.class);
-
     private static final SmartThingsBridgeChannelDefinitions INSTANCE = new SmartThingsBridgeChannelDefinitions();
 
     private final Hashtable<String, String> channelTypes = new Hashtable<String, String>();

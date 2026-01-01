@@ -19,8 +19,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import javax.validation.constraints.NotNull;
-
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
@@ -51,7 +49,7 @@ public class SmartThingsNetworkConnectorImpl implements SmartThingsNetworkConnec
 
     private final Logger logger = LoggerFactory.getLogger(SmartThingsNetworkConnectorImpl.class);
 
-    private final @NotNull Gson gSon;
+    private final Gson gSon;
 
     protected final HttpClientFactory httpClientFactory;
 
@@ -225,20 +223,23 @@ public class SmartThingsNetworkConnectorImpl implements SmartThingsNetworkConnec
         if (response != null) {
             if (resultClass.isArray()) {
                 JsonObject obj = gSon.fromJson(response, JsonObject.class);
-                if (obj != null && obj.has("items")) {
-                    T resultObj = gSon.fromJson(obj.get("items"), resultClass);
-                    return resultObj;
+                if (obj.has("items")) {
+                    final @Nullable T resultObj = gSon.fromJson(obj.get("items"), resultClass);
+                    if (resultObj != null) {
+                        return resultObj;
+                    }
                 } else {
                     throw new SmartThingsException(
                             "Requesting a Array result object, but data does not contains array definition");
                 }
             } else {
-                T resultObj = gSon.fromJson(response, resultClass);
-                return resultObj;
+                final @Nullable T resultObj = gSon.fromJson(response, resultClass);
+                if (resultObj != null) {
+                    return resultObj;
+                }
             }
         }
-
-        return null;
+        throw new SmartThingsException("doRequest failed");
     }
 
     @Override

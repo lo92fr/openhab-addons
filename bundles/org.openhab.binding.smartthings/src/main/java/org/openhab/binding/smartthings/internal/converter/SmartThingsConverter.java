@@ -162,6 +162,8 @@ public abstract class SmartThingsConverter {
             }
         }
 
+        logger.trace("uoM is : {}", uoM);
+
         switch (acceptedChannelType) {
             case SmartThingsBindingConstants.TYPE_COLOR:
                 logger.warn(
