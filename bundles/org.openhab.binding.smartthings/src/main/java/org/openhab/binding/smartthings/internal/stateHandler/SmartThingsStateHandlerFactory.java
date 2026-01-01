@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.smartthings.internal.statehandler;
+package org.openhab.binding.smartthings.internal.stateHandler;
 
 import java.util.HashMap;
 import java.util.Map;
