@@ -19,7 +19,7 @@ package org.openhab.binding.smartthings.internal.dto;
  * @author Laurent ARNAL - Initial contribution
  */
 public class AppResponse {
-    public SmartthingsApp app;
+    public SmartThingsApp app;
     public String oauthClientId;
     public String oauthClientSecret;
 }

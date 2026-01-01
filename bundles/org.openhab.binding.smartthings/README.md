@@ -1,16 +1,16 @@
-# Samsung Smartthings Binding
+# Samsung SmartThings Binding
 
-This binding integrates the Samsung Smartthings Cloud into openhab.
+This binding integrates the Samsung SmartThings Cloud into openHAB.
 
-The central part would be the "Smarthins Cloud Hub" bridge, that will enable communication between Openhab and Smartthings Cloud.
+The central part would be the "SmarThings Cloud Hub" bridge, that will enable communication between openHAB and SmartThings Cloud.
 There will be also an number of differents things for each of your home device.
 
 The Smarthings hub (the one you could have in your home to enable gateway to zigbee / mater & zware device) would be displayed as a thing (smartthings:hub).
 
-Note that having a Smartthings hub is not mandatory to use this binding.
-Some appliance devices like hoven, cooktop, dishwasher and others connect directly to Smartthings Cloud using your Wifi, and without using the local Smartthing hub.
+Note that having a SmartThings hub is not mandatory to use this binding.
+Some appliance devices like hoven, cooktop, dishwasher and others connect directly to SmartThings Cloud using your Wifi, and without using the local Smartthing hub.
 
-## A little background on Smartthings version change
+## A little background on SmartThings version change
 
 First version of bindings was bases on groovy script to be installed on the local hub.
 This version stop working somewhere in 2023 (to be verified) because of deprecation of groovy by samsung.
@@ -24,24 +24,24 @@ It's more convenient to setup : no need for end user to setup an external web ho
 Registration process is also far more easy :  
 
 - We use OAuth authentification in place of registration tokens.
-- All setup occurs directly inside Openhab.
+- All setup occurs directly inside openHAB.
 - The smartapp stuff are totally hide behind the scene, not needing complex setup.
 
 ## Supported things
 
-This binding supports most of the Smartthings devices that are defined in the [Smartthings Capabilities list](https://developer-preview.smartthings.com/docs/devices/capabilities/capabilities-reference/). 
+This binding supports most of the SmartThings devices that are defined in the [SmartThings Capabilities list](https://developer-preview.smartthings.com/docs/devices/capabilities/capabilities-reference/). 
 
 If you find a device that doesn't work [follow these instructions](doc/Troubleshooting.md) to collect the required data so it can be added in a future release.
 
-## Smartthings Configuration
+## SmartThings Configuration
 
 **The binding will not work until this part has been completed, do not skip this part of the setup.**
 
-In this version, the binding need to have a redirect URL using openhabcloud to do the first oAuth authorization. This URL will be only use during registration, and not during day to day use of the addons.
+In this version, the binding need to have a redirect URL using the openHAB Cloud service to do the first oAuth authorization. This URL will be only use during registration, and not during day to day use of the addons.
 
 URL will be of this form : https://home.myopenhab.org/connectsmartthings
 
-Warning: note that using your personal URL, even if expose on internet, will not work bacause only opencloud URL is registered to Smartthings.
+Warning: note that using your personal URL, even if expose on internet, will not work bacause only opencloud URL is registered to SmartThings.
 
 To do the registration, follow this steps:
 
@@ -61,17 +61,17 @@ To do the registration, follow this steps:
 
 ![alt text](doc/Authorize03.png)
 
-4. On this step, Smartthings should display a page with a combobox to select your location.
+4. On this step, SmartThings should display a page with a combobox to select your location.
   First select your location.
-  After this, Smartthings would display the authorization selection.
+  After this, SmartThings would display the authorization selection.
   Keep all checkbox on, and click "Authorize"
 
 ![alt text](doc/Authorize04.png)
 
-5. On this last step, your browser should be redirected to openhab.
+5. On this last step, your browser should be redirected to openHAB.
    The page will display a confirmation with the selected location, and the number of device foudn in the location.
 
-   You can now close the window, and go to Openhab Inbox to trigger a device scan.
+    You can now close the window, and go to the openHAB Inbox to trigger a device scan.
 
 ![alt text](doc/Authorize05.png)
 
@@ -99,7 +99,7 @@ Discovery will allow to automically fill Inbox with your smartthings device.
 
 
 allows openHAB to examine a binding and automatically find the Things available on that binding.
-Discovery is supported by the Smartthings binding and is run automatically on startup.
+Discovery is supported by the SmartThings binding and is run automatically on startup.
 
 
 
@@ -111,7 +111,7 @@ Discovery is supported by the Smartthings binding and is run automatically on st
 !!! ======================================================================================!!!  
 ```
 
-The bridge requires the IP address and port used to connect the openHAB server to the Smartthings Hub.
+The bridge requires the IP address and port used to connect the openHAB server to the SmartThings Hub.
 
 ```java
 Bridge smartthings:smartthings:Home    [ smartthingsIp="192.168.1.12", smartthingsPort=39500 ] {
@@ -123,16 +123,16 @@ where:
     The first two segments must be smartthings:smartthings.
     You can choose any unique name for the the last segment.
     The last segment is used when you identify items connected to this hubthingTypeId.
-- **smartthingsIp** is the IP address of the Smartthings Hub.
-    Your router should be configured such that the Smartthings Hub is always assigned to this IP address.
-- **smartthingsPort** is the port the Smartthings hub listens on. 39500 is the port assigned by Smartthings so it should be used unless you have a good reason for using another port.
+- **smartthingsIp** is the IP address of the SmartThings Hub.
+    Your router should be configured such that the SmartThings Hub is always assigned to this IP address.
+- **smartthingsPort** is the port the SmartThings hub listens on. 39500 is the port assigned by SmartThings so it should be used unless you have a good reason for using another port.
 
 **Warning** This binding only supports one Bridge.
 If you try to configure a second bridge it will be ignored.
 
 ### Thing Configuration
 
-Each attached thing must specify the type of device and it's Smartthings device name. The format of the Thing description is:
+Each attached thing must specify the type of device and it's SmartThings device name. The format of the Thing description is:
 
 ```java
 Thing <thingTypeId> name [ smartthingsName="<deviceName>", {smartthingsTimeout=<timeout>} ]
@@ -140,9 +140,9 @@ Thing <thingTypeId> name [ smartthingsName="<deviceName>", {smartthingsTimeout=<
 
 where:
 
-- **[thingTypeId](https://developer-preview.smartthings.com/docs/devices/capabilities/capabilities-reference/)** corresponds to the "Preferences Reference" in the Smartthings Capabilities document but without the capability.prefix. i.e. A dimmer switch in the Capabilities document has a Preferences reference of capability.switchLevel, therefore the &lt;thingTypeId&gt; is switchLevel.
+- **[thingTypeId](https://developer-preview.smartthings.com/docs/devices/capabilities/capabilities-reference/)** corresponds to the "Preferences Reference" in the SmartThings Capabilities document but without the capability.prefix. i.e. A dimmer switch in the Capabilities document has a Preferences reference of capability.switchLevel, therefore the &lt;thingTypeId&gt; is switchLevel.
 - **name** is what you want to call this thing and is used in defining the items that use this thing.
-- **deviceName** is the name you assigned to the device when you discovered and connected to it in the Smartthings App
+- **deviceName** is the name you assigned to the device when you discovered and connected to it in the SmartThings App
 - Optional: **timeout** is how long openHAB will wait for a response to the request before throwing a timeout exception. The default is 3 seconds.
 
 #### Example
@@ -175,7 +175,7 @@ The parts (separated by :) are defined as:
 1. **thingTypeId** specifies the type of the thing  you are connecting to. This is the same as described in the last section.
 1. **hubName** identifies the name of the hub specified above. This corresponds to the third segment in the **Bridge** definition.
 1. **thingName** identifes the thing this is attached to and is the "name" you specified in the **Thing** definition.
-1. **channelId** corresponds the the attribute in the [Smartthings Capabilities list](https://docs.smartthings.com/en/latest/capabilities-reference.html). For switch it would be "switch".
+1. **channelId** corresponds the the attribute in the [SmartThings Capabilities list](https://docs.smartthings.com/en/latest/capabilities-reference.html). For switch it would be "switch".
 
 ### Example
 
@@ -233,7 +233,7 @@ Frame label="Sengled RGBW Bulb" {
 ## References
 
 1. [openHAB configuration documentation](https://openhab.org/docs/configuration/index.html)
-2. [Smartthings Api Documentation](https://developer.smartthings.com/docs/api/public)
-3. [Smartthings Capabilities Reference]()
-4. [Smartthings Developers Documentation](https://developer.smartthings.com/docs/getting-started/architecture-of-smartthings)
+2. [SmartThings Api Documentation](https://developer.smartthings.com/docs/api/public)
+3. [SmartThings Capabilities Reference]()
+4. [SmartThings Developers Documentation](https://developer.smartthings.com/docs/getting-started/architecture-of-smartthings)
 5. [Python implementation](https://github.com/andrewsayre/pysmartthings)

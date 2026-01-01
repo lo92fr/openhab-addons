@@ -10,14 +10,14 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.smartthings.internal.stateHandler;
+package org.openhab.binding.smartthings.internal.statehandler;
 
 import java.math.BigDecimal;
 import java.util.Hashtable;
 import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.openhab.binding.smartthings.internal.handler.SmartthingsThingHandler;
+import org.openhab.binding.smartthings.internal.handler.SmartThingsThingHandler;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.PercentType;
 import org.openhab.core.thing.ChannelUID;
@@ -34,15 +34,15 @@ import org.slf4j.LoggerFactory;
  * @author Bob Raker - Initial contribution
  */
 @NonNullByDefault
-public abstract class SmartthingsStateHandler {
-    private final Logger logger = LoggerFactory.getLogger(SmartthingsStateHandler.class);
+public abstract class SmartThingsStateHandler {
+    private final Logger logger = LoggerFactory.getLogger(SmartThingsStateHandler.class);
     protected Map<String, State> stateCache = new Hashtable<String, State>();
 
-    SmartthingsStateHandler() {
+    SmartThingsStateHandler() {
     }
 
     public void handleStateChange(ChannelUID channelUID, String deviceType, String componentId, State state,
-            SmartthingsThingHandler thingHandler) {
+            SmartThingsThingHandler thingHandler) {
     }
 
     protected PercentType convToPercentTypeIfNeed(State state) {

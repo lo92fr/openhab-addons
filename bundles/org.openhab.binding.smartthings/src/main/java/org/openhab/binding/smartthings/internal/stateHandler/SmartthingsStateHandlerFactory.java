@@ -10,14 +10,14 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.smartthings.internal.stateHandler;
+package org.openhab.binding.smartthings.internal.statehandler;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.binding.smartthings.internal.SmartthingsBindingConstants;
+import org.openhab.binding.smartthings.internal.SmartThingsBindingConstants;
 
 /**
  * A factory for creating converters based on the itemType.
@@ -26,22 +26,22 @@ import org.openhab.binding.smartthings.internal.SmartthingsBindingConstants;
  */
 
 @NonNullByDefault
-public class SmartthingsStateHandlerFactory {
-    private static Map<String, SmartthingsStateHandler> stateHandlerCache = new HashMap<>();
+public class SmartThingsStateHandlerFactory {
+    private static Map<String, SmartThingsStateHandler> stateHandlerCache = new HashMap<>();
 
     public static void registerStateHandler() {
-        registerStateHandler(SmartthingsBindingConstants.THING_LIGHT, new SmartthingsStateHandlerLight());
+        registerStateHandler(SmartThingsBindingConstants.THING_LIGHT, new SmartThingsStateHandlerLight());
     }
 
-    private static void registerStateHandler(String key, SmartthingsStateHandler tp) {
+    private static void registerStateHandler(String key, SmartThingsStateHandler tp) {
         stateHandlerCache.put(key, tp);
     }
 
     /**
      * Returns the converter for an itemType.
      */
-    public static @Nullable SmartthingsStateHandler getStateHandler(String deviceType) {
-        SmartthingsStateHandler stateHandler = stateHandlerCache.get(deviceType);
+    public static @Nullable SmartThingsStateHandler getStateHandler(String deviceType) {
+        SmartThingsStateHandler stateHandler = stateHandlerCache.get(deviceType);
         return stateHandler;
     }
 }
