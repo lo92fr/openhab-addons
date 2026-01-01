@@ -115,7 +115,7 @@ public class SmartThingsAuthServlet extends SmartThingsBaseServlet {
         template = indexTemplate;
 
         if (queryString != null) {
-            final MultiMap<String> params = new MultiMap<>();
+            final MultiMap<@Nullable String> params = new MultiMap<>();
             UrlEncoded.decodeTo(queryString, params, StandardCharsets.UTF_8.name());
             final String reqCode = params.getString("code");
             final String reqState = params.getString("state");
