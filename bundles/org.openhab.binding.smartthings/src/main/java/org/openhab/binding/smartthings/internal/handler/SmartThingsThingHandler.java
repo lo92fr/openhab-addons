@@ -52,7 +52,6 @@ public class SmartThingsThingHandler extends BaseThingHandler {
 
     private String smartthingsName;
 
-    private final String smartthingsConverterName = "smartthings-converter";
     private @Nullable ScheduledFuture<?> pollingJob = null;
 
     public SmartThingsThingHandler(Thing thing) {
@@ -324,10 +323,6 @@ public class SmartThingsThingHandler extends BaseThingHandler {
         }
 
         // refreshDevice();
-    }
-
-    private @Nullable SmartthingsConverter getConverter(String converterName) {
-        return SmartthingsConverterFactory.getConverter(converterName);
     }
 
     @Override
