@@ -150,8 +150,6 @@ public class SmartThingsTypeRegistryImpl implements SmartThingsTypeRegistry {
     }
 
     public void createChannelTypes(SmartThingsCapability capa) {
-        SmartThingsChannelTypeProvider lcChannelTypeProvider = channelTypeProvider;
-
         logger.trace("createChannelTypes: capa:{} / {}", capa.id, capa.version);
 
         for (String key : capa.attributes.keySet()) {
@@ -159,81 +157,99 @@ public class SmartThingsTypeRegistryImpl implements SmartThingsTypeRegistry {
 
             logger.trace("createChannelTypes: key {}", key);
 
-            if (key.indexOf("Range") > 0) {
-                continue;
-            }
+            try {
 
-            // logger.info("capa: {} <> {}", capa.id, key);
-
-            if (attr == null) {
-                continue;
-            }
-            if (attr.schema == null) {
-                logger.info("no schema");
-            }
-            if (attr.schema.properties == null) {
-                logger.info("no properties");
-            }
-            if (!attr.schema.properties.containsKey("value")) {
-                logger.info("no value");
-            }
-
-            SmartThingsProperty prop = attr.schema.properties.get("value");
-
-            if (prop != null) {
-                String smartThingsType = prop.type;
-                String openHabChannelType = "NA";
-
-                SmartThingsProperty unit = null;
-                if (attr.schema.properties.containsKey("unit")) {
-                    unit = attr.schema.properties.get("unit");
-                }
-
-                ChannelProperty channelProp = SmartThingsBridgeChannelDefinitions
-                        .getChannelProperty(capa.id + "#" + key);
-
-                openHabChannelType = getOpenhabChannelType(smartThingsType, capa, key, channelProp);
-
-                if ("".equals(openHabChannelType)) {
-                    logger.info("need review");
-                }
-                String label = capa.name;
-
-                String channelTypeName = capa.id.replace(".", "_") + "_"
-                        + (StringUtils.join(StringUtils.splitByCharacterTypeCamelCase(key), '-')).toLowerCase();
-
-                List<StateOption> options = new ArrayList<StateOption>();
-
-                if (prop.enumeration != null) {
-                    for (String opt : prop.enumeration) {
-                        String optValue = opt;
-                        String optName = StringUtils.capitalize(
-                                StringUtils.join(StringUtils.splitByCharacterTypeCamelCase(opt), StringUtils.SPACE));
-
-                        StateOption option = new StateOption(optValue, optName);
-                        options.add(option);
-                    }
-                }
-
-                if ("".equals(openHabChannelType)) {
+                if (key.indexOf("Range") > 0) {
                     continue;
                 }
 
-                logger.trace("createChannelTypes: channelTypeName {}", channelTypeName);
+                // logger.info("capa: {} <> {}", capa.id, key);
 
-                ChannelTypeUID channelTypeUID = UidUtils.generateChannelTypeUID(channelTypeName);
-                ChannelType channelType = null;
-                if (lcChannelTypeProvider != null) {
-                    channelType = lcChannelTypeProvider.getInternalChannelType(channelTypeUID);
-                    if (channelType == null) {
-                        channelType = createChannelType(capa, unit, channelTypeName, "", label, openHabChannelType,
-                                channelTypeUID, options, channelProp);
-                        lcChannelTypeProvider.addChannelType(channelType);
-                    }
+                if (attr == null) {
+                    continue;
                 }
+                if (attr.schema == null) {
+                    logger.info("no schema");
+                }
+                if (attr.schema.properties == null) {
+                    logger.info("no properties");
+                }
+                if (!attr.schema.properties.containsKey("value")) {
+                    logger.info("no value");
+                }
+
+                SmartThingsProperty prop = attr.schema.properties.get("value");
+
+                if (prop != null) {
+                    if (prop.oneOf != null) {
+                        for (SmartThingsProperty ofOfProp : prop.oneOf) {
+                            generateChannelTypeForProp(capa, key, attr, ofOfProp);
+                        }
+                    } else {
+                        generateChannelTypeForProp(capa, key, attr, prop);
+                    }
+
+                }
+            } catch (Exception ex) {
+                logger.info("Unable to register ChannelTypes for capa : {}", key);
             }
 
         }
+    }
+
+    private void generateChannelTypeForProp(SmartThingsCapability capa, String attrKey, SmartThingsAttribute attr,
+            SmartThingsProperty prop) {
+        SmartThingsChannelTypeProvider lcChannelTypeProvider = channelTypeProvider;
+        String smartThingsType = prop.type;
+        String openHabChannelType = "NA";
+
+        SmartThingsProperty unit = null;
+        if (attr.schema.properties.containsKey("unit")) {
+            unit = attr.schema.properties.get("unit");
+        }
+
+        ChannelProperty channelProp = SmartThingsBridgeChannelDefinitions.getChannelProperty(capa.id + "#" + attrKey);
+
+        openHabChannelType = getOpenhabChannelType(smartThingsType, capa, attrKey, channelProp);
+
+        if ("".equals(openHabChannelType)) {
+            logger.info("need review");
+        }
+        String label = capa.name;
+
+        String channelTypeName = capa.id.replace(".", "_") + "_"
+                + (StringUtils.join(StringUtils.splitByCharacterTypeCamelCase(attrKey), '-')).toLowerCase();
+
+        List<StateOption> options = new ArrayList<StateOption>();
+
+        if (prop.enumeration != null) {
+            for (String opt : prop.enumeration) {
+                String optValue = opt;
+                String optName = StringUtils.capitalize(
+                        StringUtils.join(StringUtils.splitByCharacterTypeCamelCase(opt), StringUtils.SPACE));
+
+                StateOption option = new StateOption(optValue, optName);
+                options.add(option);
+            }
+        }
+
+        if ("".equals(openHabChannelType)) {
+            return;
+        }
+
+        logger.trace("createChannelTypes: channelTypeName {}", channelTypeName);
+
+        ChannelTypeUID channelTypeUID = UidUtils.generateChannelTypeUID(channelTypeName);
+        ChannelType channelType = null;
+        if (lcChannelTypeProvider != null) {
+            channelType = lcChannelTypeProvider.getInternalChannelType(channelTypeUID);
+            if (channelType == null) {
+                channelType = createChannelType(capa, unit, channelTypeName, "", label, openHabChannelType,
+                        channelTypeUID, options, channelProp);
+                lcChannelTypeProvider.addChannelType(channelType);
+            }
+        }
+
     }
 
     private ChannelType createChannelType(SmartThingsCapability capa, @Nullable SmartThingsProperty unit,

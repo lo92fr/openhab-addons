@@ -22,6 +22,7 @@ import com.google.gson.annotations.SerializedName;
  * @author Laurent ARNAL - Initial contribution
  */
 public class SmartThingsProperty {
+    public SmartThingsProperty[] oneOf;
     public String type;
     public int minimum;
     public int maximum;
