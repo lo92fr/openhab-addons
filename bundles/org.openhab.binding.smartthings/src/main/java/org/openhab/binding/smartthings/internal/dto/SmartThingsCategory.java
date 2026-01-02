@@ -10,17 +10,15 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.smartthings.internal.handler;
-
-import org.eclipse.jdt.annotation.NonNullByDefault;
+package org.openhab.binding.smartthings.internal.dto;
 
 /**
- * Smartthings Bridge messages
+ * Data object for SmartThings category description
  *
- * @author Bob Raker - Initial contribution
+ * @author Laurent ARNAL - Initial contribution
  */
-@NonNullByDefault
-public interface SmartthingsThingConfigStatusMessage {
+public class SmartThingsCategory {
 
-    static final String SMARTTHINGS_NAME_MISSING = "missing-smartthings-name";
+    public String name;
+    public String categoryType;
 }

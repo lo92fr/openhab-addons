@@ -10,18 +10,20 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.smartthings.internal.handler;
+package org.openhab.binding.smartthings.internal.api;
+
+import java.net.URI;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
 
 /**
- * Smartthings Bridge messages
- *
- * @author Bob Raker - Initial contribution
+ * @author Laurent Arnal - Initial contribution
  */
 @NonNullByDefault
-public interface SmartthingsBridgeConfigStatusMessage {
-
-    static final String IP_MISSING = "missing-ip-configuration";
-    static final String PORT_MISSING = "missing-port-configuration";
+public interface SmartThingsNetworkCallback<T> {
+    /**
+     * Runs callback code after response completion.
+     */
+    void execute(URI uri, int status, @Nullable T response);
 }

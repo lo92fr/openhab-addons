@@ -13,8 +13,8 @@
 package org.openhab.binding.smartthings.internal.converter;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.binding.smartthings.internal.dto.SmartthingsStateData;
+import org.openhab.binding.smartthings.internal.SmartThingsBindingConstants;
+import org.openhab.binding.smartthings.internal.type.SmartThingsTypeRegistry;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.types.Command;
@@ -24,28 +24,31 @@ import org.openhab.core.types.State;
  * Converter class for Door Control.
  * This can't use the default because when closing the door the command that comes in as "closed" but "close" needs to
  * be
- * sent to Smartthings
+ * sent to SmartThings
  *
  * @author Bob Raker - Initial contribution
  */
 @NonNullByDefault
-public class SmartthingsOpenCloseControlConverter extends SmartthingsConverter {
+public class SmartThingsOpenCloseControlConverter extends SmartThingsConverter {
 
-    public SmartthingsOpenCloseControlConverter(Thing thing) {
-        super(thing);
+    public SmartThingsOpenCloseControlConverter(SmartThingsTypeRegistry typeRegistry) {
+        super(typeRegistry);
     }
 
     @Override
-    public String convertToSmartthings(ChannelUID channelUid, Command command) {
-        String smartthingsValue = ("open".equals(command.toString().toLowerCase())) ? "open" : "close";
+    public void convertToSmartThingsInternal(Thing thing, ChannelUID channelUid, Command command) {
+        String smartthingsValue = (SmartThingsBindingConstants.OPEN_VALUE.equals(command.toString().toLowerCase()))
+                ? SmartThingsBindingConstants.OPEN_VALUE
+                : SmartThingsBindingConstants.CLOSE_VALUE;
         smartthingsValue = surroundWithQuotes(smartthingsValue);
 
-        return String.format("{\"capabilityKey\": \"%s\", \"deviceDisplayName\": \"%s\", \"value\": %s}", thingTypeId,
-                smartthingsName, smartthingsValue);
+        // @todo : to review, no action !
+        // String msg = String.format("{\"capabilityKey\": \"%s\", \"deviceDisplayName\": \"%s\", \"value\": %s}",
+        // thing.getThingTypeUID(), "smartthingsName", smartthingsValue);
     }
 
     @Override
-    public State convertToOpenHab(@Nullable String acceptedChannelType, SmartthingsStateData dataFromSmartthings) {
-        return defaultConvertToOpenHab(acceptedChannelType, dataFromSmartthings);
+    public State convertToOpenHabInternal(Thing thing, ChannelUID channelUid, Object dataFromSmartThings) {
+        return defaultConvertToOpenHab(thing, channelUid, dataFromSmartThings);
     }
 }
