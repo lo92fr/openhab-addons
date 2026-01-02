@@ -239,7 +239,7 @@ public class SmartThingsNetworkConnectorImpl implements SmartThingsNetworkConnec
                 }
             }
         }
-        throw new SmartThingsException("doRequest failed");
+        return null;
     }
 
     @Override
