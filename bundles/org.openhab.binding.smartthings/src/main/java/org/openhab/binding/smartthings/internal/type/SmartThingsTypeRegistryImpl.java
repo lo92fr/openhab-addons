@@ -249,7 +249,6 @@ public class SmartThingsTypeRegistryImpl implements SmartThingsTypeRegistry {
                 lcChannelTypeProvider.addChannelType(channelType);
             }
         }
-
     }
 
     private ChannelType createChannelType(SmartThingsCapability capa, @Nullable SmartThingsProperty unit,
