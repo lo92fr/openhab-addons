@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2026 Contributors to the openHAB project
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -39,7 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
-import com.google.gson.internal.LinkedTreeMap;
+//import com.google.gson.internal.LinkedTreeMap;
 
 /**
  * Base converter class.
@@ -239,18 +239,20 @@ public abstract class SmartThingsConverter {
                     String resultSt = result.toString();
                     return new StringType(resultSt);
 
-                } else if (dataFromSmartThings instanceof LinkedTreeMap map) {
-
-                    String resultSt = gson.toJson(map).toString();
-                    // if (map.keySet().contains("deltaEnergy")) {
-                    // SmartThingsTestType ttype = new SmartThingsTestType();
-                    // ttype.setEnergy(new BigDecimal(100));
-                    // ttype.setDeltaEnergy(new BigDecimal(10));
-                    // return ttype;
-                    // }
-                    return new StringType(resultSt);
-
-                } else {
+                } /*
+                   * else if (dataFromSmartThings instanceof LinkedTreeMap map) {
+                   * 
+                   * String resultSt = gson.toJson(map).toString();
+                   * // if (map.keySet().contains("deltaEnergy")) {
+                   * // SmartThingsTestType ttype = new SmartThingsTestType();
+                   * // ttype.setEnergy(new BigDecimal(100));
+                   * // ttype.setDeltaEnergy(new BigDecimal(10));
+                   * // return ttype;
+                   * // }
+                   * return new StringType(resultSt);
+                   * 
+                   * }
+                   */else {
                     logger.error("@todo : handle this case: {} inputClass: {}", channelUid,
                             dataFromSmartThings.getClass());
                 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2026 Contributors to the openHAB project
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -52,6 +52,8 @@ import org.osgi.service.jaxrs.client.SseEventSourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sun.net.httpserver.HttpServer;
+
 /**
  * The {@link SmartThingsBridgeHandler} is responsible for handling commands, which are
  * sent to one of the channels.
@@ -81,6 +83,8 @@ public abstract class SmartThingsBridgeHandler extends BaseBridgeHandler
     private @NonNullByDefault({}) SmartThingsNetworkConnector networkConnector;
     private final OAuthFactory oAuthFactory;
     private String appId = "";
+
+    private @Nullable HttpServer callbackServer;
 
     public SmartThingsBridgeHandler(Bridge bridge, SmartThingsHandlerFactory smartthingsHandlerFactory,
             SmartThingsAuthService authService, BundleContext bundleContext, HttpService httpService,
@@ -121,17 +125,12 @@ public abstract class SmartThingsBridgeHandler extends BaseBridgeHandler
 
         OAuthClientService oAuthService = oAuthFactory.createOAuthClientService(thing.getUID().getAsString(),
                 SmartThingsBindingConstants.SMARTTHINGS_API_TOKEN_URL,
-                SmartThingsBindingConstants.SMARTTHINGS_AUTHORIZE_URL, config.clientId, config.clientSecret,
+                SmartThingsBindingConstants.SMARTTHINGS_AUTHORIZE_URL, SmartThingsBindingConstants.CLI_CLIENT_ID, null,
                 SmartThingsBindingConstants.SMARTTHINGS_SCOPES, true);
 
         this.oAuthService = oAuthService;
         oAuthService.addAccessTokenRefreshListener(SmartThingsBridgeHandler.this);
-        this.networkConnector = new SmartThingsNetworkConnectorImpl(httpClientFactory, oAuthService);
-
         authService.registerServlet();
-
-        smartthingsApi = new SmartThingsApi(httpClientFactory, this, networkConnector, clientBuilder,
-                eventSourceFactory);
 
         if (servlet == null) {
             SmartThingsBridgeHandler bridgeHandler = this;
@@ -140,12 +139,109 @@ public abstract class SmartThingsBridgeHandler extends BaseBridgeHandler
             servlet.activate();
         }
 
-        updateStatus(ThingStatus.ONLINE);
+        try {
+            org.openhab.core.auth.client.oauth2.AccessTokenResponse response = oAuthService.getAccessTokenResponse();
+            if (response != null && response.getAccessToken() != null) {
+                setupClient();
+                logger.info("token:" + response.getAccessToken());
+            } else {
+                startCallbackListener();
+
+                org.openhab.core.auth.client.oauth2.OAuthClientService srv = oAuthService;
+                String authUrl = srv != null ? srv.getAuthorizationUrl(SmartThingsBindingConstants.REDIRECT_URI,
+                        SmartThingsBindingConstants.SMARTTHINGS_SCOPES, getThing().getUID().getId()) : "";
+
+                String authUrl2 = srv != null ? srv.getAuthorizationUrl(SmartThingsBindingConstants.REDIRECT_URI,
+                        SmartThingsBindingConstants.SMARTTHINGS_SCOPES, getThing().getUID().getId())
+                        + "&client_type=USER_LEVEL" : "";
+
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                        "Please authorize the binding by visiting: " + authUrl
+                                + "\nThe authorization code will be captured automatically.");
+            }
+        } catch (Exception e) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "OAuth failed: " + e.getMessage());
+        }
+
+        /*
+         *
+         *
+         *
+         * updateStatus(ThingStatus.ONLINE);
+         */
     }
 
-    public void updateConfig(String clientId, String clientSecret) {
-        config.clientId = clientId;
-        config.clientSecret = clientSecret;
+    private void startCallbackListener() {
+        stopCallbackListener();
+        try {
+            HttpServer server = HttpServer.create(new java.net.InetSocketAddress(61973), 0);
+            callbackServer = server;
+            server.createContext("/finish", exchange -> {
+                String query = exchange.getRequestURI().getQuery();
+                if (query != null && query.contains("code=")) {
+                    String code = query.split("code=")[1].split("&")[0];
+                    logger.debug("Captured auth code: {}", code);
+
+                    String response = "Authorization successful! You can now close this window.";
+                    exchange.sendResponseHeaders(200, response.length());
+                    java.io.OutputStream os = exchange.getResponseBody();
+                    os.write(response.getBytes());
+                    os.close();
+
+                    // Finish OAuth flow
+                    finishOAuth(code, getThing().getUID().getId());
+                    stopCallbackListener();
+                } else {
+                    exchange.sendResponseHeaders(400, 0);
+                    exchange.close();
+                }
+            });
+            server.setExecutor(null);
+            server.start();
+            logger.info("Started OAuth callback listener on port 61973");
+        } catch (java.io.IOException e) {
+            logger.error("Failed to start OAuth callback listener", e);
+        }
+    }
+
+    protected void setupClient() {
+        final org.openhab.core.auth.client.oauth2.OAuthClientService oAuthService = this.oAuthService;
+
+        if (oAuthService != null) {
+            this.networkConnector = new SmartThingsNetworkConnectorImpl(httpClientFactory, oAuthService);
+            smartthingsApi = new SmartThingsApi(httpClientFactory, this, networkConnector, clientBuilder,
+                    eventSourceFactory);
+        }
+
+    }
+
+    private void finishOAuth(String code, String verifier) {
+        org.openhab.core.auth.client.oauth2.OAuthClientService srv = oAuthService;
+        if (srv != null) {
+            try {
+                srv.addExtraAuthField("code_verifier", verifier);
+                org.openhab.core.auth.client.oauth2.AccessTokenResponse response = srv
+                        .getAccessTokenResponseByAuthorizationCode(code, SmartThingsBindingConstants.REDIRECT_URI);
+                if (response.getAccessToken() != null) {
+                    logger.info("token:" + response.getAccessToken());
+                    setupClient();
+                } else {
+                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                            "Failed to exchange code for tokens");
+                }
+            } catch (Exception e) {
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                        "Token exchange failed: " + e.getMessage());
+            }
+        }
+    }
+
+    private void stopCallbackListener() {
+        HttpServer server = callbackServer;
+        if (server != null) {
+            server.stop(0);
+            callbackServer = null;
+        }
     }
 
     @Override
@@ -158,6 +254,7 @@ public abstract class SmartThingsBridgeHandler extends BaseBridgeHandler
 
     @Override
     public void dispose() {
+        stopCallbackListener();
         SmartThingsServlet servlet = this.servlet;
         if (servlet != null) {
             servlet.deactivate();

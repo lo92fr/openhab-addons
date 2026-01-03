@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2026 Contributors to the openHAB project
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -63,9 +63,14 @@ public class SmartThingsCloudBridgeHandler extends SmartThingsBridgeHandler {
 
     @Override
     public void initialize() {
-        super.initialize();
-
         updateStatus(ThingStatus.UNKNOWN);
+
+        super.initialize();
+    }
+
+    @Override
+    protected void setupClient() {
+        super.setupClient();
 
         scheduler.submit(() -> {
             try {
@@ -140,11 +145,4 @@ public class SmartThingsCloudBridgeHandler extends SmartThingsBridgeHandler {
         return smartthingsHandlerFactory;
     }
 
-    public String getClientId() {
-        return config.clientId;
-    }
-
-    public String getClientSecret() {
-        return config.clientSecret;
-    }
 }

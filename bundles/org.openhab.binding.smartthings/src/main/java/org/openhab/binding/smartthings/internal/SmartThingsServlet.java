@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2026 Contributors to the openHAB project
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -293,9 +293,6 @@ public class SmartThingsServlet extends SmartThingsBaseServlet {
 
         try {
             AppResponse appResponse = api.setupApp(redirectUrl);
-            if (appResponse.oauthClientId != null && appResponse.oauthClientSecret != null) {
-                bridgeHandler.updateConfig(appResponse.oauthClientId, appResponse.oauthClientSecret);
-            }
             bridgeHandler.setAppId(appResponse.app.appId);
         } catch (SmartThingsException ex) {
             logger.info("Unable to setup SmartThings app !!");

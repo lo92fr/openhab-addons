@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2026 Contributors to the openHAB project
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -48,8 +48,15 @@ public class SmartThingsBindingConstants {
                     "x:locations:*", "r:scenes:*", "x:scenes:*", "r:rules:*", "w:rules:*")
             .collect(Collectors.joining(" "));
 
+    public static final String SMARTTHINGS_SCOPES2 = "controller:stCli";
+    // public static final String CLI_CLIENT_ID = "d18cf96e-c626-4433-bf51-ddbb10c5d1ed";
+    public static final String CLI_CLIENT_ID = "f9fd90b7-c4bb-49c1-974f-e80b89a7327f";
+    public static final String REDIRECT_URI = "http://localhost:61973/finish";
+
     // List of SmartThings services related urls, information
-    public static final String SMARTTHINGS_ACCOUNT_URL = "https://api.smartthings.com/oauth";
+
+    // public static final String SMARTTHINGS_ACCOUNT_URL = "https://api.smartthings.com/oauth";
+    public static final String SMARTTHINGS_ACCOUNT_URL = "https://oauthin-regional.api.smartthings.com/oauth";
     public static final String SMARTTHINGS_AUTHORIZE_URL = SMARTTHINGS_ACCOUNT_URL + "/authorize";
     public static final String SMARTTHINGS_API_TOKEN_URL = SMARTTHINGS_ACCOUNT_URL + "/token";
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2026 Contributors to the openHAB project
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -24,6 +24,7 @@ import org.openhab.binding.smartthings.internal.api.SmartThingsApi;
 import org.openhab.binding.smartthings.internal.dto.SmartThingsCategory;
 import org.openhab.binding.smartthings.internal.dto.SmartThingsComponent;
 import org.openhab.binding.smartthings.internal.dto.SmartThingsDevice;
+import org.openhab.binding.smartthings.internal.dto.SmartThingsLocation;
 import org.openhab.binding.smartthings.internal.handler.SmartThingsBridgeHandler;
 import org.openhab.binding.smartthings.internal.type.SmartThingsException;
 import org.openhab.binding.smartthings.internal.type.SmartThingsTypeRegistry;
@@ -107,6 +108,7 @@ public class SmartThingsDiscoveryService extends AbstractDiscoveryService
 
         SmartThingsApi api = bridge.getSmartThingsApi();
         SmartThingsDevice[] devices = api.getAllDevices();
+        SmartThingsLocation[] locations = api.getAllLocations();
 
         for (SmartThingsDevice device : devices) {
             registerDevice(device, addDevice);
