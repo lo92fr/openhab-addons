@@ -424,7 +424,7 @@ public class SmartThingsTypeRegistryImpl implements SmartThingsTypeRegistry {
                     }
                 }
 
-                tt = createThingType(deviceType, device.deviceTypeName, groupTypes);
+                tt = createThingType(deviceType, device.name, groupTypes);
                 lcThingTypeProvider.addThingType(tt);
             }
         }

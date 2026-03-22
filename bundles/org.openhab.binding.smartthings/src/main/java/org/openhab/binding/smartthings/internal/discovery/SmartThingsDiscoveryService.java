@@ -101,10 +101,36 @@ public class SmartThingsDiscoveryService extends AbstractDiscoveryService
 
     public void registerDevice(SmartThingsDevice device, Boolean addDevice) {
         String name = device.name;
+        String label = device.label;
 
         logger.trace("Find Device : {} / {}", device.name, device.label);
 
         if (device.components == null || device.components.length == 0) {
+            return;
+        }
+
+        Boolean enabled = false;
+        if ("Four".equals(label)) {
+            enabled = false;
+        }
+        if ("Petrole".equals(label)) {
+            enabled = true;
+        }
+
+        if ("Bureau".equals(label)) {
+            enabled = false;
+        }
+        if (label.contains("cuisson")) {
+            enabled = false;
+        }
+
+        if (label.contains("Plug")) {
+            enabled = false;
+        }
+
+        enabled = true;
+
+        if (!enabled) {
             return;
         }
 

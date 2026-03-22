@@ -12,6 +12,10 @@
  */
 package org.openhab.binding.smartthings.internal.handler;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -30,17 +34,42 @@ import org.openhab.binding.smartthings.internal.statehandler.SmartThingsStateHan
 import org.openhab.binding.smartthings.internal.type.SmartThingsException;
 import org.openhab.binding.smartthings.internal.type.SmartThingsTypeRegistry;
 import org.openhab.binding.smartthings.internal.type.SmartThingsTypeRegistryImpl;
+import org.openhab.core.automation.annotation.RuleAction;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.thing.binding.BaseThingHandler;
+import org.openhab.core.thing.binding.ThingActions;
+import org.openhab.core.thing.binding.ThingActionsScope;
+import org.openhab.core.thing.binding.ThingHandler;
+import org.openhab.core.thing.binding.ThingHandlerService;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.RefreshType;
 import org.openhab.core.types.State;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ServiceScope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.CtMethod;
+import javassist.CtNewMethod;
+import javassist.LoaderClassPath;
+import javassist.bytecode.AnnotationsAttribute;
+import javassist.bytecode.ConstPool;
+import javassist.bytecode.MethodInfo;
+import javassist.bytecode.annotation.Annotation;
+import javassist.bytecode.annotation.StringMemberValue;
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.description.annotation.AnnotationDescription;
+import net.bytebuddy.dynamic.DynamicType;
+import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
+import net.bytebuddy.implementation.FieldAccessor;
+import net.bytebuddy.implementation.FixedValue;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 
 /**
  * @author Bob Raker - Initial contribution
@@ -347,6 +376,154 @@ public class SmartThingsThingHandler extends BaseThingHandler {
                 }
             }
         }
+    }
+
+    // @Override
+    public Collection<Class<? extends ThingHandlerService>> getServices2() {
+
+        DynamicType.Builder<?> builder = new ByteBuddy().subclass(ThingActions.class);
+
+        builder = builder.name("SmartThingsActions");
+
+        AnnotationDescription componentAnnotation = AnnotationDescription.Builder.ofType(Component.class)
+                .define("scope", ServiceScope.PROTOTYPE).defineTypeArray("service", SmartThingsActions.class).build();
+
+        AnnotationDescription scopeAnnotation = AnnotationDescription.Builder.ofType(ThingActionsScope.class)
+                .define("name", "smartthings").build();
+
+        // AnnotationDescription nonNullAnnotation =
+        // AnnotationDescription.Builder.ofType(NonNullByDefault.class).build();
+
+        builder = builder.defineField("handler", SmartThingsThingHandler.class, Modifier.PRIVATE);
+
+        builder = builder.annotateType(componentAnnotation, scopeAnnotation);
+
+        // 👉 setThingHandler
+        builder = builder.defineMethod("setThingHandler", void.class, Modifier.PUBLIC).withParameter(ThingHandler.class)
+                .intercept(FieldAccessor.ofField("handler").withAssigner(Assigner.DEFAULT, Assigner.Typing.DYNAMIC)
+                        .setsArgumentAt(0));
+
+        // 👉 getThingHandler
+        builder = builder.defineMethod("getThingHandler", ThingHandler.class, Modifier.PUBLIC)
+                .intercept(FieldAccessor.ofField("handler"));
+
+        AnnotationDescription ruleAction = AnnotationDescription.Builder.ofType(RuleAction.class)
+                .define("label", "@text/actionLabel").define("description", "@text/actionDesc").build();
+
+        /*
+         * AnnotationDescription actionOutput = AnnotationDescription.Builder.ofType(ActionOutput.class)
+         * .define("name", "topic").define("type", "String").define("label", "@text/actionInputTopicLabel")
+         * .define("description", "@text/actionInputTopicDesc").build();
+         *
+         * AnnotationDescription stateInput = AnnotationDescription.Builder.ofType(ActionInput.class)
+         * .define("name", "state").define("label", "state")
+         * .define("description", "State of the fade effect : Run/Stop").build();
+         *
+         * // AnnotationDescription nullable = AnnotationDescription.Builder.ofType(Nullable.class).build();
+         *
+         * AnnotationDescription fadeTypeInput = AnnotationDescription.Builder.ofType(ActionInput.class)
+         * .define("name", "fadeType").define("label", "fadeType")
+         * .define("description", "The type of fade: WakeUp/WakeDown").build();
+         * AnnotationDescription durationInput = AnnotationDescription.Builder.ofType(ActionInput.class)
+         * .define("name", "duration").define("label", "duration")
+         * .define("description", "The duration of the fade effect").build();
+         *
+         * AnnotationDescription colorTempInput = AnnotationDescription.Builder.ofType(ActionInput.class)
+         * .define("name", "colorTemperature").define("label", "colorTemperature")
+         * .define("description", "The colorTemperature").build();
+         */
+
+        builder = builder.defineMethod("setFade", String.class, Modifier.PUBLIC)
+
+                .withParameters(String.class, String.class, int.class, int.class)
+
+                .intercept(FixedValue.value("test"))
+
+                .annotateMethod(ruleAction);
+
+        // .annotateParameter(0, stateInput).annotateParameter(1, fadeTypeInput)
+        // .annotateParameter(2, durationInput).annotateParameter(3, colorTempInput);
+
+        ClassLoader cl = RuleAction.class.getClassLoader();
+
+        Class dynamicType = builder.make().load(cl, ClassLoadingStrategy.Default.CHILD_FIRST).getLoaded();
+
+        String t1 = dynamicType.getClassLoader().toString();
+
+        return List.of(dynamicType);
+    }
+
+    @Override
+    public Collection<Class<? extends ThingHandlerService>> getServices() {
+        return List.of(SmartThingsActions.class);
+    }
+
+    // @Override
+    public Collection<Class<? extends ThingHandlerService>> getServices3() {
+
+        try {
+            ClassPool pool = new ClassPool();
+            pool.appendClassPath(new LoaderClassPath(this.getClass().getClassLoader()));
+            CtClass cc = pool.get("org.openhab.binding.smartthings.internal.handler.SmartThingsActions");
+
+            // cc.getClassFile().setVersionToJava5();
+
+            // @ActionOutput(name = "topic", type = "String", label = "@text/actionInputTopicLabel", description =
+            // "@text/actionInputTopicDesc")
+            // @RuleAction(label = "@text/actionLabel", description = "@text/actionDesc")
+            // public String setFade(
+            // @ActionInput(name = "state", label = "state", description = "State of the fade effect : Run/Stop")
+            // @Nullable String state,
+            // @ActionInput(name = "fadeType", label = "fadeType", description = "The type of fade: WakeUp/WakeDown")
+            // @Nullable String fadeType,
+            // @ActionInput(name = "duration", label = "duration", description = "The duration of the fade effect") int
+            // duration,
+            // @ActionInput(name = "colorTemperature", label = "colorTemperature", description = "The colorTemperature")
+            // int colorTemperature) {
+
+            // Ajouter l'annotation
+            ConstPool constPool = cc.getClassFile().getConstPool();
+
+            CtMethod m;
+            m = CtNewMethod.make("public void setTest() {  }", cc);
+            cc.addMethod(m);
+
+            // MethodInfo methodInfo = m.getMethodInfo();
+            MethodInfo methodInfo = m.getMethodInfo2();
+
+            // récupérer l'attribut existant s'il existe
+            AnnotationsAttribute attr = (AnnotationsAttribute) methodInfo.getAttribute(AnnotationsAttribute.visibleTag);
+
+            if (attr == null) {
+                attr = new AnnotationsAttribute(constPool, AnnotationsAttribute.visibleTag);
+                methodInfo.addAttribute(attr);
+            }
+
+            Annotation annot = new Annotation("org.openhab.core.automation.annotation.RuleAction", constPool);
+
+            annot.addMemberValue("label", new StringMemberValue("test", constPool));
+            annot.addMemberValue("description", new StringMemberValue("testDesc", constPool));
+
+            attr.addAnnotation(annot);
+
+            cc.writeFile("/tmp/out.class");
+            Class clazz = cc.toClass(this.getClass().getClassLoader());
+
+            for (Method method : clazz.getDeclaredMethods()) {
+                System.out.println(method.getName());
+                for (java.lang.annotation.Annotation a : method.getAnnotations()) {
+                    System.out.println(" -> " + a);
+                }
+            }
+
+            return List.of((Class<? extends ThingHandlerService>) clazz);
+        } catch (
+
+        Exception ex) {
+            logger.error("aa", ex);
+            throw new RuntimeException(ex);
+        }
+
     }
 
     @Override
