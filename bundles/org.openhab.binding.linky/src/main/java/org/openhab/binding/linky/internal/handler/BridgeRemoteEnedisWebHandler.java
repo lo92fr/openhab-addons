@@ -292,6 +292,19 @@ public class BridgeRemoteEnedisWebHandler extends BridgeRemoteBaseHandler {
             }
 
             AuthResult authResult = gson.fromJson(result.getContentAsString(), AuthResult.class);
+            if (authResult != null && authResult.successUrl == null) {
+                authData = gson.fromJson(result.getContentAsString(), AuthData.class);
+                if (authData == null) {
+                    throw new LinkyException("Errors on step3 : authData=null");
+                }
+                boolean invalidCredentials = authData.callbacks.stream()
+                        .filter(callback -> "TextOutputCallback".equals(callback.type))
+                        .flatMap(callback -> callback.output.stream()).anyMatch(output -> "message".equals(output.name)
+                                && "Identifiant et/ou mot de passe erroné(s)".equals(output.value));
+                if (invalidCredentials) {
+                    throw new LinkyException("Identifiant et/ou mot de passe erroné(s)");
+                }
+            }
 
             logger.debug("Add the tokenId cookie");
             if (authResult == null) {
