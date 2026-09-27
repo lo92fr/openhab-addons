@@ -61,6 +61,7 @@ import org.openhab.binding.linky.internal.dto.ResponseTempo;
 import org.openhab.binding.linky.internal.dto.ServiceSoucrits;
 import org.openhab.binding.linky.internal.dto.UsagePoint;
 import org.openhab.binding.linky.internal.dto.UserInfo;
+import org.openhab.binding.linky.internal.handler.BridgeRemoteApiHandler;
 import org.openhab.binding.linky.internal.handler.BridgeRemoteBaseHandler;
 import org.openhab.binding.linky.internal.handler.ThingBaseRemoteHandler;
 import org.openhab.binding.linky.internal.handler.ThingLinkyRemoteHandler;
@@ -528,7 +529,7 @@ public class EnedisHttpApi {
         String dtStart = from.format(apiConfig.apiDateFormat);
         String dtEnd = to.format(apiConfig.apiDateFormat);
 
-        if (linkyBridgeHandler instanceof BridgeRemoteBaseHandler) {
+        if (linkyBridgeHandler instanceof BridgeRemoteApiHandler) {
             String url = String.format(apiUrl, prmId, dtStart, dtEnd);
             ResponseMeter meterResponse = getData(handler, url, ResponseMeter.class);
             return meterResponse.meterReading;
