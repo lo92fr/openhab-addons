@@ -183,7 +183,7 @@ public class LinkyAuthServlet extends HttpServlet {
             replaceMap.put(KEY_REDIRECT_URI, servletBaseUrl);
             replaceMap.put(KEY_RETRIEVE_TOKEN_URI, servletBaseUrl + "?state=OK");
 
-            String authorizeUri = apiBridgeHandler.formatAuthorizationUrl("");
+            String authorizeUri = apiBridgeHandler.getEnedisApi().formatAuthorizationUrl("");
             replaceMap.put(KEY_AUTHORIZE_URI, authorizeUri);
             resp.getWriter().append(replaceKeysFromMap(template, replaceMap));
             resp.getWriter().close();
@@ -236,8 +236,8 @@ public class LinkyAuthServlet extends HttpServlet {
                 replaceMap.put(KEY_CB_DISPLAY_CONFIRMATION, "true");
                 replaceMap.put(KEY_CB_DISPLAY_INSTRUCTION, "none");
                 try {
-                    replaceMap.put(KEY_AUTHORIZED_USER, String.format(HTML_USER_AUTHORIZED,
-                            reqCode + " / " + apiBridgeHandler.authorize(servletBaseURL, reqState, reqCode)));
+                    replaceMap.put(KEY_AUTHORIZED_USER, String.format(HTML_USER_AUTHORIZED, reqCode + " / "
+                            + apiBridgeHandler.getEnedisApi().authorize(servletBaseURL, reqState, reqCode)));
                 } catch (LinkyException e) {
                     logger.debug("Exception during authorizaton: ", e);
                     replaceMap.put(KEY_ERROR, String.format(HTML_ERROR, e.getMessage()));

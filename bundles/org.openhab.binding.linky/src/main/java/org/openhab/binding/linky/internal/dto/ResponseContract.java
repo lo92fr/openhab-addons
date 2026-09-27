@@ -22,19 +22,56 @@ import com.google.gson.annotations.SerializedName;
  */
 
 public class ResponseContract {
+    @SerializedName("usage_point_id")
+    public String usagePoint;
+
+    @SerializedName("contract_start")
+    public String contractStart;
+
+    @SerializedName("contract_type")
+    public String contractType;
+
+    public String contractor;
+
+    @SerializedName("pricing_structure")
+    public String pricingStructure;
+
+    @SerializedName("distribution_tariff")
+    public String distributionTarriff;
+
+    @SerializedName("distribution_tariff_profile")
+    public DistributionTariffProfile[] distributionTariffProfile;
+
+    public class DistributionTariffProfile {
+        public String name;
+        public Power power;
+
+    }
+
+    @SerializedName("subscribed_power")
+    public Power subscribedPower;
+
+    public String segment;
+
     public Customer customer;
 
     public class Customer {
-        @SerializedName("customer_id")
-        public String customerId;
-
-        @SerializedName("usage_points")
-        public UsagePoints[] usagePoint;
+        public Customer customer;
+        public Address adress;
     }
 
-    public class UsagePoints {
-        @SerializedName("usage_point")
-        public UsagePoint usagePoint;
-        public Contract contracts;
+    public Organization organization;
+
+    public class Organization {
+        public String name;
+
+        @SerializedName("business_code")
+        public String businessCode;
+
+        @SerializedName("siret_number")
+        public String siretNumber;
+
+        @SerializedName("siren_number")
+        public String sirenNumber;
     }
 }

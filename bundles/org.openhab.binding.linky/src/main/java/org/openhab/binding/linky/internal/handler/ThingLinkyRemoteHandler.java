@@ -201,7 +201,7 @@ public class ThingLinkyRemoteHandler extends ThingBaseRemoteHandler {
 
         if (bridge.getHandler() instanceof BridgeRemoteBaseHandler bridgeHandler) {
             enedisApi = bridgeHandler.getEnedisApi();
-            divider = bridgeHandler.getDivider();
+            divider = enedisApi.getApiConfig().getDivider();
 
             updateStatus(ThingStatus.UNKNOWN);
 
@@ -231,19 +231,6 @@ public class ThingLinkyRemoteHandler extends ThingBaseRemoteHandler {
         }
     }
 
-    public boolean supportNewApiFormat() throws LinkyException {
-        Bridge bridge = getBridge();
-        if (bridge == null) {
-            throw new LinkyException("Unable to get bridge in supportNewApiFormat()");
-        }
-
-        if (bridge.getHandler() instanceof BridgeRemoteBaseHandler bridgeHandler) {
-            return bridgeHandler.supportNewApiFormat();
-        } else {
-            throw new LinkyException("Unable to get bridgeHandler in supportNewApiFormat()");
-        }
-    }
-
     private void pollingCode() {
         try {
             EnedisHttpApi api = this.enedisApi;
@@ -261,8 +248,8 @@ public class ThingLinkyRemoteHandler extends ThingBaseRemoteHandler {
                     return;
                 }
 
-                if (!bridgeHandler.isConnected()) {
-                    bridgeHandler.connectionInit();
+                if (!api.isConnected()) {
+                    api.connectionInit();
                 }
 
                 updateData();
@@ -303,7 +290,7 @@ public class ThingLinkyRemoteHandler extends ThingBaseRemoteHandler {
 
             if (getBridge() instanceof Bridge bridge
                     && bridge.getHandler() instanceof BridgeRemoteEnedisWebHandler bridgeHandler) {
-                userId = bridgeHandler.getIdPersonne();
+                userId = enedisApi.getIdPersonne();
             }
 
             addProps(props, USER_ID, userId);
@@ -352,13 +339,15 @@ public class ThingLinkyRemoteHandler extends ThingBaseRemoteHandler {
             EnedisHttpApi api = this.enedisApi;
             MetaData result = new MetaData();
             if (api != null) {
-                if (supportNewApiFormat()) {
+
+                if (api.getApiConfig().useOAuth()) {
                     if (config.prmId.isBlank()) {
                         throw new LinkyException("@text/offline.config-error-mandatory-settings");
                     }
+                    result.contract = api.getContract(this, config.prmId);
+
                     result.identity = api.getIdentity(this, config.prmId);
                     result.contact = api.getContact(this, config.prmId);
-                    result.contract = api.getContract(this, config.prmId);
                     result.usagePoint = api.getUsagePoint(this, config.prmId);
                 } else {
                     UserInfo userInfo = api.getUserInfo(this);

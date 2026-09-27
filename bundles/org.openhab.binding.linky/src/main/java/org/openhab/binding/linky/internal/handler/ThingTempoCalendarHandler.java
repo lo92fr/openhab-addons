@@ -110,20 +110,6 @@ public class ThingTempoCalendarHandler extends ThingBaseRemoteHandler {
         super.updateStatus(status, statusDetail, description);
     }
 
-    public boolean supportNewApiFormat() throws LinkyException {
-        Bridge bridge = getBridge();
-        if (bridge == null) {
-            throw new LinkyException("Unable to get bridge in supportNewApiFormat()");
-        }
-
-        BridgeRemoteBaseHandler bridgeHandler = (BridgeRemoteBaseHandler) bridge.getHandler();
-        if (bridgeHandler == null) {
-            throw new LinkyException("Unable to get bridgeHandler in supportNewApiFormat()");
-        }
-
-        return bridgeHandler.supportNewApiFormat();
-    }
-
     private void pollingCode() {
         try {
             EnedisHttpApi api = this.enedisApi;
@@ -141,8 +127,8 @@ public class ThingTempoCalendarHandler extends ThingBaseRemoteHandler {
                     return;
                 }
 
-                if (!bridgeHandler.isConnected()) {
-                    bridgeHandler.connectionInit();
+                if (!api.isConnected()) {
+                    api.connectionInit();
                 }
 
                 updateData();

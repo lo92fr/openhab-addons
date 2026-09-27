@@ -14,7 +14,6 @@ package org.openhab.binding.linky.internal.handler;
 
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,6 +24,7 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.openhab.binding.linky.internal.api.ApiConfig;
 import org.openhab.binding.linky.internal.api.EnedisHttpApi;
 import org.openhab.binding.linky.internal.config.LinkyBridgeConfiguration;
 import org.openhab.binding.linky.internal.constants.LinkyBindingConstants;
@@ -64,7 +64,6 @@ public abstract class BridgeRemoteBaseHandler extends BaseBridgeHandler {
     protected final Gson gson;
 
     protected @Nullable LinkyBridgeConfiguration config;
-    protected boolean connected = false;
 
     private static final int REQUEST_BUFFER_SIZE = 8000;
     private static final int RESPONSE_BUFFER_SIZE = 200000;
@@ -97,8 +96,10 @@ public abstract class BridgeRemoteBaseHandler extends BaseBridgeHandler {
         this.httpClient.setRequestBufferSize(REQUEST_BUFFER_SIZE);
         this.httpClient.setResponseBufferSize(RESPONSE_BUFFER_SIZE);
 
-        this.enedisApi = new EnedisHttpApi(this, gson, this.httpClient);
+        this.enedisApi = new EnedisHttpApi(this, getApiConfig(), gson, oAuthFactory, this.httpClient);
     }
+
+    public abstract ApiConfig getApiConfig();
 
     public BundleContext getBundleContext() {
         return bundleContext;
@@ -115,7 +116,7 @@ public abstract class BridgeRemoteBaseHandler extends BaseBridgeHandler {
                 httpClient.start();
 
                 try {
-                    connectionInit();
+                    enedisApi.connectionInit();
                     updateStatus(ThingStatus.ONLINE);
                 } catch (LinkyException e) {
                     updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, e.getMessage());
@@ -127,8 +128,6 @@ public abstract class BridgeRemoteBaseHandler extends BaseBridgeHandler {
         });
     }
 
-    public abstract void connectionInit() throws LinkyException;
-
     public void registerNewPrmId(String prmId) {
         if (!registeredPrmId.contains(prmId)) {
             registeredPrmId.add(prmId);
@@ -137,10 +136,6 @@ public abstract class BridgeRemoteBaseHandler extends BaseBridgeHandler {
 
     public List<String> getAllPrmId() {
         return registeredPrmId;
-    }
-
-    public boolean isConnected() {
-        return connected;
     }
 
     public @Nullable EnedisHttpApi getEnedisApi() {
@@ -158,39 +153,9 @@ public abstract class BridgeRemoteBaseHandler extends BaseBridgeHandler {
         super.updateStatus(status, statusDetail, description);
     }
 
-    public abstract String getToken(ThingBaseRemoteHandler handler) throws LinkyException;
-
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
     }
-
-    public abstract double getDivider();
-
-    public abstract String getBaseUrl();
-
-    public abstract String getContactUrl();
-
-    public abstract String getContractUrl();
-
-    public abstract String getIdentityUrl();
-
-    public abstract String getAddressUrl();
-
-    public abstract String getDailyConsumptionUrl();
-
-    public abstract String getDailyIndexUrl();
-
-    public abstract String getMaxPowerUrl();
-
-    public abstract String getLoadCurveUrl();
-
-    public abstract String getTempoUrl();
-
-    public abstract DateTimeFormatter getApiDateFormat();
-
-    public abstract DateTimeFormatter getApiDateFormatYearsFirst();
-
-    public abstract boolean supportNewApiFormat();
 
     public Gson getGson() {
         return gson;
