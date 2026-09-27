@@ -465,7 +465,7 @@ public class EnedisHttpApi {
 
     public PrmDetail getPrmDetails(ThingLinkyRemoteHandler handler, String internId, String prmId)
             throws LinkyException {
-        String url = apiConfig.contactUrl.formatted(internId) + "/" + prmId
+        String url = apiConfig.contractUrl.formatted(internId) + "/" + prmId
                 + "?embed=SITALI&embed=SITCOM&embed=SITCON&embed=SYNCON";
         return getData(handler, url, PrmDetail.class);
     }
